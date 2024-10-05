@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "RoughCA (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "RoughCA (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

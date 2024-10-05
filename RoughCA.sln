@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35312.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoughCA", "wrk\RoughCA\RoughCA.csproj", "{0E5F9D57-958E-44AE-BB94-BE232471792D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E5F9D57-958E-44AE-BB94-BE232471792D}.Debug|x64.ActiveCfg = Debug|x64
+		{0E5F9D57-958E-44AE-BB94-BE232471792D}.Debug|x64.Build.0 = Debug|x64
+		{0E5F9D57-958E-44AE-BB94-BE232471792D}.Debug|x64.Deploy.0 = Debug|x64
+		{0E5F9D57-958E-44AE-BB94-BE232471792D}.Release|x64.ActiveCfg = Release|x64
+		{0E5F9D57-958E-44AE-BB94-BE232471792D}.Release|x64.Build.0 = Release|x64
+		{0E5F9D57-958E-44AE-BB94-BE232471792D}.Release|x64.Deploy.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4A085787-E374-4105-BB22-54CAC6723D98}
+	EndGlobalSection
+EndGlobal
