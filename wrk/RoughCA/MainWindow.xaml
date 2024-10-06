@@ -1,14 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window
-    x:Class="RoughCA.MainWindow"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:RoughCA"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+	x:Class="Arteria_s.App.RoughCA.MainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-    </StackPanel>
+	xmlns:local="using:Arteria_s.App.RoughCA"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d">
+
+	<!-- 左端に設置、戻るボタンを非表示、ペインは閉じる -->
+	<NavigationView PaneDisplayMode="Left" IsBackButtonVisible="Collapsed" IsPaneOpen="False" SelectionChanged="NavigationView_SelectionChanged">
+		<NavigationView.PaneHeader>
+			<!-- 高さは、32[ppx]、水平幅は任意 -->
+			<Image Name="PaneHeader" Source="ms-appx:///Assets/EasyCA.png" />
+		</NavigationView.PaneHeader>
+		<NavigationView.MenuItems>
+			<NavigationViewItem x:Uid="ListupCertificate" Tag="ListupCertificate" Icon="Home" Content="発行履歴と失効処理"/>
+			<NavigationViewItem x:Uid="CreateCertificate" Tag="CreateCertificate" Icon="Add" Content="証明書を作成"/>
+			<NavigationViewItem x:Uid="PrimitiveProcedure" Tag="PrimitiveProcedure" Icon="Caption" Content="プリミティヴ">
+				<NavigationViewItem.MenuItems>
+					<NavigationViewItem x:Uid="Request" Tag="Request" Icon="Send" Content="署名要求を作成"/>
+					<NavigationViewItem x:Uid="Signing" Tag="Signing" Icon="Accept" Content="署名を実行"/>
+				</NavigationViewItem.MenuItems>
+			</NavigationViewItem>
+		</NavigationView.MenuItems>
+		<NavigationView.FooterMenuItems>
+			<NavigationViewItem x:Uid="Author" Tag="Author" Icon="ContactInfo" Content="著作権表示"/>
+		</NavigationView.FooterMenuItems>
+
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="0.3*"/>
+			</Grid.RowDefinitions>
+			<Grid Grid.Row="0" Style="{StaticResource CaptionPane}">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<TextBlock x:Uid="Caption"  Name="Caption"  Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Style="{StaticResource CaptionText}" />
+				<TextBlock x:Uid="Location" Name="Location" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource CaptionText}" />
+			</Grid>
+			<Frame Grid.Row="1" x:Name="ContentFrame" />
+			<Frame Grid.Row="2" x:Name="MessageFrame" />
+		</Grid>
+	</NavigationView>
+
 </Window>

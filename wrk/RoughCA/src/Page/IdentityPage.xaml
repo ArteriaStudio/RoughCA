@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+	x:Class="Arteria_s.App.RoughCA.IdentityPage"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="using:Arteria_s.App.RoughCA"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d"
+	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<ScrollViewer x:Name="IdentityParameters" Grid.Column="0" Grid.Row="0" Padding="4, 4, 4, 4" LostFocus="IdentityParameters_LostFocus">
+			<StackPanel Orientation="Vertical" Style="{StaticResource CardStyleStackPanel}">
+				<TextBox x:Uid="OrgName"       x:Name="OrgName"       Margin="8,8,8,8" IsReadOnly="True" Header="組織名（organizationName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.OrgName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="OrgUnitName"   x:Name="OrgUnitName"   Margin="8,8,8,8" IsReadOnly="True" Header="部署名（organizationalUnitName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.OrgUnitName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="LocalityName"  x:Name="LocalityName"  Margin="8,8,8,8" IsReadOnly="True" Header="市町村（localityName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.LocalityName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="ProvinceName"  x:Name="ProvinceName"  Margin="8,8,8,8" IsReadOnly="True" Header="都道府県（stateOrProvinceName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.ProvinceName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="CountryName"   x:Name="CountryName"   Margin="8,8,8,8" IsReadOnly="True" Header="国名（countryName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.CountryName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="ServerName"    x:Name="ServerName"    Margin="8,8,8,8" IsReadOnly="True" Header="証明情報公開サーバ（publishServerName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.ServerName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<StackPanel Orientation="Horizontal" Padding="4, 4, 4, 4" Style="{StaticResource CardStyleStackPanel}">
+					<Button  x:Uid="SignRequest"  x:Name="SignRequest" Margin="8,8,8,8" IsEnabled="True"  Click="SignRequest_Click" />
+					<Button  x:Uid="CertAccept"   x:Name="CertAccept"  Margin="8,8,8,8" IsEnabled="True"  Click="CertAccept_Click" />
+				</StackPanel>
+			</StackPanel>
+		</ScrollViewer>
+	</Grid>
+</Page>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+	x:Class="Arteria_s.App.RoughCA.VersionPage"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="using:Arteria_s.App.RoughCA"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d"
+	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+	<Grid Margin="16, 16, 16, 16" >
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+		<TextBlock x:Uid="VersionInfo" Grid.Column="0" Grid.Row="0" Margin="8, 8, 8, 8" VerticalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" />
+		<Grid Grid.Column="0" Grid.Row="1" Margin="8, 8, 8, 8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="64" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+
+			<Image Grid.Column="0" Grid.Row="0" Source="Assets/EasyCA.jpg" Width="64" Height="64" />
+			<Grid Grid.Column="1" Grid.Row="0" >
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
+
+				<TextBlock Grid.Row="0" Grid.Column="0" Margin="16, 4, 8, 4" VerticalAlignment="Center" Text="Arteria Studio Easy CA" Style="{StaticResource BaseTextBlockStyle}" />
+				<TextBlock Grid.Row="1" Grid.Column="0" Margin="16, 4, 8, 4" VerticalAlignment="Center" Text="Ver 0.1.0.1"            Style="{StaticResource BodyTextBlockStyle}" />
+			</Grid>
+		</Grid>
+        
+		<StackPanel Grid.Column="0" Grid.Row="2" Margin="0, 2, 0, 2" Style="{StaticResource CardStyleStackPanel}">
+			<TextBlock x:Uid="Acknowledgment" Name="Acknowledgment" Margin="16,8,16,8" Style="{StaticResource SubtitleTextBlockStyle}" />
+			<TextBlock Margin="16,8,16,8" Style="{StaticResource BodyTextBlockStyle}" Text="This application works thanks to the application described below." />
+		</StackPanel>
+		<StackPanel Grid.Column="0" Grid.Row="3" Margin="0, 2, 0, 2" Style="{StaticResource CardStyleStackPanel}">
+			<TextBlock Margin="24,8,16,8" Style="{StaticResource BodyTextBlockStyle}" Text="Microsoft Visual Studio C# (Language)" />
+			<TextBlock Margin="24,8,16,8" Style="{StaticResource BodyTextBlockStyle}" Text="Microsoft .NET Framewaork (Framwork, Function Library)" />
+			<TextBlock Margin="24,8,16,8" Style="{StaticResource BodyTextBlockStyle}" Text="PostgreSQL (Data Store)" />
+			<TextBlock Margin="24,8,16,8" Style="{StaticResource BodyTextBlockStyle}" Text="SQLite (Configuration Store)" />
+			<TextBlock Margin="24,8,16,8" Style="{StaticResource BodyTextBlockStyle}" Text="Microsoft Image Creator (Create Icon)" />
+		</StackPanel>
+		<StackPanel Grid.Column="0" Grid.Row="4" Margin="0, 2, 0, 2" Orientation="Horizontal" Style="{StaticResource CardStyleStackPanel}">
+			<TextBlock x:Uid="DisplayLanguage" Margin="16, 8, 16, 12" VerticalAlignment="Center" Style="{StaticResource BodyTextBlockStyle}" />
+			<TextBlock Name="DisplayLanguage" Margin="16, 8, 16, 12" VerticalAlignment="Center" Style="{StaticResource BodyTextBlockStyle}" Text="{x:Bind m_pLanguage}" />
+		</StackPanel>
+	</Grid>
+</Page>

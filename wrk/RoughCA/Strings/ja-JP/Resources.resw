@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Acknowledgment.Text" xml:space="preserve">
+    <value>謝辞</value>
+  </data>
+  <data name="Author.Content" xml:space="preserve">
+    <value>著作権表示</value>
+  </data>
+  <data name="AuthorityTag.Header" xml:space="preserve">
+    <value>基本認証局情報</value>
+  </data>
+  <data name="BrowseClientCrt.Content" xml:space="preserve">
+    <value>ファイルを選択</value>
+  </data>
+  <data name="BrowseClientKey.Content" xml:space="preserve">
+    <value>ファイルを選択</value>
+  </data>
+  <data name="ClientCrt.Header" xml:space="preserve">
+    <value>クライアント証明書</value>
+  </data>
+  <data name="ClientKey.Header" xml:space="preserve">
+    <value>クライアント秘密鍵</value>
+  </data>
+  <data name="ConnectionTab.Header" xml:space="preserve">
+    <value>データベース接続</value>
+  </data>
+  <data name="CreateCertificate.Content" xml:space="preserve">
+    <value>証明書を作成</value>
+  </data>
+  <data name="DisplayLanguage.Text" xml:space="preserve">
+    <value>表示言語</value>
+  </data>
+  <data name="ExportTag.Header" xml:space="preserve">
+    <value>ファイル出力先</value>
+  </data>
+  <data name="DatabaseServerName.Header" xml:space="preserve">
+    <value>データベースサーバー名</value>
+  </data>
+  <data name="InstanceName.Header" xml:space="preserve">
+    <value>データベース名</value>
+  </data>
+  <data name="ListupCertificate.Content" xml:space="preserve">
+    <value>発行履歴と失効処理</value>
+  </data>
+  <data name="Lock.Content" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="MessageLog.Text" xml:space="preserve">
+    <value>メッセージログ</value>
+  </data>
+  <data name="PrimitiveProcedure.Content" xml:space="preserve">
+    <value>詳細な処理</value>
+  </data>
+  <data name="Request.Content" xml:space="preserve">
+    <value>署名要求を作成</value>
+  </data>
+  <data name="RootCACrt.Header" xml:space="preserve">
+    <value>ルート認証局証明書</value>
+  </data>
+  <data name="SchemaName.Header" xml:space="preserve">
+    <value>データベース接続ユーザー名</value>
+  </data>
+  <data name="Settings.Content" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Signing.Content" xml:space="preserve">
+    <value>署名を実行</value>
+  </data>
+  <data name="VersionInfo.Text" xml:space="preserve">
+    <value>バージョン表示</value>
+  </data>
+  <data name="AuthorityName.Header" xml:space="preserve">
+    <value>認証局名（authorityName）</value>
+  </data>
+  <data name="OrgName.Header" xml:space="preserve">
+    <value>組織名（organizationName）</value>
+  </data>
+  <data name="OrgUnitName.Header" xml:space="preserve">
+    <value>部署名（organizationalUnitName）</value>
+  </data>
+  <data name="LocalityName.Header" xml:space="preserve">
+    <value>市町村（localityName）</value>
+  </data>
+  <data name="ProvinceName.Header" xml:space="preserve">
+    <value>都道府県（stateOrProvinceName）</value>
+  </data>
+  <data name="CountryName.Header" xml:space="preserve">
+    <value>国名（countryName）</value>
+  </data>
+  <data name="ServerName.Header" xml:space="preserve">
+    <value>証明情報公開サーバ（publishServerName）</value>
+  </data>
+  <data name="ReloadList.Text" xml:space="preserve">
+    <value>再表示</value>
+  </data>
+  <data name="UpdateCRL.Text" xml:space="preserve">
+    <value>CRLを更新</value>
+  </data>
+  <data name="AddCertificate.Text" xml:space="preserve">
+    <value>認証局署名要求に署名</value>
+  </data>
+  <data name="ExportToFile.Text" xml:space="preserve">
+    <value>ファイルに出力</value>
+  </data>
+  <data name="UpdateCertificate.Text" xml:space="preserve">
+    <value>証明書を更新</value>
+  </data>
+  <data name="RevokeCertificate.Text" xml:space="preserve">
+    <value>失効</value>
+  </data>
+  <data name="CertificateType.Header" xml:space="preserve">
+    <value>証明書の種類</value>
+  </data>
+  <data name="ServerCertificate.Content" xml:space="preserve">
+    <value>サーバー証明書</value>
+  </data>
+  <data name="ClientCertificate.Content" xml:space="preserve">
+    <value>クライアント証明書</value>
+  </data>
+  <data name="CommonName.Header" xml:space="preserve">
+    <value>共通名</value>
+  </data>
+  <data name="MailAddress.Header" xml:space="preserve">
+    <value>メールアドレス</value>
+  </data>
+  <data name="IssueButton.Content" xml:space="preserve">
+    <value>発行</value>
+  </data>
+  <data name="HostName.Header" xml:space="preserve">
+    <value>ホスト名</value>
+  </data>
+  <data name="IdentityName" xml:space="preserve">
+    <value>認証局識別子</value>
+  </data>
+  <data name="SignRequest.Content" xml:space="preserve">
+    <value>署名要求を作成</value>
+  </data>
+  <data name="CertAccept.Content" xml:space="preserve">
+    <value>認証局証明書を受入</value>
+  </data>
+  <data name="SignaturedRequest.Content" xml:space="preserve">
+    <value>署名要求</value>
+  </data>
+  <data name="SignupCertificate.Text" xml:space="preserve">
+    <value>署名要求に署名</value>
+  </data>
+</root>

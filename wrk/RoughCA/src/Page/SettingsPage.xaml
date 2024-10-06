@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Page
+	x:Class="Arteria_s.App.RoughCA.SettingsPage"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="using:Arteria_s.App.RoughCA"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d"
+	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+	<Grid>
+		<TabView Name="ParametersTab" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsAddTabButtonVisible="False" SelectionChanged="ParametersTab_SelectionChanged" >
+			<TabViewItem x:Uid="ConnectionTab" IsClosable="False">
+				<TabViewItem.IconSource>
+					<SymbolIconSource Symbol="Home" />
+				</TabViewItem.IconSource>
+				<Frame Name="ConnectionTab" />
+			</TabViewItem>
+			<TabViewItem x:Uid="AuthorityTag" IsClosable="False">
+				<TabViewItem.IconSource>
+					<SymbolIconSource Symbol="Contact" />
+				</TabViewItem.IconSource>
+				<Frame Name="AuthorityTag" />
+			</TabViewItem>
+			<TabViewItem x:Uid="ExportTag" IsClosable="False">
+				<TabViewItem.IconSource>
+					<SymbolIconSource Symbol="OutlineStar" />
+				</TabViewItem.IconSource>
+				<Frame Name="ExportTag" />
+			</TabViewItem>
+			<TabView.TabStripHeader>
+				<Grid x:Name="ShellTitlebarInset" Background="Transparent" />
+			</TabView.TabStripHeader>
+			<TabView.TabStripFooter>
+				<Grid x:Name="CustomDragRegion" Background="Transparent">
+					<StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
+						<ToggleButton x:Uid="Lock" Name="Lock" Margin="8,8,8,8" IsEnabled="True" Style="{StaticResource ToggleButtonRevealStyle}" Click="Lock_Click" />
+					</StackPanel>
+				</Grid>
+			</TabView.TabStripFooter>
+		</TabView>
+	</Grid>
+</Page>

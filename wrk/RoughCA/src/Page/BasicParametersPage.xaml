@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+	x:Class="Arteria_s.App.RoughCA.BasicParametersPage"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="using:Arteria_s.App.RoughCA"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d"
+	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<ScrollViewer x:Name="BasicParameters" Grid.Column="0" Grid.Row="0" Padding="4, 4, 4, 4" LostFocus="BasicParameters_LostFocus">
+			<StackPanel Orientation="Vertical" Style="{StaticResource CardStyleStackPanel}">
+				<TextBox x:Uid="DatabaseServerName" x:Name="DatabaseServerName" Margin="8,8,8,8" IsReadOnly="True" Header="サーバのホスト名（HostName）" PlaceholderText="" Text="{x:Bind m_pDbParams.HostName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="InstanceName"       x:Name="InstanceName"       Margin="8,8,8,8" IsReadOnly="True" Header="インスタンス名（InstanceName）" PlaceholderText="" Text="{x:Bind m_pDbParams.InstanceName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="SchemaName"         x:Name="SchemaName"         Margin="8,8,8,8" IsReadOnly="True" Header="スキーマ名（SchemaName）" PlaceholderText=""  Text="{x:Bind m_pDbParams.SchemaName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
+					<TextBox x:Uid="ClientKey"       x:Name="ClientKey"       Grid.Column="0" Margin="8,8,8,8" IsReadOnly="True" Header="クライアント秘密鍵（ClientSecretKey）" PlaceholderText=""  Text="{x:Bind m_pDbParams.ClientKey, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+					<Button  x:Uid="BrowseClientKey" x:Name="BrowseClientKey" Grid.Column="1" Margin="8,8,8,8" IsEnabled="False" Click="BrowseClientKey_Click" Content="ファイルを選択"/>
+				</Grid>
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
+					<TextBox x:Uid="ClientCrt"       x:Name="ClientCrt"       Grid.Column="0" Margin="8,8,8,8" IsReadOnly="True" Header="クライアント証明書（ClientCertificate）" PlaceholderText=""  Text="{x:Bind m_pDbParams.ClientCrt, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+					<Button  x:Uid="BrowseClientCrt" x:Name="BrowseClientCrt" Grid.Column="1" Margin="8,8,8,8" IsEnabled="False" Click="BrowseClienCrt_Click" Content="ファイルを選択"/>
+				</Grid>
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
+					<TextBox x:Uid="RootCACrt"       x:Name="RootCACrt"       Grid.Column="0" Margin="8,8,8,8" IsReadOnly="True" Header="ルート（＝信頼端点）証明書（RootCertificate）" PlaceholderText=""  Text="{x:Bind m_pDbParams.TrustCrt, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+					<Button  x:Uid="BrowseRootCACrt" x:Name="BrowseRootCACrt" Grid.Column="1" Margin="8,8,8,8" IsEnabled="False" Click="BrowseRootCACrt_Click" Content="ファイルを選択"/>
+				</Grid>
+				<TextBox x:Uid="IdentityName" x:Name="IdentityName" Margin="8,8,8,8" IsReadOnly="True" Header="認証局識別子（IdentityName）" PlaceholderText=""  Text="{x:Bind m_pDbParams.IdentityName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+			</StackPanel>
+		</ScrollViewer>
+	</Grid>
+</Page>
