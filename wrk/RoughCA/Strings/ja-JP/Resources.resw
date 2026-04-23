@@ -261,4 +261,7 @@
   <data name="SignupCertificate.Text" xml:space="preserve">
     <value>署名要求に署名</value>
   </data>
+  <data name="RDSignCertificate" xml:space="preserve">
+    <value>デスクトップ証明書</value>
+  </data>
 </root>

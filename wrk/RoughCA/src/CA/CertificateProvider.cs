@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -93,6 +94,37 @@ namespace Arteria_s.App.RoughCA
 
 			return (pRequest);
 		}
+
+		//　署名要求（リモートデスクトップ接続リスナー証明書）を生成
+		public static CertificateRequest CreateSignRequestForRDSign(ECDsaCng pKeys, OrgProfile pOrgProfile, X500DistinguishedName pSubjectName, string pCommonName, string pDnsName, string pNetAddress, bool fCA)
+		{
+			//　署名要求を生成（der形式）
+			CertificateRequest pRequest = new CertificateRequest(pSubjectName, pKeys, HashAlgorithmName.SHA512);
+
+			//　CA制約：証明書が認証局であるか否かを指定する。
+			pRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(fCA, fCA, 2, true));
+			pRequest.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(pRequest.PublicKey, false));
+			var pKeyUsageFlags = X509KeyUsageFlags.NonRepudiation | X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.EncipherOnly;
+			pRequest.CertificateExtensions.Add(new X509KeyUsageExtension(pKeyUsageFlags, false));
+			OidCollection pEnhancedKeyUsageFlags = new OidCollection
+			{
+				// https://oidref.com/1.3.6.1.5.5.7.3.2
+				new Oid("1.3.6.1.5.5.7.3.1"),   //　serverAuth
+				new Oid("1.3.6.1.5.5.7.3.3"),   //　codeSigning
+			};
+			pRequest.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(pEnhancedKeyUsageFlags, false));
+
+			var pBuilder = new SubjectAlternativeNameBuilder();
+			pBuilder.AddDnsName(pDnsName);
+			pBuilder.AddIpAddress(IPAddress.Parse(pNetAddress));
+			var pExtBuilt = pBuilder.Build(true);
+			pRequest.CertificateExtensions.Add(new X509SubjectAlternativeNameExtension(pExtBuilt.RawData));
+
+			return (pRequest);
+		}
+
+		
+
 
 		//　自己署名証明書を作成
 		public static X509Certificate2	CreateSelfCertificate(CertificateRequest pRequest, string CommonName, int iLifeDays, string pServerName)

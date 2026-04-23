@@ -243,17 +243,8 @@
   <data name="IssueButton.Content" xml:space="preserve">
     <value>Issue</value>
   </data>
-  <data name="CommonName.PlaceholderText" xml:space="preserve">
-    <value>ex. www.aeonic.com, Company Name</value>
-  </data>
   <data name="HostName.Header" xml:space="preserve">
     <value>Host Name</value>
-  </data>
-  <data name="HostName.PlaceholderText" xml:space="preserve">
-    <value>ex. www.neucom.net</value>
-  </data>
-  <data name="MailAddress.PlaceholderText" xml:space="preserve">
-    <value>ex. raven@neucom.net</value>
   </data>
   <data name="IdentityName" xml:space="preserve">
     <value>Identity Name</value>
@@ -269,5 +260,17 @@
   </data>
   <data name="SignupCertificate.Text" xml:space="preserve">
     <value>Signup Certificate</value>
+  </data>
+  <data name="CommonName.PlaceholderText" xml:space="preserve">
+    <value>ex. www.aeonic.com, Company Name</value>
+  </data>
+  <data name="HostName.PlaceholderText" xml:space="preserve">
+    <value>ex. www.neucom.net</value>
+  </data>
+  <data name="MailAddress.PlaceholderText" xml:space="preserve">
+    <value>ex. raven@neucom.net</value>
+  </data>
+  <data name="RDSignCertificate" xml:space="preserve">
+    <value>Desktop Certificate</value>
   </data>
 </root>

@@ -152,6 +152,40 @@ namespace Arteria_s.App.RoughCA
 			return (true);
 		}
 
+		//　リモートデスクトップ接続リスナー証明書を生成する。
+		//　fOverWrite：同一のサブジェクトを持つ証明書があった場合に有効な証明書を当該証明書に差し替える。
+		public bool CreateForRDSign(SQLContext pSQLContext, string pCommonName, string pFQDN, string pNetAddress, bool fCA, bool fOverWrite)
+		{
+			var pCertificate = new Certificate();
+			if (pCertificate.CreateForRDSign(m_pOrgProfile, pCommonName, pFQDN, pNetAddress, m_pAuthorityItem, fCA) == false)
+			{
+				throw (new AppException(AppError.FailureCreateCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+			}
+			if (pCertificate.Validate() == false)
+			{
+				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+			}
+			if (pCertificate.IsHaveKey() == false)
+			{
+				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+			}
+			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
+			{
+				//　同一のサブジェクトを持つ証明書が既に発行されている。
+				if (fOverWrite == false)
+				{
+					throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+				}
+			}
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId) == false)
+			{
+				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+			}
+
+			return (true);
+		}
+		
+
 		//　認証局署名要求を生成する。
 		public bool CreateForDemand(SQLContext pSQLContext, string pCommonName)
 		{

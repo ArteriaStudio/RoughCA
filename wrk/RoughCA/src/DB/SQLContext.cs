@@ -19,8 +19,8 @@ namespace Arteria_s.DB.Base
 			pBuilder.Host = DatabaseServer;
 			pBuilder.Database = DatabaseName;
 			pBuilder.Username = SchemaName;
-			//pBuilder.SslMode = SslMode.VerifyFull;
-			pBuilder.SslMode = SslMode.Disable;
+			pBuilder.SslMode = SslMode.VerifyFull;
+			//pBuilder.SslMode = SslMode.Disable;
 			pBuilder.SslCertificate = ClientCrt;
 			pBuilder.SslKey = ClientKey;
 			pBuilder.RootCertificate = TrustCrt;

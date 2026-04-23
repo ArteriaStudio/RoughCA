@@ -47,6 +47,21 @@ namespace Arteria_s.DB
 			return (true);
 		}
 
+		public static bool IsValidIPv4Address(string pValue)
+		{
+			if (IsNotNull(pValue) == false)
+			{
+				return (false);
+			}
+			var pRegex = new Regex(@"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+			if (pRegex.IsMatch(pValue) == false)
+			{
+				return (false);
+			}
+
+			return (true);
+		}
+
 		//　メールアドレスの書式検査
 		public static bool IsValidFQDN(string pValue)
 		{

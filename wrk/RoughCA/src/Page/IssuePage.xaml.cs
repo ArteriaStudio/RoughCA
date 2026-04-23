@@ -12,12 +12,14 @@ namespace Arteria_s.App.RoughCA
 		public string m_pCommonName;
 		public string m_pHostName;
 		public string m_pMailAddress;
+		public string m_pNetAddress;
 
 		public CertInputForm()
 		{
 			m_pCommonName  = "";
 			m_pHostName    = "";
 			m_pMailAddress = "";
+			m_pNetAddress  = "";
 		}
 
 		public override bool Validate()
@@ -31,6 +33,10 @@ namespace Arteria_s.App.RoughCA
 				return (false);
 			}
 			if (IsNotNull(m_pMailAddress) == false)
+			{
+				return (false);
+			}
+			if (IsNotNull(m_pNetAddress) == false)
 			{
 				return (false);
 			}
@@ -84,8 +90,24 @@ namespace Arteria_s.App.RoughCA
 						IsEnabled = false;
 					}
 				}
-				//　署名要求
+				//　デスクトップ接続リスナー証明書
 				else if (CertificateType.SelectedIndex == 2)
+				{
+					if (Data.IsValidFQDN(HostName.Text) == false)
+					{
+						IsEnabled = false;
+					}
+					else if (Data.IsValidFQDN(CommonName.Text) == false)
+					{
+						IsEnabled = false;
+					}
+					else if (Data.IsValidIPv4Address(NetAddress.Text) == false)
+					{
+						IsEnabled = false;
+					}
+				}
+				//　署名要求
+				else if (CertificateType.SelectedIndex == 3)
 				{
 					if (Data.IsValidFQDN(HostName.Text) == false)
 					{
@@ -123,20 +145,30 @@ namespace Arteria_s.App.RoughCA
 			{
 			case 0:
 				//　サーバー証明書にメールアドレスは不要
-				CommonName.IsEnabled = true;
-				HostName.IsEnabled = true;
+				CommonName.IsEnabled  = true;
+				HostName.IsEnabled    = true;
 				MailAddress.IsEnabled = false;
+				NetAddress.IsEnabled  = false;
 				break;
 			case 1:
 				//　クライアント証明書にFQDNは不要
-				CommonName.IsEnabled = true;
-				HostName.IsEnabled = false;
+				CommonName.IsEnabled  = true;
+				HostName.IsEnabled    = false;
 				MailAddress.IsEnabled = true;
+				NetAddress.IsEnabled  = false;
+				break;
+			case 2:
+				//　リモートデスクトップ接続リスナー証明書にメールアドレスは不要
+				CommonName.IsEnabled  = true;
+				HostName.IsEnabled    = true;
+				MailAddress.IsEnabled = false;
+				NetAddress.IsEnabled  = true;
 				break;
 			case -1:
-				CommonName.IsEnabled = false;
-				HostName.IsEnabled = false;
+				CommonName.IsEnabled  = false;
+				HostName.IsEnabled    = false;
 				MailAddress.IsEnabled = false;
+				NetAddress.IsEnabled  = false;
 				break;
 			}
 		}
@@ -165,6 +197,10 @@ namespace Arteria_s.App.RoughCA
 				case 1:
 					//　メール証明書
 					pAuthority.CreateForClient(pSQLContext, m_pForm.m_pCommonName, m_pForm.m_pMailAddress, false, true);
+					break;
+				case 2:
+					//　リモートデスクトップ接続リスナー証明書
+					pAuthority.CreateForRDSign(pSQLContext, m_pForm.m_pCommonName, m_pForm.m_pHostName, m_pForm.m_pNetAddress, false, true);
 					break;
 				}
 

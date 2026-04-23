@@ -426,6 +426,54 @@ namespace Arteria_s.App.RoughCA
 			return (true);
 		}
 
+		//　サーバ証明書を生成
+		public bool CreateForRDSign(OrgProfile pOrgProfile, string pCommonName, string pFQDN, string pNetAddress, Certificate pCACertificate, bool fCA)
+		{
+			//　認証局の証明書データが指定されていない時はエラー
+			if (pCACertificate == null)
+			{
+				return (false);
+			}
+
+			//　証明書のサブジェクト名を生成
+			var pSubjectName = ItemsMentioned.GenerateSubjectName(pOrgProfile, pCommonName);
+
+			//　秘密鍵を生成（楕円曲線方式）
+			ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE);
+
+			//　サーバ証明書用の署名要求を生成
+			var pRequest = CertificateProvider.CreateSignRequestForRDSign(pKeys, pOrgProfile, pSubjectName, pCommonName, pFQDN, pNetAddress, fCA);
+			if (pRequest == null)
+			{
+				return (false);
+			}
+			//　指定された認証局の証明書で署名
+			var iLifeDays = 365 * 1;
+			m_pCertificate = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName);
+			if (m_pCertificate == null)
+			{
+				return (false);
+			}
+
+			//　証明書記載情報の主要なものをキャッシュ
+			m_pItems.SequenceNumber = 0;
+			m_pItems.SerialNumber = m_pCertificate.SerialNumber;
+			m_pItems.SubjectName = m_pCertificate.SubjectName.Name;
+			m_pItems.CommonName = ItemsMentioned.GetDistinguishedValue("CN", m_pCertificate.SubjectName);
+			m_pItems.TypeOf = CertificateType.Server;
+			m_pItems.Revoked = false;
+			m_pItems.LaunchAt = m_pCertificate.NotBefore;
+			m_pItems.ExpireAt = m_pCertificate.NotAfter;
+
+			//　証明書データをPEM 形式に変換して保管
+			m_pCrt = m_pCertificate.ExportCertificatePem();
+
+			//　秘密鍵データをPEM 形式に変換して保管
+			m_pKey = pKeys.ExportECPrivateKeyPem();
+
+			return (true);
+		}
+
 		//　指定された証明書データに基づいて有効期限を延長した証明書を作成する。
 		//　for Updateとあるが、Oracleの行ロックとは関係ない。
 		//　pBaseCertificate：転記元の証明書
