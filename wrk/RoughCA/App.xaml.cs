@@ -23,16 +23,16 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　環境の前提条件の状態を検査
-		public void Check(SQLContext pSQLContext, Profile pProfile, Authority pAuthority)
+		public void Check(SQLContext pSQLContext, DbParams m_pDbParams, Authority pAuthority)
 		{
 			//　データベース接続情報が登録されているか？
-			if (pProfile.m_pDbParams == null)
+			if (m_pDbParams == null)
 			{
 				bExistDbParams = false;
 			}
 			else
 			{
-				bExistDbParams = pProfile.m_pDbParams.Validate();
+				bExistDbParams = m_pDbParams.Validate();
 			}
 			if ((pAuthority == null) || (pAuthority.m_pOrgProfile == null))
 			{
@@ -78,6 +78,7 @@ namespace Arteria_s.App.RoughCA
 			//Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = "ja";
 
 			this.InitializeComponent();
+			//this.Exit += App_Exit;
 
 			//　
 			Debug.WriteLine(CultureInfo.CurrentUICulture.Name);
@@ -117,31 +118,36 @@ namespace Arteria_s.App.RoughCA
 				pFilepath = pArgs[1];
 			}
 			m_pProfile = new Profile(pFilepath);
-			m_pProfile.Load();
+			m_pDbParams = new DbParams();
+			m_pProfile.Load(ref m_pDbParams);
 
 			//　データベースインスタンスに接続
-			if (m_pProfile.m_pDbParams.Validate() == true)
+			if (m_pDbParams.Validate() == true)
 			{
-				m_pSQLContext = new SQLContext(m_pProfile.m_pDbParams.HostName, m_pProfile.m_pDbParams.InstanceName, m_pProfile.m_pDbParams.SchemaName, m_pProfile.m_pDbParams.ClientKey, m_pProfile.m_pDbParams.ClientCrt, m_pProfile.m_pDbParams.TrustCrt);
+				m_pSQLContext = new SQLContext(m_pDbParams.HostName, m_pDbParams.InstanceName, m_pDbParams.SchemaName, m_pDbParams.ClientKey, m_pDbParams.ClientCrt, m_pDbParams.TrustCrt);
 
 				m_pCertsStock = Authority.Instance;
-				m_pCertsStock.Load(m_pSQLContext, m_pProfile.m_pDbParams.IdentityName);
+				m_pCertsStock.Load(m_pSQLContext, m_pDbParams.IdentityName);
 			}
 			m_pPrepareFlags = new PrepareFlags();
-			m_pPrepareFlags.Check(m_pSQLContext, m_pProfile, m_pCertsStock);
+			m_pPrepareFlags.Check(m_pSQLContext, m_pDbParams, m_pCertsStock);
 
 			m_pWindow = new MainWindow();
-			m_pWindow.Title = "EasyCA [" + m_pProfile.m_pDbParams.IdentityName + "]";
+			m_pWindow.Title = "RoughCA [" + m_pDbParams.IdentityName + "]";
 			m_pWindow.Activate();
 		}
 
 		//　組織プロファイルを保存
-		public void SaveOrgProfile()
+		public void SaveOrgProfile(DbParams pDbParams)
 		{
 			if (m_pSQLContext != null)
 			{
 				m_pCertsStock.m_pOrgProfile.Save(m_pSQLContext);
 			}
+
+			//　
+			m_pProfile.Save(pDbParams);
+			
 		}
 
 		public SQLContext	GetSQLContext()
@@ -153,6 +159,7 @@ namespace Arteria_s.App.RoughCA
 
 		public Window m_pWindow;
 		public Profile m_pProfile;
+		public DbParams m_pDbParams;
 		public PrepareFlags m_pPrepareFlags;	//　前提条件検査結果（）
 		public Authority m_pCertsStock;
 	}

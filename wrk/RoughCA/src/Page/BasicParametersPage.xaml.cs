@@ -1,4 +1,4 @@
-using Microsoft.UI.Xaml;
+ï»¿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using Windows.Storage.Pickers;
@@ -23,7 +23,8 @@ namespace Arteria_s.App.RoughCA
 			this.InitializeComponent();
 			var pApp = App.Current as RoughCA.App;
 			var pProfile = pApp.m_pProfile;
-			m_pDbParams = pProfile.m_pDbParams;
+			//m_pDbParams = pProfile.m_pDbParams;
+			m_pDbParams = pApp.m_pDbParams;
 			m_bIsDirty = false;
 		}
 
@@ -82,7 +83,7 @@ namespace Arteria_s.App.RoughCA
 			}
 
 			var pApp = App.Current as RoughCA.App;
-			var bResult = pApp.m_pProfile.Save();
+			var bResult = pApp.m_pProfile.Save(m_pDbParams);
 			//Save.IsEnabled = false;
 		}
 
@@ -107,9 +108,9 @@ namespace Arteria_s.App.RoughCA
 
 		private async void BrowseClienCrt_Click(object sender, RoutedEventArgs e)
 		{
-			//@ƒRƒ‚ƒ“ƒ_ƒCƒAƒƒO‚ğg‚¤“¹‚ÍA–Y‚ê‚é‚©’ú‚ß‚é‚Ì‚ªD‚Ü‚µ‚¢i2022/10/12j
-			//@Å“K‰ğFƒGƒNƒXƒvƒ[ƒ‰‚Åƒtƒ@ƒCƒ‹‚ğƒhƒƒbƒv‚µ‚ë‚Æ—˜—pÒ‚É“`‚¦‚é
-			//@‘ŠŒİ‰^—p‹@”\‚É—Š‚éi2022/10/15j
+			//ã€€ã‚³ãƒ¢ãƒ³ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ä½¿ã†é“ã¯ã€å¿˜ã‚Œã‚‹ã‹è«¦ã‚ã‚‹ã®ãŒå¥½ã¾ã—ã„ï¼ˆ2022/10/12ï¼‰
+			//ã€€æœ€é©è§£ï¼šã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ã§ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒ‰ãƒ­ãƒƒãƒ—ã—ã‚ã¨åˆ©ç”¨è€…ã«ä¼ãˆã‚‹
+			//ã€€ç›¸äº’é‹ç”¨æ©Ÿèƒ½ã«é ¼ã‚‹ï¼ˆ2022/10/15ï¼‰
 			var pApp = Application.Current as App;
 			var pOpenPicker = PickerHelper.NewFileOpenPicker(pApp.m_pWindow);
 
@@ -117,12 +118,12 @@ namespace Arteria_s.App.RoughCA
 			pOpenPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
 			pOpenPicker.FileTypeFilter.Add(".csv");
 			pOpenPicker.FileTypeFilter.Add("*");
-			//@FileTypeFilter‚ÌƒŠƒXƒg‚©‚ç‰Šú•\¦‚Ég‚¤ƒtƒBƒ‹ƒ^[‚ğ‘I‘ğ‚·‚é•û–@‚Í–¢À‘•i2023/01/22j
+			//ã€€FileTypeFilterã®ãƒªã‚¹ãƒˆã‹ã‚‰åˆæœŸè¡¨ç¤ºã«ä½¿ã†ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’é¸æŠã™ã‚‹æ–¹æ³•ã¯æœªå®Ÿè£…ï¼ˆ2023/01/22ï¼‰
 
-			// 2023/01/22@ChatGPT Suggestion is follow.
+			// 2023/01/22ã€€ChatGPT Suggestion is follow.
 			// pOpenPicker.SuggestedFileType = ".csv";
 			// pOpenPicker.SuggestedFileType = pOpenPicker.FileTypeFilter[1];
-			//@‚¢‚â—‘z“I‚ÈÀ‘•‚Í‚»‚¤‚¾‚¯‚ÇA‚»‚êiSuggestedFileTypej‚ªÀ‘•‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚Å‚·‚æc
+			//ã€€ã„ã‚„ç†æƒ³çš„ãªå®Ÿè£…ã¯ãã†ã ã‘ã©ã€ãã‚Œï¼ˆSuggestedFileTypeï¼‰ãŒå®Ÿè£…ã•ã‚Œã¦ã„ãªã„ã®ã§ã™ã‚ˆâ€¦
 
 			StorageFile file = await pOpenPicker.PickSingleFileAsync();
 			if (file != null)
@@ -137,9 +138,9 @@ namespace Arteria_s.App.RoughCA
 
 		private async void BrowseRootCACrt_Click(object sender, RoutedEventArgs e)
 		{
-			//@ƒRƒ‚ƒ“ƒ_ƒCƒAƒƒO‚ğg‚¤“¹‚ÍA–Y‚ê‚é‚©’ú‚ß‚é‚Ì‚ªD‚Ü‚µ‚¢i2022/10/12j
-			//@Å“K‰ğFƒGƒNƒXƒvƒ[ƒ‰‚Åƒtƒ@ƒCƒ‹‚ğƒhƒƒbƒv‚µ‚ë‚Æ—˜—pÒ‚É“`‚¦‚é
-			//@‘ŠŒİ‰^—p‹@”\‚É—Š‚éi2022/10/15j
+			//ã€€ã‚³ãƒ¢ãƒ³ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ä½¿ã†é“ã¯ã€å¿˜ã‚Œã‚‹ã‹è«¦ã‚ã‚‹ã®ãŒå¥½ã¾ã—ã„ï¼ˆ2022/10/12ï¼‰
+			//ã€€æœ€é©è§£ï¼šã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ã§ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒ‰ãƒ­ãƒƒãƒ—ã—ã‚ã¨åˆ©ç”¨è€…ã«ä¼ãˆã‚‹
+			//ã€€ç›¸äº’é‹ç”¨æ©Ÿèƒ½ã«é ¼ã‚‹ï¼ˆ2022/10/15ï¼‰
 			var pApp = Application.Current as App;
 			var pOpenPicker = PickerHelper.NewFileOpenPicker(pApp.m_pWindow);
 
@@ -147,12 +148,12 @@ namespace Arteria_s.App.RoughCA
 			pOpenPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
 			pOpenPicker.FileTypeFilter.Add(".csv");
 			pOpenPicker.FileTypeFilter.Add("*");
-			//@FileTypeFilter‚ÌƒŠƒXƒg‚©‚ç‰Šú•\¦‚Ég‚¤ƒtƒBƒ‹ƒ^[‚ğ‘I‘ğ‚·‚é•û–@‚Í–¢À‘•i2023/01/22j
+			//ã€€FileTypeFilterã®ãƒªã‚¹ãƒˆã‹ã‚‰åˆæœŸè¡¨ç¤ºã«ä½¿ã†ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’é¸æŠã™ã‚‹æ–¹æ³•ã¯æœªå®Ÿè£…ï¼ˆ2023/01/22ï¼‰
 
-			// 2023/01/22@ChatGPT Suggestion is follow.
+			// 2023/01/22ã€€ChatGPT Suggestion is follow.
 			// pOpenPicker.SuggestedFileType = ".csv";
 			// pOpenPicker.SuggestedFileType = pOpenPicker.FileTypeFilter[1];
-			//@‚¢‚â—‘z“I‚ÈÀ‘•‚Í‚»‚¤‚¾‚¯‚ÇA‚»‚êiSuggestedFileTypej‚ªÀ‘•‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚Å‚·‚æc
+			//ã€€ã„ã‚„ç†æƒ³çš„ãªå®Ÿè£…ã¯ãã†ã ã‘ã©ã€ãã‚Œï¼ˆSuggestedFileTypeï¼‰ãŒå®Ÿè£…ã•ã‚Œã¦ã„ãªã„ã®ã§ã™ã‚ˆâ€¦
 
 			StorageFile file = await pOpenPicker.PickSingleFileAsync();
 			if (file != null)
@@ -168,9 +169,9 @@ namespace Arteria_s.App.RoughCA
 
 		private async void BrowseClientKey_Click(object sender, RoutedEventArgs e)
 		{
-			//@ƒRƒ‚ƒ“ƒ_ƒCƒAƒƒO‚ğg‚¤“¹‚ÍA–Y‚ê‚é‚©’ú‚ß‚é‚Ì‚ªD‚Ü‚µ‚¢i2022/10/12j
-			//@Å“K‰ğFƒGƒNƒXƒvƒ[ƒ‰‚Åƒtƒ@ƒCƒ‹‚ğƒhƒƒbƒv‚µ‚ë‚Æ—˜—pÒ‚É“`‚¦‚é
-			//@‘ŠŒİ‰^—p‹@”\‚É—Š‚éi2022/10/15j
+			//ã€€ã‚³ãƒ¢ãƒ³ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ä½¿ã†é“ã¯ã€å¿˜ã‚Œã‚‹ã‹è«¦ã‚ã‚‹ã®ãŒå¥½ã¾ã—ã„ï¼ˆ2022/10/12ï¼‰
+			//ã€€æœ€é©è§£ï¼šã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ã§ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒ‰ãƒ­ãƒƒãƒ—ã—ã‚ã¨åˆ©ç”¨è€…ã«ä¼ãˆã‚‹
+			//ã€€ç›¸äº’é‹ç”¨æ©Ÿèƒ½ã«é ¼ã‚‹ï¼ˆ2022/10/15ï¼‰
 			var pApp = Application.Current as App;
 			var pOpenPicker = PickerHelper.NewFileOpenPicker(pApp.m_pWindow);
 
@@ -178,12 +179,12 @@ namespace Arteria_s.App.RoughCA
 			pOpenPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
 			pOpenPicker.FileTypeFilter.Add(".csv");
 			pOpenPicker.FileTypeFilter.Add("*");
-			//@FileTypeFilter‚ÌƒŠƒXƒg‚©‚ç‰Šú•\¦‚Ég‚¤ƒtƒBƒ‹ƒ^[‚ğ‘I‘ğ‚·‚é•û–@‚Í–¢À‘•i2023/01/22j
+			//ã€€FileTypeFilterã®ãƒªã‚¹ãƒˆã‹ã‚‰åˆæœŸè¡¨ç¤ºã«ä½¿ã†ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’é¸æŠã™ã‚‹æ–¹æ³•ã¯æœªå®Ÿè£…ï¼ˆ2023/01/22ï¼‰
 
-			// 2023/01/22@ChatGPT Suggestion is follow.
+			// 2023/01/22ã€€ChatGPT Suggestion is follow.
 			// pOpenPicker.SuggestedFileType = ".csv";
 			// pOpenPicker.SuggestedFileType = pOpenPicker.FileTypeFilter[1];
-			//@‚¢‚â—‘z“I‚ÈÀ‘•‚Í‚»‚¤‚¾‚¯‚ÇA‚»‚êiSuggestedFileTypej‚ªÀ‘•‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚Å‚·‚æc
+			//ã€€ã„ã‚„ç†æƒ³çš„ãªå®Ÿè£…ã¯ãã†ã ã‘ã©ã€ãã‚Œï¼ˆSuggestedFileTypeï¼‰ãŒå®Ÿè£…ã•ã‚Œã¦ã„ãªã„ã®ã§ã™ã‚ˆâ€¦
 
 			StorageFile file = await pOpenPicker.PickSingleFileAsync();
 			if (file != null)
@@ -208,7 +209,8 @@ namespace Arteria_s.App.RoughCA
 				return;
 			}
 			var pApp = App.Current as RoughCA.App;
-			var bResult = pApp.m_pProfile.Save();
+			var pDbParams = pApp.m_pDbParams;
+			var bResult = pApp.m_pProfile.Save(pDbParams);
 		}
 
 		public void IsWriteable(bool? bWriteable)

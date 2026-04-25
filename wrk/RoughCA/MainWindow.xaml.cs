@@ -1,4 +1,4 @@
-using Microsoft.UI.Xaml;
+ï»¿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Diagnostics;
@@ -22,17 +22,17 @@ namespace Arteria_s.App.RoughCA
 			var pApp = App.Current as RoughCA.App;
 			if (pApp.m_pPrepareFlags.bExistDbParams == false)
 			{
-				//@İ’èî•ñiÚ‘±î•ñ“ü—Í‰æ–Êj‚É‘JˆÚ
+				//ã€€è¨­å®šæƒ…å ±ï¼ˆæ¥ç¶šæƒ…å ±å…¥åŠ›ç”»é¢ï¼‰ã«é·ç§»
 				TransitPage("Settings");
 			}
 			else if (pApp.m_pPrepareFlags.bExistOrgProfile == false)
 			{
-				//@İ’èî•ñiÚ‘±î•ñ“ü—Í‰æ–Êj‚É‘JˆÚ
+				//ã€€è¨­å®šæƒ…å ±ï¼ˆæ¥ç¶šæƒ…å ±å…¥åŠ›ç”»é¢ï¼‰ã«é·ç§»
 				TransitPage("Settings");
 			}
 			else
 			{
-				//@Šù’è‚Ì‰Šú‰æ–Ê‚É‘JˆÚ
+				//ã€€æ—¢å®šã®åˆæœŸç”»é¢ã«é·ç§»
 				TransitPage("ListupCertificate");
 			}
 			this.MessageFrame.Navigate(typeof(MessagesPage));

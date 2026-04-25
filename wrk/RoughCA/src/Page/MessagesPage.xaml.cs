@@ -1,4 +1,4 @@
-using Arteria_s.DB;
+ï»¿using Arteria_s.DB;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.ObjectModel;
@@ -9,17 +9,17 @@ using System.Collections.ObjectModel;
 namespace Arteria_s.App.RoughCA
 {
 	/// <summary>
-	/// —˜—pÒŒü‚¯ƒƒbƒZ[ƒW
+	/// åˆ©ç”¨è€…å‘ã‘ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
 	/// </summary>
 	public class Message : Data
 	{
-		public AppFacility	Facility;	//@•ª—Ş
-		public DateTime		CreateAt;	//@“ú
-		public string		DateAt;		//@
-		public string		TimeAt;		//@
-		public string		Text;		//@ƒƒbƒZ[ƒW
-		public string		Which;		//@‘ÎÛ‚Ì¯•Êq
-		public string		Where;      //@‘ÎÛ‚ÌêŠ
+		public AppFacility	Facility;	//ã€€åˆ†é¡
+		public DateTime		CreateAt;	//ã€€æ—¥æ™‚
+		public string		DateAt;		//ã€€
+		public string		TimeAt;		//ã€€
+		public string		Text;		//ã€€ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
+		public string		Which;		//ã€€å¯¾è±¡ã®è­˜åˆ¥å­
+		public string		Where;      //ã€€å¯¾è±¡ã®å ´æ‰€
 
 		public Message(AppFacility eFacility, string pText, string pWhich, string pWhere = null)
 		{
@@ -54,14 +54,14 @@ namespace Arteria_s.App.RoughCA
 #if ENABLE_TRACE
 			for (var i = 0; i < 12; i++)
 			{
-				var pMessage = new Message("ERROR", "ƒGƒ‰[‚Å‚·BƒTƒ“ƒvƒ‹•¶š—ñ");
+				var pMessage = new Message("ERROR", "ã‚¨ãƒ©ãƒ¼ã§ã™ã€‚ã‚µãƒ³ãƒ—ãƒ«æ–‡å­—åˆ—");
 				pMessage.Text += string.Format("{0}", i);
 				m_pMessages.Insert(0, pMessage);
 			}
 #endif
 		}
 
-		//@—˜—pÒŒü‚¯ƒƒbƒZ[ƒW‚ğ’Ç‰Á
+		//ã€€åˆ©ç”¨è€…å‘ã‘ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¿½åŠ 
 		public void	AddMessage(AppFacility eFacility, string pText, string pWhich, string pWhere)
 		{
 			var pMessage = new Message(eFacility, pText, pWhich, pWhere);

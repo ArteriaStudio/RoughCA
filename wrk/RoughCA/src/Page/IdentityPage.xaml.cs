@@ -23,6 +23,14 @@ namespace Arteria_s.App.RoughCA
 
 			var m_pCertsStock = Authority.Instance;
 			m_pOrgProfile = m_pCertsStock.m_pOrgProfile;
+			if (m_pOrgProfile == null ) {
+				m_pOrgProfile = new OrgProfile();
+			}
+
+			var pApp = App.Current as RoughCA.App;
+			var pDbParams = pApp.m_pDbParams;
+			m_pOrgProfile.TrustName = pDbParams.TrustName;
+			m_pOrgProfile.IssueName = pDbParams.IssueName;
 		}
 
 		//　TODO: データオブジェクト側に検査処理を寄せること
@@ -65,10 +73,18 @@ namespace Arteria_s.App.RoughCA
 			{
 				return (false);
 			}
+			if (IsNotNull(TrustName.Text) == false)
+			{
+				return (false);
+			}
+			if (IsNotNull(IssueName.Text) == false)
+			{
+				return (false);
+			}
 
 			return (true);
 		}
-
+/*
 		private void Save_Click(object sender, RoutedEventArgs e)
 		{
 			if (Validate() == false)
@@ -77,9 +93,10 @@ namespace Arteria_s.App.RoughCA
 			}
 
 			var pApp = App.Current as RoughCA.App;
-			pApp.SaveOrgProfile();
+			DbParams m_pDbParams;
+			pApp.SaveOrgProfile(m_pDbParams);
 		}
-
+*/
 
 		private void Settings_TextChanged(object sender, TextChangedEventArgs e)
 		{
@@ -108,7 +125,20 @@ namespace Arteria_s.App.RoughCA
 			}
 
 			var pApp = App.Current as RoughCA.App;
-			pApp.SaveOrgProfile();
+			var pDbParams = pApp.m_pDbParams;
+/*
+			pDbParams.HostName
+			pDbParams.InstanceName
+			pDbParams.SchemaName
+			pDbParams.ClientKey
+			pDbParams.ClientCrt
+			pDbParams.TrustCrt
+			pDbParams.IdentityName
+*/
+			pDbParams.TrustName = TrustName.Text;
+			pDbParams.IssueName = IssueName.Text;
+
+			pApp.SaveOrgProfile(pDbParams);
 		}
 
 		public void IsWriteable(bool? bWriteable)
@@ -117,6 +147,8 @@ namespace Arteria_s.App.RoughCA
 			{
 				return;
 			}
+			TrustName.IsReadOnly     = !bWriteable.Value;
+			IssueName.IsReadOnly     = !bWriteable.Value;
 			OrgName.IsReadOnly       = !bWriteable.Value;
 			OrgUnitName.IsReadOnly   = !bWriteable.Value;
 			LocalityName.IsReadOnly  = !bWriteable.Value;
@@ -139,10 +171,11 @@ namespace Arteria_s.App.RoughCA
 			var pApp        = App.Current as RoughCA.App;
 			var pWindow     = pApp.m_pWindow as MainWindow;
 			var pProfile    = pApp.m_pProfile;
+			var pDbParams   = pApp.m_pDbParams;
 			var pSQLContext = pApp.GetSQLContext();
 			var pAuthority  = Authority.Instance;
 
-			if (pAuthority.CreateForDemand(pSQLContext, pProfile.m_pDbParams.IdentityName) == false)
+			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.IdentityName) == false)
 			{
 				//　エラー
 				;

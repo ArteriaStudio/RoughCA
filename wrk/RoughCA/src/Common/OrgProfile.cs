@@ -12,6 +12,8 @@ namespace Arteria_s.App.RoughCA
 		{
 			OrgKey = 0;
 		}
+		public string TrustName { get; set; }	//　ルート認証局名
+		public string IssueName { get; set; }	//　発行認証局名
 		public long OrgKey { get; set; }
 		public string OrgName { get; set; }
 		public string OrgUnitName { get; set; }

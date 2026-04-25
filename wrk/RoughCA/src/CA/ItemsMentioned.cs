@@ -7,10 +7,11 @@ namespace Arteria_s.App.RoughCA
 	public enum CertificateType
 	{
 		Unknown,
+		Demand,
 		CA,
 		Server,
 		Client,
-		Demand,
+		RemoteDesktopListener,
 	}
 
 	public class RoughCA_Const

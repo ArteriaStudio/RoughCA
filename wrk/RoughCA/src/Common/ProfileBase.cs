@@ -26,7 +26,8 @@ namespace Arteria_s.App.RoughCA
 		{
 			try
 			{
-				pCommand.CommandText = "SELECT Revision FROM LayoutVersion;";
+				pCommand.CommandText = "PRAGMA user_version";
+//				pCommand.CommandText = "SELECT Revision FROM LayoutVersion;";
 				using (var pReader = pCommand.ExecuteReader())
 				{
 					while (pReader.Read())

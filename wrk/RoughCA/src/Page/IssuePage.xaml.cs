@@ -1,4 +1,4 @@
-using Arteria_s.DB;
+ï»¿using Arteria_s.DB;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -59,7 +59,7 @@ namespace Arteria_s.App.RoughCA
 			UpdateFormState();
 		}
 
-		//@ƒtƒH[ƒ€‚Ì“ü—Í’l‚ğŒŸ¸
+		//ã€€ãƒ•ã‚©ãƒ¼ãƒ ã®å…¥åŠ›å€¤ã‚’æ¤œæŸ»
 		private bool IsValidForm()
 		{
 			bool IsEnabled = true;
@@ -74,7 +74,7 @@ namespace Arteria_s.App.RoughCA
 			}
 			else
 			{
-				//@ƒT[ƒoØ–¾‘
+				//ã€€ã‚µãƒ¼ãƒè¨¼æ˜æ›¸
 				if (CertificateType.SelectedIndex == 0)
 				{
 					if (Data.IsValidFQDN(HostName.Text) == false)
@@ -82,7 +82,7 @@ namespace Arteria_s.App.RoughCA
 						IsEnabled = false;
 					}
 				}
-				//@ƒ[ƒ‹Ø–¾‘
+				//ã€€ãƒ¡ãƒ¼ãƒ«è¨¼æ˜æ›¸
 				else if (CertificateType.SelectedIndex == 1)
 				{
 					if (Data.IsValidMail(MailAddress.Text) == false)
@@ -90,7 +90,7 @@ namespace Arteria_s.App.RoughCA
 						IsEnabled = false;
 					}
 				}
-				//@ƒfƒXƒNƒgƒbƒvÚ‘±ƒŠƒXƒi[Ø–¾‘
+				//ã€€ãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—æ¥ç¶šãƒªã‚¹ãƒŠãƒ¼è¨¼æ˜æ›¸
 				else if (CertificateType.SelectedIndex == 2)
 				{
 					if (Data.IsValidFQDN(HostName.Text) == false)
@@ -106,7 +106,7 @@ namespace Arteria_s.App.RoughCA
 						IsEnabled = false;
 					}
 				}
-				//@–¼—v‹
+				//ã€€ç½²åè¦æ±‚
 				else if (CertificateType.SelectedIndex == 3)
 				{
 					if (Data.IsValidFQDN(HostName.Text) == false)
@@ -144,21 +144,21 @@ namespace Arteria_s.App.RoughCA
 			switch (CertificateType.SelectedIndex)
 			{
 			case 0:
-				//@ƒT[ƒo[Ø–¾‘‚Éƒ[ƒ‹ƒAƒhƒŒƒX‚Í•s—v
+				//ã€€ã‚µãƒ¼ãƒãƒ¼è¨¼æ˜æ›¸ã«ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã¯ä¸è¦
 				CommonName.IsEnabled  = true;
 				HostName.IsEnabled    = true;
 				MailAddress.IsEnabled = false;
 				NetAddress.IsEnabled  = false;
 				break;
 			case 1:
-				//@ƒNƒ‰ƒCƒAƒ“ƒgØ–¾‘‚ÉFQDN‚Í•s—v
+				//ã€€ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆè¨¼æ˜æ›¸ã«FQDNã¯ä¸è¦
 				CommonName.IsEnabled  = true;
 				HostName.IsEnabled    = false;
 				MailAddress.IsEnabled = true;
 				NetAddress.IsEnabled  = false;
 				break;
 			case 2:
-				//@ƒŠƒ‚[ƒgƒfƒXƒNƒgƒbƒvÚ‘±ƒŠƒXƒi[Ø–¾‘‚Éƒ[ƒ‹ƒAƒhƒŒƒX‚Í•s—v
+				//ã€€ãƒªãƒ¢ãƒ¼ãƒˆãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—æ¥ç¶šãƒªã‚¹ãƒŠãƒ¼è¨¼æ˜æ›¸ã«ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã¯ä¸è¦
 				CommonName.IsEnabled  = true;
 				HostName.IsEnabled    = true;
 				MailAddress.IsEnabled = false;
@@ -173,7 +173,7 @@ namespace Arteria_s.App.RoughCA
 			}
 		}
 
-		//@Ø–¾‘”­sƒ{ƒ^ƒ“‚ğƒNƒŠƒbƒN
+		//ã€€è¨¼æ˜æ›¸ç™ºè¡Œãƒœã‚¿ãƒ³ã‚’ã‚¯ãƒªãƒƒã‚¯
 		private void IssueButton_Click(object sender, RoutedEventArgs e)
 		{
 			if (IsValidForm() == false)
@@ -191,20 +191,20 @@ namespace Arteria_s.App.RoughCA
 				switch (CertificateType.SelectedIndex)
 				{
 				case 0:
-					//@ƒT[ƒoØ–¾‘
+					//ã€€ã‚µãƒ¼ãƒè¨¼æ˜æ›¸
 					pAuthority.CreateForServer(pSQLContext, m_pForm.m_pCommonName, m_pForm.m_pHostName, false, true);
 					break;
 				case 1:
-					//@ƒ[ƒ‹Ø–¾‘
+					//ã€€ãƒ¡ãƒ¼ãƒ«è¨¼æ˜æ›¸
 					pAuthority.CreateForClient(pSQLContext, m_pForm.m_pCommonName, m_pForm.m_pMailAddress, false, true);
 					break;
 				case 2:
-					//@ƒŠƒ‚[ƒgƒfƒXƒNƒgƒbƒvÚ‘±ƒŠƒXƒi[Ø–¾‘
+					//ã€€ãƒªãƒ¢ãƒ¼ãƒˆãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—æ¥ç¶šãƒªã‚¹ãƒŠãƒ¼è¨¼æ˜æ›¸
 					pAuthority.CreateForRDSign(pSQLContext, m_pForm.m_pCommonName, m_pForm.m_pHostName, m_pForm.m_pNetAddress, false, true);
 					break;
 				}
 
-				pWindow.AddMessage(new Message(AppFacility.Complete, "Ø–¾‘‚ğ”­s‚µ‚Ü‚µ‚½B", m_pForm.m_pCommonName));
+				pWindow.AddMessage(new Message(AppFacility.Complete, "è¨¼æ˜æ›¸ã‚’ç™ºè¡Œã—ã¾ã—ãŸã€‚", m_pForm.m_pCommonName));
 			}
 			catch (AppException pException)
 			{
