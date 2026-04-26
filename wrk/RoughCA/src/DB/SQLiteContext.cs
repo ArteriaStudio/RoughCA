@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Arteria_s.DB.Base
@@ -318,14 +319,14 @@ namespace Arteria_s.DB.Base
 		}
 
 		//　シリアル番号を獲得
-		protected bool FetchSerialNumber(uint uAuthorityId, ref long SerialNumber)
+		protected bool FetchSerialNumber(uint uOrgKey, ref long SerialNumber)
 		{
-			var pSQL_SerialNumber = "SELECT SerialNumber FROM TOrgProfile WHERE AuthorityId = @AuthorityId";
+			var pSQL_SerialNumber = "SELECT SerialNumber FROM TOrgProfile WHERE OrgKey = @OrgKey";
 			using (var pCommand = m_pConnection.CreateCommand())
 			{
 				pCommand.CommandText = pSQL_SerialNumber;
 				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+				pCommand.Parameters.AddWithValue("OrgKey", (Int64)uOrgKey);
 				using (var pReader = pCommand.ExecuteReader())
 				{
 					while (pReader.Read())
@@ -338,14 +339,14 @@ namespace Arteria_s.DB.Base
 		}
 
 		//　シリアル番号を更新
-		protected bool UpdateSerialNumber(uint uAuthorityId, long lSerialNumber)
+		protected bool UpdateSerialNumber(uint uOrgKey, long lSerialNumber)
 		{
-			var pSQL_SerialNumber = "UPDATE TOrgProfile SET SerialNumber = @SerialNumber WHERE AuthorityId = @AuthorityId";
+			var pSQL_SerialNumber = "UPDATE TOrgProfile SET SerialNumber = @SerialNumber WHERE OrgKey = @OrgKey";
 			using (var pCommand = m_pConnection.CreateCommand())
 			{
 				pCommand.CommandText = pSQL_SerialNumber;
 				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+				pCommand.Parameters.AddWithValue("OrgKey", (Int64)uOrgKey);
 				pCommand.Parameters.AddWithValue("SerialNumber", (Int64)lSerialNumber);
 				pCommand.ExecuteNonQuery();
 			}
@@ -357,7 +358,7 @@ namespace Arteria_s.DB.Base
 			var status = true;
 			try
 			{
-				var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = CURRENT_TIMESTAMP WHERE OrgKey = @AuthorityId AND CommonName = @CommonName";
+				var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = CURRENT_TIMESTAMP WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
 				m_pConnection.Open();
 				using (var pCommand = m_pConnection.CreateCommand())
 				{
