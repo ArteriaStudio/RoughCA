@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Arteria_s.DB
 {
@@ -91,6 +93,21 @@ namespace Arteria_s.DB
 			}
 
 			return (true);
+		}
+
+		//　有効なCountryCodeであるかを検査
+		public static bool IsValidCountryCode(string code)
+		{
+			if (code?.Length != 2) return false;
+			try
+			{
+				var region = new RegionInfo(code.ToUpper());
+				return true;
+			}
+			catch (ArgumentException)
+			{
+				return false;
+			}
 		}
 
 		public abstract bool Validate();

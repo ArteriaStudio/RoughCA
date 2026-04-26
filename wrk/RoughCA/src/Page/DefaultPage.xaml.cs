@@ -165,7 +165,8 @@ namespace Arteria_s.App.RoughCA
 
 			//　DBコネクションにおいてトランザクジョンを開始
 			// ※ このトランザクションクラスは、リスナパタンでかなり使いやすい設計。
-			var pTransaction = pSQLContext.BeginTransaction();
+			pSQLContext.BeginTransaction();
+			//var pTransaction = pSQLContext.BeginTransaction();
 			try
 			{
 				//　選択された証明書データを獲得
@@ -177,9 +178,12 @@ namespace Arteria_s.App.RoughCA
 				}
 
 				//　証明書を失効する。
-				pAuthority.Revoke(pSQLContext, pCertificate);
+				var uAuthorityId = pAuthority.GetAuthorityId();
+				pSQLContext.Revoke(uAuthorityId, pCertificate.m_pItems.SerialNumber);
+				//pAuthority.Revoke(pSQLContext, pCertificate);
 
 				//　有効期限を延長した証明書を発行する。
+				//pSQLContext.Update(pCertificate);
 				pAuthority.Update(pSQLContext, pCertificate);
 
 				//　メモリ上のデータを更新する。
@@ -191,12 +195,14 @@ namespace Arteria_s.App.RoughCA
 						break;
 					}
 				}
-				pTransaction.Commit();
+				//pTransaction.Commit();
+				pSQLContext.Commit();
 				pWindow.AddMessage(new Message(AppFacility.Complete, "証明書の有効期限を延長しました。", pCertificate.m_pItems.CommonName));
 			}
 			catch (AppException pException)
 			{
-				pTransaction.Rollback();
+				//pTransaction.Rollback();
+				pSQLContext.Rollback();
 				pWindow.AddMessage(new Message(pException.m_eFacility, pException.GetText(), pException.GetParameter()));
 			}
 
@@ -262,7 +268,8 @@ namespace Arteria_s.App.RoughCA
 
 			//　DBコネクションにおいてトランザクジョンを開始
 			// ※ このトランザクションクラスは、リスナパタンでかなり使いやすい設計。
-			var pTransaction = pSQLContext.BeginTransaction();
+			//var pTransaction = pSQLContext.BeginTransaction();
+			pSQLContext.BeginTransaction();
 			try
 			{
 				//　選択された証明書データを獲得する。
@@ -274,7 +281,9 @@ namespace Arteria_s.App.RoughCA
 				}
 
 				//　証明書を失効する。
-				pAuthority.Revoke(pSQLContext, pCertificate);
+				var uAuthorityId = pAuthority.GetAuthorityId();
+				pSQLContext.Revoke(uAuthorityId, pCertificate.m_pItems.SerialNumber);
+				//pAuthority.Revoke(pSQLContext, pCertificate);
 
 				//　メモリ上のデータを更新する。
 				foreach (var pCert in m_pCertificates)
@@ -285,12 +294,14 @@ namespace Arteria_s.App.RoughCA
 						break;
 					}
 				}
-				pTransaction.Commit();
+				//pTransaction.Commit();
+				pSQLContext.Commit();
 				pWindow.AddMessage(new Message(AppFacility.Complete, "証明書を失効しました。", pCertificate.m_pItems.CommonName));
 			}
 			catch (Exception)
 			{
-				pTransaction.Rollback();
+				//pTransaction.Rollback();
+				pSQLContext.Rollback();
 			}
 			
 			return;
@@ -331,13 +342,16 @@ namespace Arteria_s.App.RoughCA
 			{
 				//　失効リストを生成する。
 				var iCrlDays = 128;
+				//var uAuthorityId = pAuthority.GetAuthorityId();
+				//var pBytes = pSQLContext.GenerateCRL(uAuthorityId, iCrlDays);
 				var pBytes = pAuthority.GenerateCRL(pSQLContext, iCrlDays);
 
 				//　ダウンロードフォルダにファイルを出力する。
 				var pExportFolder = System.Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads";
 				var pExportFilepath = pAuthority.ExportCRL(pExportFolder, pBytes);
 
-				pTransaction.Commit();
+				//pTransaction.Commit();
+				pSQLContext.Commit();
 
 				/*
 				//　
@@ -354,7 +368,8 @@ namespace Arteria_s.App.RoughCA
 			catch (Exception ex)
 			{
 				Debug.WriteLine(ex.ToString());
-				pTransaction.Rollback();
+				//pTransaction.Rollback();
+				pSQLContext.Rollback();
 			}
 
 			return;

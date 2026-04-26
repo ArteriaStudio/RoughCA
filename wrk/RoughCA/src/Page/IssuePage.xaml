@@ -37,6 +37,8 @@
 					<ComboBoxItem x:Uid="ServerCertificate" Tag="Server" Content="サーバー証明書" />
 					<ComboBoxItem x:Uid="ClientCertificate" Tag="Client" Content="クライアント証明書" />
 					<ComboBoxItem x:Uid="RDSignCertificate" Tag="RDSign" Content="リモートデスクトップリスナー証明書" />
+					<ComboBoxItem x:Uid="CACertificate"     Tag="CA"     Content="認証局証明書" />
+					<ComboBoxItem x:Uid="CodeCertificate"   Tag="Code"   Content="コード署名証明書" />
 				</ComboBox>
 			</StackPanel>
 			<TextBox x:Uid="CommonName"  x:Name="CommonName"  Grid.Column="0" Grid.Row="1" Margin="8, 8, 8, 8" Header="共通名" Text="{x:Bind m_pForm.m_pCommonName, Mode=TwoWay}"  PlaceholderText="証明書に記載する名前"  TextChanged="TextBox_TextChanged" />

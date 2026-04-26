@@ -24,7 +24,7 @@ namespace Arteria_s.App.RoughCA
 
 		public Certificate	m_pAuthorityItem;	//　認証局証明書
 
-		public bool Validate(SQLContext pSQLContext)
+		public bool Validate(VSQLContext pSQLContext)
 		{
 			if (m_pAuthorityItem == null)
 			{
@@ -42,7 +42,7 @@ namespace Arteria_s.App.RoughCA
 		private string		m_pAuthorityName;	//　認証局名
 
 		//　認証局の証明書と鍵を入力
-		public bool Load(SQLContext pSQLContext, string pIdentityName)
+		public bool Load(VSQLContext pSQLContext, string pIdentityName)
 		{
 			//　認証局識別子を作成
 			m_uAuthorityId = ConvertIdentity(pIdentityName);
@@ -51,7 +51,8 @@ namespace Arteria_s.App.RoughCA
 			//　組織プロファイルと認証局情報を入力
 			var iUserIdentity = 0;
 			m_pOrgProfile = new OrgProfile();
-			m_pOrgProfile.Load(pSQLContext, iUserIdentity);
+			pSQLContext.LoadOrgProfile(ref m_pOrgProfile, iUserIdentity);
+//			m_pOrgProfile.Load(pSQLContext, iUserIdentity);
 			if (m_pOrgProfile.Validate() == false)
 			{
 				;
@@ -89,7 +90,7 @@ namespace Arteria_s.App.RoughCA
 
 		//　サーバ証明書を生成する。
 		//　fOverWrite：同一のサブジェクトを持つ証明書があった場合に有効な証明書を当該証明書に差し替える。
-		public bool CreateForServer(SQLContext pSQLContext, string pCommonName, string pFQDN, bool fCA, bool fOverWrite)
+		public bool CreateForServer(VSQLContext pSQLContext, string pCommonName, string pFQDN, bool fCA, bool fOverWrite)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.CreateForServer(m_pOrgProfile, pCommonName, pFQDN, m_pAuthorityItem, fCA) == false)
@@ -104,7 +105,8 @@ namespace Arteria_s.App.RoughCA
 			{
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
-			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
+			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
+//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一のサブジェクトを持つ証明書が既に発行されている。
 				if (fOverWrite == false)
@@ -121,7 +123,7 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　メール証明書を生成する。
-		public bool CreateForClient(SQLContext pSQLContext, string pCommonName, string pMailAddress, bool fCA, bool fOverWrite)
+		public bool CreateForClient(VSQLContext pSQLContext, string pCommonName, string pMailAddress, bool fCA, bool fOverWrite)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.CreateForClient(m_pOrgProfile, pCommonName, pMailAddress, m_pAuthorityItem, fCA) == false)
@@ -136,7 +138,8 @@ namespace Arteria_s.App.RoughCA
 			{
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForClient, pCommonName));
 			}
-			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
+			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
+//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一のサブジェクトを持つ証明書が既に発行されている。
 				if (fOverWrite == false)
@@ -154,7 +157,7 @@ namespace Arteria_s.App.RoughCA
 
 		//　リモートデスクトップ接続リスナー証明書を生成する。
 		//　fOverWrite：同一のサブジェクトを持つ証明書があった場合に有効な証明書を当該証明書に差し替える。
-		public bool CreateForRDSign(SQLContext pSQLContext, string pCommonName, string pFQDN, string pNetAddress, bool fCA, bool fOverWrite)
+		public bool CreateForRDSign(VSQLContext pSQLContext, string pCommonName, string pFQDN, string pNetAddress, bool fCA, bool fOverWrite)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.CreateForRDSign(m_pOrgProfile, pCommonName, pFQDN, pNetAddress, m_pAuthorityItem, fCA) == false)
@@ -169,7 +172,8 @@ namespace Arteria_s.App.RoughCA
 			{
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
-			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
+			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
+//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一のサブジェクトを持つ証明書が既に発行されている。
 				if (fOverWrite == false)
@@ -187,7 +191,7 @@ namespace Arteria_s.App.RoughCA
 		
 
 		//　認証局署名要求を生成する。
-		public bool CreateForDemand(SQLContext pSQLContext, string pCommonName)
+		public bool CreateForDemand(VSQLContext pSQLContext, string pCommonName)
 		{
 			var pSignRequest = new SignRequest();
 			if (pSignRequest.CreateForRemand(m_pOrgProfile, pCommonName) == false)
@@ -214,7 +218,7 @@ namespace Arteria_s.App.RoughCA
 
 		//　CA証明書の署名要求に署名してCA証明書を作成する。
 		//　
-		public bool CreateForCACert(SQLContext pSQLContext, string pImportFilepath, bool fOverWrite)
+		public bool CreateForCACert(VSQLContext pSQLContext, string pImportFilepath, bool fOverWrite)
 		{
 			var pBytes = File.ReadAllBytes(pImportFilepath);
 
@@ -236,7 +240,8 @@ namespace Arteria_s.App.RoughCA
 				return (false);
 			}
 			//　認証局が発行した有効な証明書の中にサブジェクト名の重複がないことを検査
-			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
+			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
+//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一の共通名を持つ証明書が存在する。
 				if (fOverWrite == false)
@@ -254,7 +259,7 @@ namespace Arteria_s.App.RoughCA
 
 		//　サーバー証明書の署名要求に署名してサーバー証明書を作成する。
 		//　
-		public bool CreateForServerCert(SQLContext pSQLContext, string pImportFilepath, bool fOverWrite)
+		public bool CreateForServerCert(VSQLContext pSQLContext, string pImportFilepath, bool fOverWrite)
 		{
 			var pBytes = File.ReadAllBytes(pImportFilepath);
 
@@ -281,7 +286,8 @@ namespace Arteria_s.App.RoughCA
 				return (false);
 			}
 			//　認証局が発行した有効な証明書の中にサブジェクト名の重複がないことを検査
-			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
+			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
+//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一の共通名を持つ証明書が存在する。
 				if (fOverWrite == false)
@@ -298,7 +304,7 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　CA証明書をデータベースに登録する。
-		public bool ImportCertificate(SQLContext pSQLContext, string pImportFilepath)
+		public bool ImportCertificate(VSQLContext pSQLContext, string pImportFilepath)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.Import(pImportFilepath) == false)
@@ -324,7 +330,7 @@ namespace Arteria_s.App.RoughCA
 
 		// <summary>有効期限を延長した証明書を発行</summary>
 		// <param>pBaseCertificate：元にする証明書</param>
-		public bool Update(SQLContext pSQLContext, Certificate pBaseCertificate)
+		public bool Update(VSQLContext pSQLContext, Certificate pBaseCertificate)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.CreateForUpdate(m_pOrgProfile, pBaseCertificate, m_pAuthorityItem) == false)
@@ -367,135 +373,21 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　
-		public ObservableCollection<Certificate> Listup(SQLContext pSQLContext)
+		public ObservableCollection<Certificate> Listup(VSQLContext pSQLContext)
 		{
-			var pCertificates = new ObservableCollection<Certificate>();
-
-			var pSQL = "SELECT SequenceNumber, SerialNumber, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE AuthorityId = @AuthorityId AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND TypeOf <> @TypeOf;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)m_uAuthorityId);
-				pCommand.Parameters.AddWithValue("TypeOf", (int)CertificateType.Demand);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					while (pReader.Read())
-					{
-						var pCertificate = new Certificate();
-						pCertificate.m_pItems.SequenceNumber = pReader.GetInt64(0);
-						pCertificate.m_pItems.SerialNumber   = pReader.GetString(1);
-						pCertificate.m_pItems.CommonName     = pReader.GetString(2);
-						pCertificate.m_pItems.TypeOf         = (CertificateType)pReader.GetInt32(3);
-						pCertificate.m_pItems.Revoked        = pReader.GetBoolean(4);
-						pCertificate.m_pItems.LaunchAt       = pReader.GetDateTime(5);
-						pCertificate.m_pItems.ExpireAt       = pReader.GetDateTime(6);
-						pCertificate.m_pCrt                  = pReader.GetString(7);
-						pCertificate.m_pKey                  = pReader.GetString(8);
-						pCertificate.Prepare();
-						pCertificates.Add(pCertificate);
-					}
-					if (pCertificates.Count == 0)
-					{
-						return (null);
-					}
-				}
-			}
-
-			return (pCertificates);
+			return (pSQLContext.ListupCertificates(m_uAuthorityId));
 		}
 
 		//　<summary>シリアル番号で証明書を取得</summary>
-		public Certificate Fetch(SQLContext pSQLContext, string pSerialNumber)
+		public Certificate Fetch(VSQLContext pSQLContext, string pSerialNumber)
 		{
-			var pCertificate = new Certificate();
-
-			var pSQL = "SELECT SequenceNumber, SerialNumber, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE SerialNumber = @SerialNumber AND TypeOf <> @TypeOf;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("SerialNumber", pSerialNumber);
-				pCommand.Parameters.AddWithValue("TypeOf", (int)CertificateType.Demand);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					var iCount = 0;
-					while (pReader.Read())
-					{
-						pCertificate.m_pItems.SequenceNumber = pReader.GetInt64(0);
-						pCertificate.m_pItems.SerialNumber   = pReader.GetString(1);
-						pCertificate.m_pItems.CommonName     = pReader.GetString(2);
-						pCertificate.m_pItems.TypeOf         = (CertificateType)pReader.GetInt32(3);
-						pCertificate.m_pItems.Revoked        = pReader.GetBoolean(4);
-						pCertificate.m_pItems.LaunchAt       = pReader.GetDateTime(5);
-						pCertificate.m_pItems.ExpireAt       = pReader.GetDateTime(6);
-						pCertificate.m_pCrt                  = pReader.GetString(7);
-						pCertificate.m_pKey                  = pReader.GetString(8);
-						pCertificate.Prepare();
-						iCount ++;
-					}
-					if (iCount == 0)
-					{
-						return (null);
-					}
-				}
-			}
-
-			return (pCertificate);
+			return (pSQLContext.Fetch(pSerialNumber));
 		}
 
 		//　CRLを生成
-		public byte[] GenerateCRL(SQLContext pSQLContext, int iDays)
+		public byte[] GenerateCRL(VSQLContext pSQLContext, int iDays)
 		{
-			byte[]	pBytes;
-			var pBuilder = new CertificateRevocationListBuilder();
-
-			var pSQL = "SELECT SerialNumber, RevokeAt FROM TIssuedCerts WHERE Revoked = TRUE AND AuthorityId = @AuthorityId;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)m_uAuthorityId);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					while (pReader.Read())
-					{
-						var SerialNumber = Convert.FromHexString(pReader.GetString(0));
-						var RevokeAt     = pReader.GetDateTime(1);
-						pBuilder.AddEntry(SerialNumber, RevokeAt);
-					}
-				}
-			}
-
-			BigInteger iCRLNumber = 0;
-
-			//　CRL番号を取得
-			pSQL = "SELECT CRLNumber FROM TCounters;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					while (pReader.Read())
-					{
-						var pNumber = pReader.GetString(0);
-						iCRLNumber = BigInteger.Parse(pNumber, NumberStyles.HexNumber);
-						iCRLNumber ++;
-						break;
-					}
-				}
-				DateTimeOffset pNextUpdate = DateTimeOffset.Now.AddDays(iDays);
-				pBytes = pBuilder.Build(m_pAuthorityItem.m_pCertificate, iCRLNumber, pNextUpdate, HashAlgorithmName.SHA512);
-			}
-
-			//　CRLNumberのカウンタを更新
-			pSQL = "UPDATE TCounters SET CrlNumber = @CrlNumber;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				var pNumber = iCRLNumber.ToString("X");
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("CrlNumber", pNumber);
-				pCommand.ExecuteNonQuery();
-			}
-
-			return (pBytes);
+			return (pSQLContext.GenerateCRL(m_uAuthorityId, iDays, m_pAuthorityItem.m_pCertificate));
 		}
 
 		public string ExportCRL(string pExportFolder, byte[] pBytesOfCrl)
@@ -509,7 +401,13 @@ namespace Arteria_s.App.RoughCA
 		//　組織プロファイルを保存
 		public void SaveOrgProfile(SQLContext pSQLContext)
 		{
-			m_pOrgProfile.Save(pSQLContext);
+			pSQLContext.SaveOrgProfile(m_pOrgProfile);
+//			m_pOrgProfile.Save(pSQLContext);
+		}
+
+		public uint GetAuthorityId()
+		{
+			return (m_uAuthorityId);
 		}
 	}
 }

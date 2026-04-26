@@ -1,8 +1,10 @@
 ﻿using Arteria_s.DB.Base;
 using Microsoft.UI.Xaml;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -23,7 +25,7 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　環境の前提条件の状態を検査
-		public void Check(SQLContext pSQLContext, DbParams m_pDbParams, Authority pAuthority)
+		public void Check(VSQLContext pSQLContext, DbParams m_pDbParams, Authority pAuthority)
 		{
 			//　データベース接続情報が登録されているか？
 			if (m_pDbParams == null)
@@ -121,10 +123,28 @@ namespace Arteria_s.App.RoughCA
 			m_pDbParams = new DbParams();
 			m_pProfile.Load(ref m_pDbParams);
 
+			var pContexts = new SortedDictionary<string, VSQLContext>();
+			pContexts["Postgres"] = new SQLContext();
+			pContexts["SQLite"] = new SQLiteContext();
+
+
 			//　データベースインスタンスに接続
 			if (m_pDbParams.Validate() == true)
 			{
-				m_pSQLContext = new SQLContext(m_pDbParams.HostName, m_pDbParams.InstanceName, m_pDbParams.SchemaName, m_pDbParams.ClientKey, m_pDbParams.ClientCrt, m_pDbParams.TrustCrt);
+				//　データベース処理インスタンスを選択
+				if (m_pDbParams.DriverName.Equals("Postgres") == true)
+				{
+					m_pSQLContext = new SQLContext(m_pDbParams.HostName, m_pDbParams.InstanceName, m_pDbParams.SchemaName, m_pDbParams.ClientKey, m_pDbParams.ClientCrt, m_pDbParams.TrustCrt);
+				}
+				else if (m_pDbParams.DriverName.Equals("SQLite") == true)
+				{
+					m_pSQLContext = new SQLiteContext(m_pDbParams.HostName, m_pDbParams.InstanceName, m_pDbParams.SchemaName, m_pDbParams.ClientKey, m_pDbParams.ClientCrt, m_pDbParams.TrustCrt);
+				}
+				else
+				{
+					m_pSQLContext = null;
+				}
+				pContexts[m_pDbParams.DriverName] = m_pSQLContext;
 
 				m_pCertsStock = Authority.Instance;
 				m_pCertsStock.Load(m_pSQLContext, m_pDbParams.IdentityName);
@@ -142,7 +162,8 @@ namespace Arteria_s.App.RoughCA
 		{
 			if (m_pSQLContext != null)
 			{
-				m_pCertsStock.m_pOrgProfile.Save(m_pSQLContext);
+				m_pSQLContext.SaveOrgProfile(m_pCertsStock.m_pOrgProfile);
+//				m_pCertsStock.m_pOrgProfile.Save(m_pSQLContext);
 			}
 
 			//　
@@ -150,12 +171,12 @@ namespace Arteria_s.App.RoughCA
 			
 		}
 
-		public SQLContext	GetSQLContext()
+		public VSQLContext	GetSQLContext()
 		{
 			return (m_pSQLContext);
 		}
 
-		protected SQLContext m_pSQLContext;
+		protected VSQLContext	m_pSQLContext;
 
 		public Window m_pWindow;
 		public Profile m_pProfile;

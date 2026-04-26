@@ -33,112 +33,25 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　共通名が一致する証明書を入力
-		public bool Load(SQLContext pSQLContext, string pCommonName, uint uAuthorityId)
+		public bool Load(VSQLContext pSQLContext, string pCommonName, uint uAuthorityId)
 		{
-			//　共通名が一致する証明書を入力
-			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE CommonName = @CommonName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("CommonName", pCommonName);
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					int iCount = 0;
-					while (pReader.Read())
-					{
-						m_pItems.SequenceNumber = pReader.GetInt64(0);
-						m_pItems.SerialNumber   = pReader.GetString(1);
-						m_pItems.SubjectName    = pReader.GetString(2);
-						m_pItems.CommonName     = pReader.GetString(3);
-						m_pItems.TypeOf         = (CertificateType)pReader.GetInt32(4);
-						m_pItems.Revoked        = pReader.GetBoolean(5);
-						m_pItems.LaunchAt       = pReader.GetDateTime(6);
-						m_pItems.ExpireAt       = pReader.GetDateTime(7);
-						m_pCrt                  = pReader.GetString(8);
-						m_pKey                  = pReader.GetString(9);
-
-						iCount++;
-					}
-					if (iCount == 0)
-					{
-						return (false);
-					}
-				}
-			}
-			//if ((m_pItems.KeyData != null) && (m_pItems.KeyData.Length > 0))
-			if ((m_pKey != null) && (m_pKey.Length > 0))
-			{
-				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt, m_pKey);
-			}
-			else
-			{
-				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt);
-			}
-
-			return (true);
+			return (pSQLContext.LoadCertificate(pCommonName, uAuthorityId, ref m_pItems, ref m_pCrt, ref m_pKey, m_pCertificate));
 		}
 
 		//　
 		//　pKeyData：当該証明書に紐付く秘密鍵
-		public bool Save(SQLContext pSQLContext, uint uAuthorityId, string pKeyData = null)
+		public bool Save(VSQLContext pSQLContext, uint uAuthorityId, string pKeyData = null)
 		{
-			var status = true;
-
 			if (pKeyData != null)
 			{
 				m_pKey = pKeyData;
 			}
-
-			var pTransaction = pSQLContext.BeginTransaction();
-
-			try
-			{
-				var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
-				using (var pCommand = new NpgsqlCommand(pSQL_UPDATE, pSQLContext.m_pConnection))
-				{
-					pCommand.Parameters.Clear();
-					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-					pCommand.ExecuteNonQuery();
-				}
-
-				var pSQL = "INSERT INTO TIssuedCerts (AuthorityId, SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData)";
-				pSQL += " VALUES (@AuthorityId, NEXTVAL('SQ_REQTS'), @SerialNumber, @SubjectName, @CommonName, @TypeOf, FALSE, @LaunchAt, @ExpireAt, @PemData, @KeyData)";
-				pSQL += " ON CONFLICT ON CONSTRAINT tissuedcerts_pkey DO UPDATE SET";
-				pSQL += " SerialNumber = @SerialNumber, SubjectName = @SubjectName, CommonName = @CommonName, TypeOf = @TypeOf,";
-				pSQL += " LaunchAt = @LaunchAt, ExpireAt = @ExpireAt, PemData = @PemData, KeyData = @KeyData";
-				using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-				{
-					pCommand.Parameters.Clear();
-					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
-					pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
-					pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-					pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
-					pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt);
-					pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt);
-					pCommand.Parameters.AddWithValue("PemData", m_pCrt);
-					pCommand.Parameters.AddWithValue("KeyData", m_pKey);
-					pCommand.ExecuteNonQuery();
-				}
-
-				pTransaction.Commit();
-			}
-			catch (Exception ex)
-			{
-				pTransaction.Rollback();
-				Debug.WriteLine(ex);
-				status = false;
-			}
-
-			return (status);
+			return (pSQLContext.SaveCertificate(uAuthorityId, ref m_pItems, ref m_pCrt, ref m_pKey, m_pCertificate));
 		}
 
 		//　
 		//　pKeyData：当該証明書に紐付く秘密鍵
-		public bool Save2(SQLContext pSQLContext, uint uAuthorityId, string pKeyData = null)
+		public bool Save2(VSQLContext pSQLContext, uint uAuthorityId, string pKeyData = null)
 		{
 			var status = true;
 
@@ -149,35 +62,7 @@ namespace Arteria_s.App.RoughCA
 
 			try
 			{
-				var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
-				using (var pCommand = new NpgsqlCommand(pSQL_UPDATE, pSQLContext.m_pConnection))
-				{
-					pCommand.Parameters.Clear();
-					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-					pCommand.ExecuteNonQuery();
-				}
-
-				var pSQL = "INSERT INTO TIssuedCerts (AuthorityId, SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, LaunchAt, ExpireAt, PemData, KeyData)";
-				pSQL += " VALUES (@AuthorityId, NEXTVAL('SQ_REQTS'), @SerialNumber, @SubjectName, @CommonName, @TypeOf, @LaunchAt, @ExpireAt, @PemData, @KeyData)";
-				pSQL += " ON CONFLICT ON CONSTRAINT tissuedcerts_pkey DO UPDATE SET";
-				pSQL += " SerialNumber = @SerialNumber, SubjectName = @SubjectName, CommonName = @CommonName, TypeOf = @TypeOf,";
-				pSQL += " LaunchAt = @LaunchAt, ExpireAt = @ExpireAt, PemData = @PemData, KeyData = @KeyData";
-				using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-				{
-					pCommand.Parameters.Clear();
-					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
-					pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
-					pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-					pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
-					pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt);
-					pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt);
-					pCommand.Parameters.AddWithValue("PemData", m_pCrt);
-					pCommand.Parameters.AddWithValue("KeyData", m_pKey);
-					pCommand.ExecuteNonQuery();
-				}
+				status = pSQLContext.Save2(uAuthorityId, m_pItems, m_pCrt, m_pKey);
 			}
 			catch (Exception ex)
 			{
@@ -457,13 +342,13 @@ namespace Arteria_s.App.RoughCA
 
 			//　証明書記載情報の主要なものをキャッシュ
 			m_pItems.SequenceNumber = 0;
-			m_pItems.SerialNumber = m_pCertificate.SerialNumber;
-			m_pItems.SubjectName = m_pCertificate.SubjectName.Name;
-			m_pItems.CommonName = ItemsMentioned.GetDistinguishedValue("CN", m_pCertificate.SubjectName);
-			m_pItems.TypeOf = CertificateType.Server;
-			m_pItems.Revoked = false;
-			m_pItems.LaunchAt = m_pCertificate.NotBefore;
-			m_pItems.ExpireAt = m_pCertificate.NotAfter;
+			m_pItems.SerialNumber   = m_pCertificate.SerialNumber;
+			m_pItems.SubjectName    = m_pCertificate.SubjectName.Name;
+			m_pItems.CommonName     = ItemsMentioned.GetDistinguishedValue("CN", m_pCertificate.SubjectName);
+			m_pItems.TypeOf         = CertificateType.RemoteDesktopListener;
+			m_pItems.Revoked        = false;
+			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
+			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
 
 			//　証明書データをPEM 形式に変換して保管
 			m_pCrt = m_pCertificate.ExportCertificatePem();
@@ -544,7 +429,7 @@ namespace Arteria_s.App.RoughCA
 
 			return (true);
 		}
-
+		/*
 		//　有効な証明祖の中に同一のサブジェクト名を持つ要素が存在するか検査
 		protected bool IsExistSubject(SQLContext pSQLContext, string pSerialNumber, string pSubjectName, uint uAuthorityId)
 		{
@@ -571,34 +456,7 @@ namespace Arteria_s.App.RoughCA
 
 			return (true);
 		}
-
-		//　有効な証明祖の中に同一のサブジェクト名を持つ要素が存在するか検査
-		public bool IsExistSubject(SQLContext pSQLContext, uint uAuthorityId)
-		{
-			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName FROM TIssuedCerts WHERE SerialNumber <> @SerialNumber AND SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
-				pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					int iCount = 0;
-					while (pReader.Read())
-					{
-						iCount++;
-					}
-					if (iCount == 0)
-					{
-						return (false);
-					}
-				}
-			}
-
-			return (true);
-		}
-
+		*/
 		//　証明書データの有効性を検査
 		public bool	Validate()
 		{

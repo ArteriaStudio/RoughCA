@@ -2,6 +2,7 @@
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 
@@ -46,6 +47,21 @@ namespace Arteria_s.App.RoughCA
 			}
 			return (true);
 		}
+		//　有効なCountryCodeであるかを検査
+		public static bool IsValidCountryCode(string code)
+		{
+			if (code?.Length != 2) return false;
+			try
+			{
+				var region = new RegionInfo(code.ToUpper());
+				return true;
+			}
+			catch (ArgumentException)
+			{
+				return false;
+			}
+		}
+
 
 		private bool Validate()
 		{
@@ -66,6 +82,10 @@ namespace Arteria_s.App.RoughCA
 				return (false);
 			}
 			if (IsNotNull(CountryName.Text) == false)
+			{
+				return (false);
+			}
+			if (IsValidCountryCode(CountryName.Text) == false)
 			{
 				return (false);
 			}

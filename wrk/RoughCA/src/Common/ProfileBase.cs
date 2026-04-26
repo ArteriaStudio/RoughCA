@@ -6,7 +6,8 @@ namespace Arteria_s.App.RoughCA
 {
 	public abstract class ProfileBase
 	{
-		private static string m_pProfilePath = null;
+		protected string m_pProfilePath = null;
+		protected string m_pProfileFolderPath = null;
 
 		public ProfileBase(string pCompanyName, string pAppName)
 		{
@@ -14,12 +15,12 @@ namespace Arteria_s.App.RoughCA
 			System.Diagnostics.Debug.WriteLine("AppData: " + pAppDataFolder);
 
 			//　ユーザープロファイルのフォルダ名を生成
-			var pFolderPath = pAppDataFolder + "/" + pCompanyName + "/" + pAppName;
+			m_pProfileFolderPath = pAppDataFolder + "/" + pCompanyName + "/" + pAppName;
 
-			DirectoryHelper.CreateDirectorySafe(pFolderPath);
+			DirectoryHelper.CreateDirectorySafe(m_pProfileFolderPath);
 
 			//　ユーザープロファイルのパス名を生成
-			m_pProfilePath = pFolderPath + "/" + pAppName + ".db";
+			m_pProfilePath = m_pProfileFolderPath + "/" + pAppName + ".db";
 		}
 
 		protected virtual bool IsUpgradeLayout(SqliteCommand pCommand, long lRequireRevision)

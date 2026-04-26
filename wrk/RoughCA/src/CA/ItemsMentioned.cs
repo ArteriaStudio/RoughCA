@@ -7,21 +7,22 @@ namespace Arteria_s.App.RoughCA
 	public enum CertificateType
 	{
 		Unknown,
-		Demand,
-		CA,
-		Server,
-		Client,
-		RemoteDesktopListener,
+		CA, 						//　認証局証明書
+		Server, 					//　サーバー証明書
+		Client, 					//　クライアント証明書
+		Demand, 					//　署名要求
+		RemoteDesktopListener,		//　リモートデスクトップ接続リスナー
+		CodeSign,					//　コード署名
 	}
 
 	public class RoughCA_Const
 	{
 		//　EC（楕円曲線暗号）で用いるキー長。2015年からChromeium系は、P-521は非対応（2024/08/17）
 		public const int		ECDSAKEY_SIZE = 384;
-		public const string		CRT_EXTENSION = ".crt";
-		public const string		CSR_EXTENSION = ".csr";
-		public const string		KEY_EXTENSION = ".key";
-		public const string		CRL_EXTENSION = ".crl";
+		public const string 	CRT_EXTENSION = ".crt";
+		public const string 	CSR_EXTENSION = ".csr";
+		public const string 	KEY_EXTENSION = ".key";
+		public const string 	CRL_EXTENSION = ".crl";
 	};
 
 	public class ItemsMentioned

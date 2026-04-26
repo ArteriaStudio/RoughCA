@@ -66,109 +66,21 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　署名要求が存在するかを確認する。
-		public static bool IsExists(SQLContext pSQLContext, uint uAuthorityId, string pSubjectName, string pCommonName)
+		public static bool IsExists(VSQLContext pSQLContext, uint uAuthorityId, string pSubjectName, string pCommonName)
 		{
-			var pSQL = "SELECT SequenceNumber, SubjectName FROM TSignRequest WHERE SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("SubjectName", pSubjectName);
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					int iCount = 0;
-					while (pReader.Read())
-					{
-						iCount++;
-					}
-					if (iCount == 0)
-					{
-						return (false);
-					}
-				}
-			}
-
-			return (true);
+			return (pSQLContext.IsExists(uAuthorityId, pSubjectName, pCommonName));
 		}
 
 		//　署名要求が存在するかを確認する。
-		public bool Load(SQLContext pSQLContext, uint uAuthorityId, string pSubjectName)
+		public bool Load(VSQLContext pSQLContext, uint uAuthorityId, string pSubjectName)
 		{
-			var pSQL = "SELECT SequenceNumber, SubjectName, KeyData FROM TSignRequest WHERE SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("SubjectName", pSubjectName);
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					int iCount = 0;
-					while (pReader.Read())
-					{
-						m_pItems.SequenceNumber = pReader.GetInt64(0);
-						m_pItems.SubjectName    = pReader.GetString(1);
-						//m_pItems.KeyData        = pReader.GetString(2);
-						m_pKey                  = pReader.GetString(2);
-
-						iCount++;
-					}
-					if (iCount == 0)
-					{
-						return (false);
-					}
-				}
-			}
-
-			return (true);
+			return (pSQLContext.LoadSignRequest(uAuthorityId, pSubjectName, ref m_pKey, ref m_pItems));
 		}
 
 		//　
-		public bool Save(SQLContext pSQLContext, uint uAuthorityId)
+		public bool Save(VSQLContext pSQLContext, uint uAuthorityId)
 		{
-			var status = true;
-
-			var pTransaction = pSQLContext.BeginTransaction();
-
-			try
-			{
-				var pSQL_UPDATE = "UPDATE TSignRequest SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
-				using (var pCommand = new NpgsqlCommand(pSQL_UPDATE, pSQLContext.m_pConnection))
-				{
-					pCommand.Parameters.Clear();
-					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-					pCommand.ExecuteNonQuery();
-				}
-
-				var pSQL = "INSERT INTO TSignRequest (AuthorityId, SequenceNumber, SubjectName, CommonName, TypeOf, LaunchAt, ExpireAt, KeyData)";
-				pSQL += " VALUES (@AuthorityId, NEXTVAL('SQ_REQTS'), @SubjectName, @CommonName, @TypeOf, @LaunchAt, @ExpireAt, @KeyData)";
-				pSQL += " ON CONFLICT ON CONSTRAINT tsignrequest_pkey DO UPDATE SET";
-				pSQL += " SubjectName = @SubjectName, CommonName = @CommonName, TypeOf = @TypeOf,";
-				pSQL += " LaunchAt = @LaunchAt, ExpireAt = @ExpireAt, KeyData = @KeyData";
-				using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-				{
-					pCommand.Parameters.Clear();
-					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
-					pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-					pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
-					pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt);
-					pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt);
-					pCommand.Parameters.AddWithValue("KeyData", m_pKey);
-					pCommand.ExecuteNonQuery();
-				}
-
-				pTransaction.Commit();
-			}
-			catch (Exception ex)
-			{
-				pTransaction.Rollback();
-				Debug.WriteLine(ex);
-				status = false;
-			}
-
-			return (status);
+			return (pSQLContext.SaveSignRequest(uAuthorityId, m_pKey, m_pItems));
 		}
 
 		//　認証局署名要求を生成

@@ -1,6 +1,7 @@
 ﻿using Arteria_s.DB;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using static Arteria_s.App.RoughCA.CertInputForm;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -50,7 +51,14 @@ namespace Arteria_s.App.RoughCA
 	/// </summary>
 	public sealed partial class IssuePage : Page
 	{
-		CertInputForm	m_pForm = new CertInputForm();
+		const int CertificateTypeSelectIndex_Server = 0;
+		const int CertificateTypeSelectIndex_Client = 1;
+		const int CertificateTypeSelectIndex_RDSign = 2;
+//		const int CertificateTypeSelectIndex_Demand = 3;
+		const int CertificateTypeSelectIndex_CA     = 3;
+		const int CertificateTypeSelectIndex_Code   = 4;
+
+		CertInputForm m_pForm = new CertInputForm();
 
 		public IssuePage()
 		{
@@ -75,7 +83,7 @@ namespace Arteria_s.App.RoughCA
 			else
 			{
 				//　サーバ証明書
-				if (CertificateType.SelectedIndex == 0)
+				if (CertificateType.SelectedIndex == CertificateTypeSelectIndex_Server)
 				{
 					if (Data.IsValidFQDN(HostName.Text) == false)
 					{
@@ -83,7 +91,7 @@ namespace Arteria_s.App.RoughCA
 					}
 				}
 				//　メール証明書
-				else if (CertificateType.SelectedIndex == 1)
+				else if (CertificateType.SelectedIndex == CertificateTypeSelectIndex_Client)
 				{
 					if (Data.IsValidMail(MailAddress.Text) == false)
 					{
@@ -91,7 +99,7 @@ namespace Arteria_s.App.RoughCA
 					}
 				}
 				//　デスクトップ接続リスナー証明書
-				else if (CertificateType.SelectedIndex == 2)
+				else if (CertificateType.SelectedIndex == CertificateTypeSelectIndex_RDSign)
 				{
 					if (Data.IsValidFQDN(HostName.Text) == false)
 					{
@@ -106,8 +114,20 @@ namespace Arteria_s.App.RoughCA
 						IsEnabled = false;
 					}
 				}
-				//　署名要求
-				else if (CertificateType.SelectedIndex == 3)
+				//　認証局署名
+				else if (CertificateType.SelectedIndex == CertificateTypeSelectIndex_CA)
+				{
+					if (Data.IsValidFQDN(HostName.Text) == false)
+					{
+						IsEnabled = false;
+					}
+					else if (Data.IsValidMail(MailAddress.Text) == false)
+					{
+						IsEnabled = false;
+					}
+				}
+				//　コード署名
+				else if (CertificateType.SelectedIndex == CertificateTypeSelectIndex_Code)
 				{
 					if (Data.IsValidFQDN(HostName.Text) == false)
 					{
@@ -143,21 +163,21 @@ namespace Arteria_s.App.RoughCA
 		{
 			switch (CertificateType.SelectedIndex)
 			{
-			case 0:
+			case CertificateTypeSelectIndex_Server:
 				//　サーバー証明書にメールアドレスは不要
 				CommonName.IsEnabled  = true;
 				HostName.IsEnabled    = true;
 				MailAddress.IsEnabled = false;
 				NetAddress.IsEnabled  = false;
 				break;
-			case 1:
+			case CertificateTypeSelectIndex_Client:
 				//　クライアント証明書にFQDNは不要
 				CommonName.IsEnabled  = true;
 				HostName.IsEnabled    = false;
 				MailAddress.IsEnabled = true;
 				NetAddress.IsEnabled  = false;
 				break;
-			case 2:
+			case CertificateTypeSelectIndex_RDSign:
 				//　リモートデスクトップ接続リスナー証明書にメールアドレスは不要
 				CommonName.IsEnabled  = true;
 				HostName.IsEnabled    = true;
