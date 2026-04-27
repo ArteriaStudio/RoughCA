@@ -147,7 +147,7 @@ namespace Arteria_s.App.RoughCA
 				pContexts[m_pDbParams.DriverName] = m_pSQLContext;
 
 				m_pCertsStock = Authority.Instance;
-				m_pCertsStock.Load(m_pSQLContext, m_pDbParams.IdentityName);
+				m_pCertsStock.Load(m_pSQLContext, m_pDbParams.IdentityName, m_pDbParams.uInstance);
 			}
 			m_pPrepareFlags = new PrepareFlags();
 			m_pPrepareFlags.Check(m_pSQLContext, m_pDbParams, m_pCertsStock);

@@ -195,7 +195,7 @@ namespace Arteria_s.App.RoughCA
 			var pSQLContext = pApp.GetSQLContext();
 			var pAuthority  = Authority.Instance;
 
-			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.IdentityName) == false)
+			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pDbParams.IdentityName) == false)
 			{
 				//　エラー
 				;
@@ -220,7 +220,8 @@ namespace Arteria_s.App.RoughCA
 				var pSQLContext = pApp.GetSQLContext();
 				//　署名された証明書を入力する。
 				var pAuthority = Authority.Instance;
-				if (pAuthority.ImportCertificate(pSQLContext, pFile.Path) == false)
+				var pDbParams = pApp.m_pDbParams;
+				if (pAuthority.ImportCertificate(pSQLContext, pDbParams.uInstance, pFile.Path) == false)
 				{
 					//　エラー
 					;

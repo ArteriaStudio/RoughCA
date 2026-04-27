@@ -78,7 +78,7 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　
-		public bool Save(VSQLContext pSQLContext, uint uAuthorityId)
+		public bool Save(VSQLContext pSQLContext, uint uInstance, uint uAuthorityId)
 		{
 			return (pSQLContext.SaveSignRequest(uAuthorityId, m_pKey, m_pItems));
 		}

@@ -194,7 +194,7 @@ namespace Arteria_s.DB.Base
 			return (VariableValue);
 		}
 
-		public override bool LoadOrgProfile(ref OrgProfile pOrgProfile, int iUserIdentity)
+		public override bool LoadOrgProfile(ref OrgProfile pOrgProfile, uint uInstance)
 		{
 			m_pConnection.Open();
 			var pSQL = "SELECT OrgKey, OrgName, OrgUnitName, LocalityName, ProvinceName, CountryName, ServerName, SerialNumber, UpdateAt FROM TOrgProfile WHERE OrgKey = @OrgKey";
@@ -202,7 +202,7 @@ namespace Arteria_s.DB.Base
 			{
 				pCommand.CommandText = pSQL;
 				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("OrgKey", iUserIdentity);
+				pCommand.Parameters.AddWithValue("OrgKey", uInstance);
 				using (var pReader = pCommand.ExecuteReader())
 				{
 					while (pReader.Read())
@@ -296,6 +296,7 @@ namespace Arteria_s.DB.Base
 					}
 					if (iCount == 0)
 					{
+						Console.WriteLine("準正常系：認証局の証明書が未発行です。（The certificate from the certificate authority has not been issued.）");
 						return (false);
 					}
 				}
@@ -353,7 +354,7 @@ namespace Arteria_s.DB.Base
 			return (true);
 		}
 
-		public override bool SaveCertificate(uint uAuthorityId, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey, X509Certificate2 m_pCertificate)
+		public override bool SaveCertificate(uint uAuthorityId, uint uInstance, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey, X509Certificate2 m_pCertificate)
 		{
 			var status = true;
 			try
@@ -370,7 +371,7 @@ namespace Arteria_s.DB.Base
 				}
 
 				long uSerialNumber = 0;
-				if (FetchSerialNumber(uAuthorityId, ref uSerialNumber) == false)
+				if (FetchSerialNumber(uInstance, ref uSerialNumber) == false)
 				{
 					;
 				}
@@ -461,7 +462,7 @@ namespace Arteria_s.DB.Base
 			throw new System.NotImplementedException();
 		}
 
-		public override bool Save2(uint uAuthorityId, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
+		public override bool Save2(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
 		{
 			throw new System.NotImplementedException();
 		}

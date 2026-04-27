@@ -162,6 +162,7 @@ namespace Arteria_s.App.RoughCA
 			var pProfile = pApp.m_pProfile;
 			var pSQLContext = pApp.GetSQLContext();
 			var pAuthority = Authority.Instance;
+			var pDBParams = pApp.m_pDbParams;
 
 			//　DBコネクションにおいてトランザクジョンを開始
 			// ※ このトランザクションクラスは、リスナパタンでかなり使いやすい設計。
@@ -184,7 +185,7 @@ namespace Arteria_s.App.RoughCA
 
 				//　有効期限を延長した証明書を発行する。
 				//pSQLContext.Update(pCertificate);
-				pAuthority.Update(pSQLContext, pCertificate);
+				pAuthority.Update(pSQLContext, pDBParams.uInstance, pCertificate);
 
 				//　メモリ上のデータを更新する。
 				foreach (var pCert in m_pCertificates)
@@ -432,8 +433,9 @@ namespace Arteria_s.App.RoughCA
 				var pProfile = pApp.m_pProfile;
 				var pSQLContext = pApp.GetSQLContext();
 				var pAuthority = Authority.Instance;
+				var pDBParams = pApp.m_pDbParams;
 				var fOverWrite = true;
-				if (pAuthority.CreateForServerCert(pSQLContext, pFile.Path, fOverWrite) == false)
+				if (pAuthority.CreateForServerCert(pSQLContext, pDBParams.uInstance, pFile.Path, fOverWrite) == false)
 				{
 					;
 				}
@@ -459,9 +461,10 @@ namespace Arteria_s.App.RoughCA
 
 				var pProfile = pApp.m_pProfile;
 				var pSQLContext = pApp.GetSQLContext();
+				var pDBParams = pApp.m_pDbParams;
 				var pAuthority = Authority.Instance;
 				var fOverWrite = true;
-				if (pAuthority.CreateForCACert(pSQLContext, pFile.Path, fOverWrite) == false)
+				if (pAuthority.CreateForCACert(pSQLContext, pDBParams.uInstance, pFile.Path, fOverWrite) == false)
 				{
 					;
 				}

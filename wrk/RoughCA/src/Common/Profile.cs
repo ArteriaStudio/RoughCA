@@ -24,6 +24,7 @@ namespace Arteria_s.App.RoughCA
 			TrustName    = "";
 			IssueName    = "";
 			DriverName   = "";
+			uInstance    = 0;
 		}
 
 		[JsonPropertyName("UserIdentity")]
@@ -48,6 +49,8 @@ namespace Arteria_s.App.RoughCA
 		public string IssueName { get; set; }
 		[JsonPropertyName("DriverName")]
 		public string DriverName { get; set; }
+		[JsonPropertyName("uInstance")]
+		public uint uInstance { get; set; }
 
 		public override bool Validate()
 		{
@@ -154,6 +157,7 @@ namespace Arteria_s.App.RoughCA
 				m_pDbParams.IssueName    = "";
 				//m_pDbParams.DriverName   = "SQLite";
 				m_pDbParams.DriverName = "Postgres";
+				m_pDbParams.uInstance  = 0;
 			}
 
 			return (true);

@@ -42,16 +42,15 @@ namespace Arteria_s.App.RoughCA
 		private string		m_pAuthorityName;	//　認証局名
 
 		//　認証局の証明書と鍵を入力
-		public bool Load(VSQLContext pSQLContext, string pIdentityName)
+		public bool Load(VSQLContext pSQLContext, string pIdentityName, uint uInstance)
 		{
 			//　認証局識別子を作成
 			m_uAuthorityId = ConvertIdentity(pIdentityName);
 			m_pAuthorityName = pIdentityName;
 
 			//　組織プロファイルと認証局情報を入力
-			var iUserIdentity = 0;
 			m_pOrgProfile = new OrgProfile();
-			pSQLContext.LoadOrgProfile(ref m_pOrgProfile, iUserIdentity);
+			pSQLContext.LoadOrgProfile(ref m_pOrgProfile, uInstance);
 //			m_pOrgProfile.Load(pSQLContext, iUserIdentity);
 			if (m_pOrgProfile.Validate() == false)
 			{
@@ -78,7 +77,7 @@ namespace Arteria_s.App.RoughCA
 					{
 						return (false);
 					}
-					if (m_pAuthorityItem.Save(pSQLContext, m_uAuthorityId) == false)
+					if (m_pAuthorityItem.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 					{
 						return (false);
 					}
@@ -90,7 +89,7 @@ namespace Arteria_s.App.RoughCA
 
 		//　サーバ証明書を生成する。
 		//　fOverWrite：同一のサブジェクトを持つ証明書があった場合に有効な証明書を当該証明書に差し替える。
-		public bool CreateForServer(VSQLContext pSQLContext, string pCommonName, string pFQDN, bool fCA, bool fOverWrite)
+		public bool CreateForServer(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pFQDN, bool fCA, bool fOverWrite)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.CreateForServer(m_pOrgProfile, pCommonName, pFQDN, m_pAuthorityItem, fCA) == false)
@@ -114,7 +113,7 @@ namespace Arteria_s.App.RoughCA
 					throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 				}
 			}
-			if (pCertificate.Save(pSQLContext, m_uAuthorityId) == false)
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -123,7 +122,7 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　メール証明書を生成する。
-		public bool CreateForClient(VSQLContext pSQLContext, string pCommonName, string pMailAddress, bool fCA, bool fOverWrite)
+		public bool CreateForClient(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pMailAddress, bool fCA, bool fOverWrite)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.CreateForClient(m_pOrgProfile, pCommonName, pMailAddress, m_pAuthorityItem, fCA) == false)
@@ -147,7 +146,7 @@ namespace Arteria_s.App.RoughCA
 					throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForClient, pCommonName));
 				}
 			}
-			if (pCertificate.Save(pSQLContext, m_uAuthorityId) == false)
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForClient, pCommonName));
 			}
@@ -157,7 +156,7 @@ namespace Arteria_s.App.RoughCA
 
 		//　リモートデスクトップ接続リスナー証明書を生成する。
 		//　fOverWrite：同一のサブジェクトを持つ証明書があった場合に有効な証明書を当該証明書に差し替える。
-		public bool CreateForRDSign(VSQLContext pSQLContext, string pCommonName, string pFQDN, string pNetAddress, bool fCA, bool fOverWrite)
+		public bool CreateForRDSign(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pFQDN, string pNetAddress, bool fCA, bool fOverWrite)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.CreateForRDSign(m_pOrgProfile, pCommonName, pFQDN, pNetAddress, m_pAuthorityItem, fCA) == false)
@@ -181,7 +180,7 @@ namespace Arteria_s.App.RoughCA
 					throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 				}
 			}
-			if (pCertificate.Save(pSQLContext, m_uAuthorityId) == false)
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -191,7 +190,7 @@ namespace Arteria_s.App.RoughCA
 		
 
 		//　認証局署名要求を生成する。
-		public bool CreateForDemand(VSQLContext pSQLContext, string pCommonName)
+		public bool CreateForDemand(VSQLContext pSQLContext, uint uInstance, string pCommonName)
 		{
 			var pSignRequest = new SignRequest();
 			if (pSignRequest.CreateForRemand(m_pOrgProfile, pCommonName) == false)
@@ -206,7 +205,7 @@ namespace Arteria_s.App.RoughCA
 			{
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForClient, pCommonName));
 			}
-			if (pSignRequest.Save(pSQLContext, m_uAuthorityId) == false)
+			if (pSignRequest.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForClient, pCommonName));
 			}
@@ -218,7 +217,7 @@ namespace Arteria_s.App.RoughCA
 
 		//　CA証明書の署名要求に署名してCA証明書を作成する。
 		//　
-		public bool CreateForCACert(VSQLContext pSQLContext, string pImportFilepath, bool fOverWrite)
+		public bool CreateForCACert(VSQLContext pSQLContext, uint uInstance, string pImportFilepath, bool fOverWrite)
 		{
 			var pBytes = File.ReadAllBytes(pImportFilepath);
 
@@ -249,7 +248,7 @@ namespace Arteria_s.App.RoughCA
 					throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 				}
 			}
-			if (pCertificate.Save(pSQLContext, m_uAuthorityId) == false)
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -259,7 +258,7 @@ namespace Arteria_s.App.RoughCA
 
 		//　サーバー証明書の署名要求に署名してサーバー証明書を作成する。
 		//　
-		public bool CreateForServerCert(VSQLContext pSQLContext, string pImportFilepath, bool fOverWrite)
+		public bool CreateForServerCert(VSQLContext pSQLContext, uint uInstance, string pImportFilepath, bool fOverWrite)
 		{
 			var pBytes = File.ReadAllBytes(pImportFilepath);
 
@@ -295,7 +294,7 @@ namespace Arteria_s.App.RoughCA
 					throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 				}
 			}
-			if (pCertificate.Save(pSQLContext, m_uAuthorityId) == false)
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -304,7 +303,7 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　CA証明書をデータベースに登録する。
-		public bool ImportCertificate(VSQLContext pSQLContext, string pImportFilepath)
+		public bool ImportCertificate(VSQLContext pSQLContext, uint uInstance, string pImportFilepath)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.Import(pImportFilepath) == false)
@@ -320,7 +319,7 @@ namespace Arteria_s.App.RoughCA
 				//　該当する署名要求が存在しない。
 				return (false);
 			}
-			if (pCertificate.Save(pSQLContext, m_uAuthorityId, pSignRequest.m_pKey) == false)
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance, pSignRequest.m_pKey) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -330,7 +329,7 @@ namespace Arteria_s.App.RoughCA
 
 		// <summary>有効期限を延長した証明書を発行</summary>
 		// <param>pBaseCertificate：元にする証明書</param>
-		public bool Update(VSQLContext pSQLContext, Certificate pBaseCertificate)
+		public bool Update(VSQLContext pSQLContext, uint uInstance, Certificate pBaseCertificate)
 		{
 			var pCertificate = new Certificate();
 			if (pCertificate.CreateForUpdate(m_pOrgProfile, pBaseCertificate, m_pAuthorityItem) == false)
@@ -345,7 +344,7 @@ namespace Arteria_s.App.RoughCA
 			{
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForUpdate, pBaseCertificate.m_pItems.CommonName));
 			}
-			if (pCertificate.Save2(pSQLContext, m_uAuthorityId) == false)
+			if (pCertificate.Save2(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForUpdate, pBaseCertificate.m_pItems.CommonName));
 			}

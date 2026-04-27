@@ -66,13 +66,13 @@ namespace Arteria_s.DB.Base
 			return(new NpgsqlCommand(pSQL, m_pConnection));
 		}
 
-		public override bool LoadOrgProfile(ref OrgProfile pOrgProfile, int iUserIdentity)
+		public override bool LoadOrgProfile(ref OrgProfile pOrgProfile, uint uInstance)
 		{
 			var pSQL = "SELECT OrgKey, OrgName, OrgUnitName, LocalityName, ProvinceName, CountryName, ServerName, UpdateAt FROM TOrgProfile WHERE OrgKey = @OrgKey";
 			using (var pCommand = new NpgsqlCommand(pSQL, m_pConnection))
 			{
 				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("OrgKey", iUserIdentity);
+				pCommand.Parameters.AddWithValue("OrgKey", uInstance);
 				using (var pReader = pCommand.ExecuteReader())
 				{
 					while (pReader.Read())
@@ -266,7 +266,7 @@ namespace Arteria_s.DB.Base
 			return (true);
 		}
 
-		public override bool SaveCertificate(uint uAuthorityId, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey, X509Certificate2 m_pCertificate)
+		public override bool SaveCertificate(uint uAuthorityId, uint uInstance, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey, X509Certificate2 m_pCertificate)
 		{
 			var status = true;
 
@@ -466,7 +466,7 @@ namespace Arteria_s.DB.Base
 			return (pCertificate);
 		}
 
-		public override bool Save2(uint uAuthorityId, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
+		public override bool Save2(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
 		{
 			var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
 			using (var pCommand = new NpgsqlCommand(pSQL_UPDATE, m_pConnection))

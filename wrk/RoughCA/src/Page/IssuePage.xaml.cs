@@ -205,6 +205,7 @@ namespace Arteria_s.App.RoughCA
 			var pProfile = pApp.m_pProfile;
 			var pSQLContext = pApp.GetSQLContext();
 			var pAuthority = Authority.Instance;
+			var pDBParams = pApp.m_pDbParams;
 
 			try
 			{
@@ -212,15 +213,15 @@ namespace Arteria_s.App.RoughCA
 				{
 				case 0:
 					//　サーバ証明書
-					pAuthority.CreateForServer(pSQLContext, m_pForm.m_pCommonName, m_pForm.m_pHostName, false, true);
+					pAuthority.CreateForServer(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pHostName, false, true);
 					break;
 				case 1:
 					//　メール証明書
-					pAuthority.CreateForClient(pSQLContext, m_pForm.m_pCommonName, m_pForm.m_pMailAddress, false, true);
+					pAuthority.CreateForClient(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pMailAddress, false, true);
 					break;
 				case 2:
 					//　リモートデスクトップ接続リスナー証明書
-					pAuthority.CreateForRDSign(pSQLContext, m_pForm.m_pCommonName, m_pForm.m_pHostName, m_pForm.m_pNetAddress, false, true);
+					pAuthority.CreateForRDSign(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pHostName, m_pForm.m_pNetAddress, false, true);
 					break;
 				}
 

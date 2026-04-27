@@ -40,18 +40,18 @@ namespace Arteria_s.App.RoughCA
 
 		//　
 		//　pKeyData：当該証明書に紐付く秘密鍵
-		public bool Save(VSQLContext pSQLContext, uint uAuthorityId, string pKeyData = null)
+		public bool Save(VSQLContext pSQLContext, uint uAuthorityId, uint uInstance, string pKeyData = null)
 		{
 			if (pKeyData != null)
 			{
 				m_pKey = pKeyData;
 			}
-			return (pSQLContext.SaveCertificate(uAuthorityId, ref m_pItems, ref m_pCrt, ref m_pKey, m_pCertificate));
+			return (pSQLContext.SaveCertificate(uAuthorityId, uInstance, ref m_pItems, ref m_pCrt, ref m_pKey, m_pCertificate));
 		}
 
 		//　
 		//　pKeyData：当該証明書に紐付く秘密鍵
-		public bool Save2(VSQLContext pSQLContext, uint uAuthorityId, string pKeyData = null)
+		public bool Save2(VSQLContext pSQLContext, uint uAuthorityId, uint uInstance, string pKeyData = null)
 		{
 			var status = true;
 
@@ -62,7 +62,7 @@ namespace Arteria_s.App.RoughCA
 
 			try
 			{
-				status = pSQLContext.Save2(uAuthorityId, m_pItems, m_pCrt, m_pKey);
+				status = pSQLContext.Save2(uAuthorityId, uInstance, m_pItems, m_pCrt, m_pKey);
 			}
 			catch (Exception ex)
 			{
