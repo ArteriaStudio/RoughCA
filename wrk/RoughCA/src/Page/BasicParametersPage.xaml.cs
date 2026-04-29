@@ -230,9 +230,26 @@ namespace Arteria_s.App.RoughCA
 			BrowseClientKey.IsEnabled = bWriteable.Value;
 			BrowseClientCrt.IsEnabled = bWriteable.Value;
 			BrowseRootCACrt.IsEnabled = bWriteable.Value;
+			DBDrivers.IsEnabled       = bWriteable.Value;
 
 			m_bWriteable = bWriteable.Value;
 		}
 		private bool m_bWriteable = false;
+
+		private void DBDrivers_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (Varidate() == false)
+			{
+				//Save.IsEnabled = false;
+			}
+			else
+			{
+				if (m_bIsDirty == true)
+				{
+					//Save.IsEnabled = true;
+				}
+			}
+			m_bIsDirty = true;
+		}
 	}
 }

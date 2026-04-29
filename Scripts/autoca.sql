@@ -29,3 +29,8 @@ CREATE TABLE TOrgProfile (
 );
 
 CREATE TABLE TOrgProfile (OrgKey INTEGER NOT NULL, OrgName TEXT NOT NULL, OrgunitName TEXT NOT NULL, LocalityName TEXT NOT NULL, ProvinceName TEXT NOT NULL, CountryName TEXT NOT NULL, ServerName TEXT NOT NULL, UpdateAt TEXT NOT NULL, CONSTRAINT TOrgProfile_pkey PRIMARY KEY (OrgKey));
+
+CREATE TABLE TCounters (
+	CrlNumber TEXT NOT NULL
+);
+CREATE TABLE TCounters (CrlNumber TEXT NOT NULL);

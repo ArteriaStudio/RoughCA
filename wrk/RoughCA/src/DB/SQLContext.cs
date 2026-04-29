@@ -172,7 +172,7 @@ namespace Arteria_s.DB.Base
 		{
 			var status = true;
 
-			BeginTransaction();;
+			BeginTransaction();
 			//var pTransaction = BeginTransaction();
 
 			try
@@ -220,7 +220,7 @@ namespace Arteria_s.DB.Base
 		}
 
 		//　
-		public override bool LoadCertificate(string pCommonName, uint uAuthorityId, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey, X509Certificate2 m_pCertificate)
+		public override bool LoadCertificate(string pCommonName, uint uAuthorityId, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey)
 		{
 			//　共通名が一致する証明書を入力
 			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE CommonName = @CommonName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
@@ -253,6 +253,7 @@ namespace Arteria_s.DB.Base
 					}
 				}
 			}
+			/*
 			//if ((m_pItems.KeyData != null) && (m_pItems.KeyData.Length > 0))
 			if ((m_pKey != null) && (m_pKey.Length > 0))
 			{
@@ -262,11 +263,11 @@ namespace Arteria_s.DB.Base
 			{
 				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt);
 			}
-
+			*/
 			return (true);
 		}
 
-		public override bool SaveCertificate(uint uAuthorityId, uint uInstance, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey, X509Certificate2 m_pCertificate)
+		public override bool SaveCertificate(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
 		{
 			var status = true;
 
@@ -465,7 +466,7 @@ namespace Arteria_s.DB.Base
 
 			return (pCertificate);
 		}
-
+/*
 		public override bool Save2(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
 		{
 			var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
@@ -500,7 +501,7 @@ namespace Arteria_s.DB.Base
 
 			return (true);
 		}
-
+*/
 		//　CRLを生成
 		public override byte[] GenerateCRL(uint m_uAuthorityId, int iDays, X509Certificate2 m_pCertificate)
 		{

@@ -8,6 +8,8 @@ using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Globalization;
+using System.Numerics;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Arteria_s.DB.Base
@@ -24,7 +26,7 @@ namespace Arteria_s.DB.Base
 
 		private static readonly string m_pCompanyName = "Arteria";
 		private static readonly string m_pAppName = "RoughCA";
-		private const long LAYOUT_VERSION = 20;
+		private const long LAYOUT_VERSION = 21;
 
 		//　
 		public SQLiteContext(string DatabaseServer, string DatabaseName, string SchemaName, string ClientKey, string ClientCrt, string TrustCrt)
@@ -100,6 +102,8 @@ namespace Arteria_s.DB.Base
 			pSQLs.Add("CREATE TABLE TIssuedCerts(SequenceNumber INTEGER NOT NULL, SerialNumber TEXT NOT NULL UNIQUE, SubjectName TEXT NOT NULL, CommonName TEXT NOT NULL, TypeOf INTEGER NOT NULL, Revoked INTEGER NOT NULL, LaunchAt  TEXT NOT NULL, ExpireAt TEXT NOT NULL, RevokeAt TEXT, AuthorityId INTEGER NOT NULL, PemData TEXT NOT NULL, KeyData TEXT, CONSTRAINT TIssuedCerts_pkey  PRIMARY KEY (AuthorityId, SequenceNumber));");
 			pSQLs.Add("DROP TABLE IF EXISTS TOrgProfile;");
 			pSQLs.Add("CREATE TABLE TOrgProfile (OrgKey INTEGER NOT NULL, OrgName TEXT NOT NULL, OrgunitName TEXT NOT NULL, LocalityName TEXT NOT NULL, ProvinceName TEXT NOT NULL, CountryName TEXT NOT NULL, ServerName TEXT NOT NULL, SerialNumber INTEGER NOT NULL, UpdateAt TEXT NOT NULL, CONSTRAINT TOrgProfile_pkey PRIMARY KEY (OrgKey));");
+			pSQLs.Add("DROP TABLE IF EXISTS TCounters;");
+			pSQLs.Add("CREATE TABLE TCounters (CrlNumber TEXT NOT NULL);");
 			pSQLs.Add(@$"PRAGMA user_version = {LAYOUT_VERSION};");
 
 			foreach (var pSQL in pSQLs)
@@ -242,8 +246,6 @@ namespace Arteria_s.DB.Base
 				pCommand.Parameters.Add(new SqliteParameter("ServerName",   pOrgProfile.ServerName));
 				var lResult = pCommand.ExecuteNonQuery();
 				Debug.Assert(lResult == 1, $"SQL={pSQL}; SQL文を設定し忘れていませんか？CommandTextメンバーに設定する必要があります。");
-
-
 			}
 			m_pConnection.Close();
 			return (true);
@@ -251,20 +253,117 @@ namespace Arteria_s.DB.Base
 
 		public override bool IsExists(uint uAuthorityId, string pSubjectName, string pCommonName)
 		{
-			throw new System.NotImplementedException();
+			m_pConnection.Open();
+			var pSQL = "SELECT SequenceNumber, SubjectName FROM TSignRequest WHERE SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				pCommand.CommandText = pSQL;
+				pCommand.Parameters.Clear();
+				pCommand.Parameters.AddWithValue("SubjectName", pSubjectName);
+				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+				using (var pReader = pCommand.ExecuteReader())
+				{
+					int iCount = 0;
+					while (pReader.Read())
+					{
+						iCount++;
+					}
+					if (iCount == 0)
+					{
+						m_pConnection.Close();
+						return (false);
+					}
+				}
+			}
+			m_pConnection.Close();
+			return (true);
 		}
 
 		public override bool LoadSignRequest(uint uAuthorityId, string pSubjectName, ref string m_pKey, ref ItemsMentioned m_pItems)
 		{
-			throw new System.NotImplementedException();
+			m_pConnection.Open();
+			var pSQL = "SELECT SequenceNumber, SubjectName, KeyData FROM TSignRequest WHERE SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				pCommand.CommandText = pSQL;
+				pCommand.Parameters.Clear();
+				pCommand.Parameters.AddWithValue("SubjectName", pSubjectName);
+				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+				using (var pReader = pCommand.ExecuteReader())
+				{
+					int iCount = 0;
+					while (pReader.Read())
+					{
+						m_pItems.SequenceNumber = pReader.GetInt64(0);
+						m_pItems.SubjectName = pReader.GetString(1);
+						//m_pItems.KeyData        = pReader.GetString(2);
+						m_pKey = pReader.GetString(2);
+
+						iCount++;
+					}
+					if (iCount == 0)
+					{
+						m_pConnection.Close();
+						return (false);
+					}
+				}
+			}
+			m_pConnection.Close();
+			return (true);
 		}
 
 		public override bool SaveSignRequest(uint uAuthorityId, string m_pKey, ItemsMentioned m_pItems)
 		{
-			throw new System.NotImplementedException();
+			var status = true;
+
+			BeginTransaction();
+			//var pTransaction = BeginTransaction();
+			try
+			{
+				var pSQL_UPDATE = "UPDATE TSignRequest SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
+				using (var pCommand = m_pConnection.CreateCommand())
+				{
+					pCommand.CommandText = pSQL_UPDATE;
+					pCommand.Parameters.Clear();
+					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
+					pCommand.ExecuteNonQuery();
+				}
+
+				var pSQL = "INSERT INTO TSignRequest (AuthorityId, SequenceNumber, SubjectName, CommonName, TypeOf, LaunchAt, ExpireAt, KeyData)";
+				pSQL += " VALUES (@AuthorityId, NEXTVAL('SQ_REQTS'), @SubjectName, @CommonName, @TypeOf, @LaunchAt, @ExpireAt, @KeyData)";
+				pSQL += " ON CONFLICT ON CONSTRAINT tsignrequest_pkey DO UPDATE SET";
+				pSQL += " SubjectName = @SubjectName, CommonName = @CommonName, TypeOf = @TypeOf,";
+				pSQL += " LaunchAt = @LaunchAt, ExpireAt = @ExpireAt, KeyData = @KeyData";
+				using (var pCommand = m_pConnection.CreateCommand())
+				{
+					pCommand.CommandText = pSQL;
+					pCommand.Parameters.Clear();
+					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+					pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
+					pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
+					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
+					pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
+					pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt);
+					pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt);
+					pCommand.Parameters.AddWithValue("KeyData", m_pKey);
+					pCommand.ExecuteNonQuery();
+				}
+
+				//pTransaction.Commit();
+				Commit();
+			}
+			catch (Exception ex)
+			{
+				//pTransaction.Rollback();
+				Rollback();
+				Debug.WriteLine(ex);
+				status = false;
+			}
+			return (status);
 		}
 
-		public override bool LoadCertificate(string pCommonName, uint uAuthorityId, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey, X509Certificate2 m_pCertificate)
+		public override bool LoadCertificate(string pCommonName, uint uAuthorityId, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey)
 		{
 			//　共通名が一致する証明書を入力
 			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE CommonName = @CommonName AND Revoked = FALSE AND LaunchAt <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < ExpireAt AND AuthorityId = @AuthorityId;";
@@ -301,27 +400,42 @@ namespace Arteria_s.DB.Base
 					}
 				}
 			}
-			//if ((m_pItems.KeyData != null) && (m_pItems.KeyData.Length > 0))
-			if ((m_pKey != null) && (m_pKey.Length > 0))
-			{
-				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt, m_pKey);
-			}
-			else
-			{
-				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt);
-			}
 			m_pConnection.Close();
 			return (true);
 		}
 
 		public override bool IsExistSubject(string pSerialNumber, string pSubjectName, uint uAuthorityId)
 		{
-			throw new System.NotImplementedException();
+			m_pConnection.Open();
+			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName FROM TIssuedCerts WHERE SerialNumber <> @SerialNumber AND SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < ExpireAt AND AuthorityId = @AuthorityId;";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				pCommand.CommandText = pSQL;
+				pCommand.Parameters.Clear();
+				pCommand.Parameters.AddWithValue("SerialNumber", pSerialNumber);
+				pCommand.Parameters.AddWithValue("SubjectName", pSubjectName);
+				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+				using (var pReader = pCommand.ExecuteReader())
+				{
+					int iCount = 0;
+					while (pReader.Read())
+					{
+						iCount++;
+					}
+					if (iCount == 0)
+					{
+						return (false);
+					}
+				}
+			}
+			m_pConnection.Close();
+			return (true);
 		}
 
-		//　シリアル番号を獲得
-		protected bool FetchSerialNumber(uint uOrgKey, ref long SerialNumber)
+		//　シーケンス番号を獲得
+		protected long FetchSequenceNumber(uint uOrgKey)
 		{
+			var uSequenceNumber = 0L;
 			var pSQL_SerialNumber = "SELECT SerialNumber FROM TOrgProfile WHERE OrgKey = @OrgKey";
 			using (var pCommand = m_pConnection.CreateCommand())
 			{
@@ -332,15 +446,15 @@ namespace Arteria_s.DB.Base
 				{
 					while (pReader.Read())
 					{
-						SerialNumber = pReader.GetInt64(0);
+						uSequenceNumber = pReader.GetInt64(0);
 					}
 				}
 			}
-			return (true);
+			return (uSequenceNumber);
 		}
 
 		//　シリアル番号を更新
-		protected bool UpdateSerialNumber(uint uOrgKey, long lSerialNumber)
+		protected bool UpdateSequenceNumber(uint uOrgKey, long lSequenceNumber)
 		{
 			var pSQL_SerialNumber = "UPDATE TOrgProfile SET SerialNumber = @SerialNumber WHERE OrgKey = @OrgKey";
 			using (var pCommand = m_pConnection.CreateCommand())
@@ -348,19 +462,19 @@ namespace Arteria_s.DB.Base
 				pCommand.CommandText = pSQL_SerialNumber;
 				pCommand.Parameters.Clear();
 				pCommand.Parameters.AddWithValue("OrgKey", (Int64)uOrgKey);
-				pCommand.Parameters.AddWithValue("SerialNumber", (Int64)lSerialNumber);
+				pCommand.Parameters.AddWithValue("SerialNumber", (Int64)lSequenceNumber);
 				pCommand.ExecuteNonQuery();
 			}
 			return (true);
 		}
 
-		public override bool SaveCertificate(uint uAuthorityId, uint uInstance, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey, X509Certificate2 m_pCertificate)
+		//　（前提）呼び出し元がトランザクションとコネクションのライフタイムを管理する
+		public override bool SaveCertificate(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
 		{
 			var status = true;
 			try
 			{
 				var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = CURRENT_TIMESTAMP WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
-				m_pConnection.Open();
 				using (var pCommand = m_pConnection.CreateCommand())
 				{
 					pCommand.CommandText = pSQL_UPDATE;
@@ -370,12 +484,8 @@ namespace Arteria_s.DB.Base
 					pCommand.ExecuteNonQuery();
 				}
 
-				long uSerialNumber = 0;
-				if (FetchSerialNumber(uInstance, ref uSerialNumber) == false)
-				{
-					;
-				}
-				uSerialNumber += 1;
+				long uSequenceNumber = FetchSequenceNumber(uInstance);
+				uSequenceNumber += 1;
 
 				var pSQL = "INSERT INTO TIssuedCerts (AuthorityId, SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData)";
 				pSQL += " VALUES (@AuthorityId, @SequenceNumber, @SerialNumber, @SubjectName, @CommonName, @TypeOf, FALSE, @LaunchAt, @ExpireAt, @PemData, @KeyData)";
@@ -387,8 +497,8 @@ namespace Arteria_s.DB.Base
 					pCommand.CommandText = pSQL;
 					pCommand.Parameters.Clear();
 					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
-					pCommand.Parameters.AddWithValue("SerialNumber", uSerialNumber);	//　ここで新しいシリアル番号を登録する必要がある。（2026/04/26）
+					pCommand.Parameters.AddWithValue("SequenceNumber", uSequenceNumber);
+					pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
 					pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
 					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
 					pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
@@ -399,7 +509,7 @@ namespace Arteria_s.DB.Base
 					pCommand.ExecuteNonQuery();
 				}
 
-				if (UpdateSerialNumber(uAuthorityId, uSerialNumber) == false)
+				if (UpdateSequenceNumber(uInstance, uSequenceNumber) == false)
 				{
 					;
 				}
@@ -409,19 +519,28 @@ namespace Arteria_s.DB.Base
 				Debug.WriteLine(ex);
 				status = false;
 			}
-			m_pConnection.Close();
 			return (status);
 		}
 
 		public override bool Revoke(uint uAuthorityId, string SerialNumber)
 		{
-			throw new System.NotImplementedException();
+			var pSQL = "UPDATE TIssuedCerts SET Revoked = @Revoked, RevokeAt = CURRENT_TIMESTAMP WHERE SerialNumber = @SerialNumber AND AuthorityId = @AuthorityId";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				var Revoked = true;
+				pCommand.CommandText = pSQL;
+				pCommand.Parameters.Clear();
+				pCommand.Parameters.AddWithValue("SerialNumber", SerialNumber);
+				pCommand.Parameters.AddWithValue("Revoked", Revoked);
+				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+				pCommand.ExecuteNonQuery();
+			}
+			return (true);
 		}
 
 		public override ObservableCollection<Certificate> ListupCertificates(long m_uAuthorityId)
 		{
 			var pCertificates = new ObservableCollection<Certificate>();
-
 			var pSQL = "SELECT SequenceNumber, SerialNumber, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE AuthorityId = @AuthorityId AND Revoked = FALSE AND LaunchAt <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < ExpireAt AND TypeOf <> @TypeOf;";
 			m_pConnection.Open();
 			using (var pCommand = m_pConnection.CreateCommand())
@@ -459,17 +578,133 @@ namespace Arteria_s.DB.Base
 
 		public override Certificate Fetch(string pSerialNumber)
 		{
-			throw new System.NotImplementedException();
+			var pCertificate = new Certificate();
+			var pSQL = "SELECT SequenceNumber, SerialNumber, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE SerialNumber = @SerialNumber AND TypeOf <> @TypeOf;";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				pCommand.CommandText = pSQL;
+				pCommand.Parameters.Clear();
+				pCommand.Parameters.AddWithValue("SerialNumber", pSerialNumber);
+				pCommand.Parameters.AddWithValue("TypeOf", (int)CertificateType.Demand);
+				using (var pReader = pCommand.ExecuteReader())
+				{
+					var iCount = 0;
+					while (pReader.Read())
+					{
+						pCertificate.m_pItems.SequenceNumber = pReader.GetInt64(0);
+						pCertificate.m_pItems.SerialNumber = pReader.GetString(1);
+						pCertificate.m_pItems.CommonName = pReader.GetString(2);
+						pCertificate.m_pItems.TypeOf = (CertificateType)pReader.GetInt32(3);
+						pCertificate.m_pItems.Revoked = pReader.GetBoolean(4);
+						pCertificate.m_pItems.LaunchAt = pReader.GetDateTime(5);
+						pCertificate.m_pItems.ExpireAt = pReader.GetDateTime(6);
+						pCertificate.m_pCrt = pReader.GetString(7);
+						pCertificate.m_pKey = pReader.GetString(8);
+						pCertificate.Prepare();
+						iCount++;
+					}
+					if (iCount == 0)
+					{
+						return (null);
+					}
+				}
+			}
+			return (pCertificate);
 		}
-
+/*
 		public override bool Save2(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
 		{
-			throw new System.NotImplementedException();
-		}
+			var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				pCommand.CommandText = pSQL_UPDATE;
+				pCommand.Parameters.Clear();
+				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+				pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
+				pCommand.ExecuteNonQuery();
+			}
 
+			var pSQL = "INSERT INTO TIssuedCerts (AuthorityId, SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, LaunchAt, ExpireAt, PemData, KeyData)";
+			pSQL += " VALUES (@AuthorityId, NEXTVAL('SQ_REQTS'), @SerialNumber, @SubjectName, @CommonName, @TypeOf, @LaunchAt, @ExpireAt, @PemData, @KeyData)";
+			pSQL += " ON CONFLICT ON CONSTRAINT tissuedcerts_pkey DO UPDATE SET";
+			pSQL += " SerialNumber = @SerialNumber, SubjectName = @SubjectName, CommonName = @CommonName, TypeOf = @TypeOf,";
+			pSQL += " LaunchAt = @LaunchAt, ExpireAt = @ExpireAt, PemData = @PemData, KeyData = @KeyData";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				pCommand.CommandText = pSQL;
+				pCommand.Parameters.Clear();
+				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+				pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
+				pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
+				pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
+				pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
+				pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
+				pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt);
+				pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt);
+				pCommand.Parameters.AddWithValue("PemData", m_pCrt);
+				pCommand.Parameters.AddWithValue("KeyData", m_pKey);
+				pCommand.ExecuteNonQuery();
+			}
+
+			return (true);
+		}
+*/
 		public override byte[] GenerateCRL(uint m_uAuthorityId, int iDays, X509Certificate2 m_pCertificate)
 		{
-			throw new System.NotImplementedException();
+			byte[] pBytes;
+			var pBuilder = new CertificateRevocationListBuilder();
+
+			var pSQL = "SELECT SerialNumber, RevokeAt FROM TIssuedCerts WHERE Revoked = TRUE AND AuthorityId = @AuthorityId;";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				pCommand.CommandText = pSQL;
+				pCommand.Parameters.Clear();
+				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)m_uAuthorityId);
+				using (var pReader = pCommand.ExecuteReader())
+				{
+					while (pReader.Read())
+					{
+						var SerialNumber = Convert.FromHexString(pReader.GetString(0));
+						var RevokeAt = pReader.GetDateTime(1);
+						pBuilder.AddEntry(SerialNumber, RevokeAt);
+					}
+				}
+			}
+
+			BigInteger iCRLNumber = 0;
+
+			//　CRL番号を取得
+			pSQL = "SELECT CRLNumber FROM TCounters;";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				pCommand.Parameters.Clear();
+				pCommand.CommandText = pSQL;
+				using (var pReader = pCommand.ExecuteReader())
+				{
+					while (pReader.Read())
+					{
+						var pNumber = pReader.GetString(0);
+						iCRLNumber = BigInteger.Parse(pNumber, NumberStyles.HexNumber);
+						iCRLNumber++;
+						break;
+					}
+				}
+				DateTimeOffset pNextUpdate = DateTimeOffset.Now.AddDays(iDays);
+				pBytes = pBuilder.Build(m_pCertificate, iCRLNumber, pNextUpdate, HashAlgorithmName.SHA512);
+			}
+
+			//　CRLNumberのカウンタを更新
+			pSQL = "UPDATE TCounters SET CrlNumber = @CrlNumber;";
+			using (var pCommand = m_pConnection.CreateCommand())
+			{
+				var pNumber = iCRLNumber.ToString("X");
+				pCommand.Parameters.Clear();
+				pCommand.CommandText = pSQL;
+				pCommand.Parameters.AddWithValue("CrlNumber", pNumber);
+				pCommand.ExecuteNonQuery();
+			}
+
+			return (pBytes);
 		}
 
 		private SqliteTransaction	m_pTransaction = null;
@@ -477,6 +712,7 @@ namespace Arteria_s.DB.Base
 		//　トランザクションを開始
 		public override bool BeginTransaction()
 		{
+			m_pConnection.Open();
 			m_pTransaction = m_pConnection.BeginTransaction();
 			return (true);
 		}
@@ -484,12 +720,14 @@ namespace Arteria_s.DB.Base
 		public override bool Commit()
 		{
 			m_pTransaction.Commit();
+			m_pConnection.Close();
 			return (true);
 		}
 
 		public override bool Rollback()
 		{
 			m_pTransaction.Rollback();
+			m_pConnection.Close();
 			return (true);
 		}
 	}

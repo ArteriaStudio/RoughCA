@@ -30,8 +30,8 @@ namespace Arteria_s.App.RoughCA
 
 			var pApp = App.Current as RoughCA.App;
 			var pDbParams = pApp.m_pDbParams;
-			m_pOrgProfile.TrustName = pDbParams.TrustName;
-			m_pOrgProfile.IssueName = pDbParams.IssueName;
+//			m_pOrgProfile.TrustName = pDbParams.TrustName;
+//			m_pOrgProfile.IssueName = pDbParams.IssueName;
 		}
 
 		//　TODO: データオブジェクト側に検査処理を寄せること
@@ -93,6 +93,7 @@ namespace Arteria_s.App.RoughCA
 			{
 				return (false);
 			}
+			/*
 			if (IsNotNull(TrustName.Text) == false)
 			{
 				return (false);
@@ -101,6 +102,7 @@ namespace Arteria_s.App.RoughCA
 			{
 				return (false);
 			}
+			*/
 
 			return (true);
 		}
@@ -155,10 +157,12 @@ namespace Arteria_s.App.RoughCA
 			pDbParams.TrustCrt
 			pDbParams.IdentityName
 */
+/*
 			pDbParams.TrustName = TrustName.Text;
 			pDbParams.IssueName = IssueName.Text;
-
+*/
 			pApp.SaveOrgProfile(pDbParams);
+
 		}
 
 		public void IsWriteable(bool? bWriteable)
@@ -167,8 +171,8 @@ namespace Arteria_s.App.RoughCA
 			{
 				return;
 			}
-			TrustName.IsReadOnly     = !bWriteable.Value;
-			IssueName.IsReadOnly     = !bWriteable.Value;
+//			TrustName.IsReadOnly     = !bWriteable.Value;
+//			IssueName.IsReadOnly     = !bWriteable.Value;
 			OrgName.IsReadOnly       = !bWriteable.Value;
 			OrgUnitName.IsReadOnly   = !bWriteable.Value;
 			LocalityName.IsReadOnly  = !bWriteable.Value;

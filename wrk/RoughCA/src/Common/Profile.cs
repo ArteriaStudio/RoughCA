@@ -9,8 +9,11 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Arteria_s.App.RoughCA
 {
+
 	public class DbParams : Data
 	{
+		private SortedDictionary<string, int> DriverNameToIndexMap = new SortedDictionary<string, int>();
+		private SortedDictionary<int, string> DriverIndexToNameMap = new SortedDictionary<int, string>();
 		public DbParams()
 		{
 			UserIdentity = -1;
@@ -25,6 +28,11 @@ namespace Arteria_s.App.RoughCA
 			IssueName    = "";
 			DriverName   = "";
 			uInstance    = 0;
+
+			DriverNameToIndexMap["SQLite"] = 0;
+			DriverNameToIndexMap["Postgres"] = 1;
+			DriverIndexToNameMap[0] = "SQLite";
+			DriverIndexToNameMap[1] = "Postgres";
 		}
 
 		[JsonPropertyName("UserIdentity")]
@@ -49,6 +57,15 @@ namespace Arteria_s.App.RoughCA
 		public string IssueName { get; set; }
 		[JsonPropertyName("DriverName")]
 		public string DriverName { get; set; }
+		private int _DriverIndex = 0;
+		public int DriverIndex {
+			get => _DriverIndex;
+			set {
+				if (value < 0) value = 0;
+				_DriverIndex = value;
+				DriverName = DriverIndexToNameMap[value];
+			}
+		}
 		[JsonPropertyName("uInstance")]
 		public uint uInstance { get; set; }
 
@@ -109,9 +126,16 @@ namespace Arteria_s.App.RoughCA
 				return (false);
 			}
 			*/
+			//Normalize();
 
 			return (true);
 		}
+		/*
+		public void Normalize()
+		{
+			DriverIndex = DriverNameToIndexMap[DriverName];
+		}
+		*/
 	}
 
 	public class Profile : ProfileBase
@@ -159,6 +183,7 @@ namespace Arteria_s.App.RoughCA
 				m_pDbParams.DriverName = "Postgres";
 				m_pDbParams.uInstance  = 0;
 			}
+			//m_pDbParams.Normalize();
 
 			return (true);
 		}
@@ -173,6 +198,7 @@ namespace Arteria_s.App.RoughCA
 			}
 			return(SaveDbParams(m_pConnection, m_pDbParams));
 			*/
+			//m_pDbParams.Normalize();
 			return (SaveDbParams(m_pProfileFolderPath, m_pDbParams));
 		}
 

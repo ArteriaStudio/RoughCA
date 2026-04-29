@@ -94,15 +94,28 @@ namespace Arteria_s.App.RoughCA
 			var pWindow = pApp.m_pWindow as MainWindow;
 			var pSQLContext = pApp.GetSQLContext();
 			var pAuthority = Authority.Instance;
-			var pCertificate = pAuthority.Fetch(pSQLContext, pSerialNumber);
-			if ((pCertificate != null) && (pCertificate.m_pCertificate != null)) {
-				//　ダウンロードフォルダにファイルを出力する。
-				var pExportFolder = System.Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads";
-				var pExportFilepath = pCertificate.Export(pExportFolder);
 
-				pWindow.AddMessage(new Message(AppFacility.Complete, "証明書をファイルに出力しました。", pCertificate.m_pItems.CommonName, pExportFilepath));
+			try
+			{
+				if (pSQLContext.BeginTransaction() == false)
+				{
+					return;
+				}
+				var pCertificate = pAuthority.Fetch(pSQLContext, pSerialNumber);
+				if ((pCertificate != null) && (pCertificate.m_pCertificate != null))
+				{
+					//　ダウンロードフォルダにファイルを出力する。
+					var pExportFolder = System.Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads";
+					var pExportFilepath = pCertificate.Export(pExportFolder);
+
+					pWindow.AddMessage(new Message(AppFacility.Complete, "証明書をファイルに出力しました。", pCertificate.m_pItems.CommonName, pExportFilepath));
+				}
+				pSQLContext.Commit();
 			}
-
+			catch (Exception ex)
+			{
+				Debug.WriteLine(ex);
+			}
 		}
 
 		//　選択した証明書をファイルに出力する。

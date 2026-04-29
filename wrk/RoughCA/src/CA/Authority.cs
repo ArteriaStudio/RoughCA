@@ -344,7 +344,7 @@ namespace Arteria_s.App.RoughCA
 			{
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForUpdate, pBaseCertificate.m_pItems.CommonName));
 			}
-			if (pCertificate.Save2(pSQLContext, m_uAuthorityId, uInstance) == false)
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForUpdate, pBaseCertificate.m_pItems.CommonName));
 			}

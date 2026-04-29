@@ -35,7 +35,23 @@ namespace Arteria_s.App.RoughCA
 		//　共通名が一致する証明書を入力
 		public bool Load(VSQLContext pSQLContext, string pCommonName, uint uAuthorityId)
 		{
-			return (pSQLContext.LoadCertificate(pCommonName, uAuthorityId, ref m_pItems, ref m_pCrt, ref m_pKey, m_pCertificate));
+			var status = pSQLContext.LoadCertificate(pCommonName, uAuthorityId, ref m_pItems, ref m_pCrt, ref m_pKey);
+			if (status == false)
+			{
+				return (false);
+			}
+
+			//if ((m_pItems.KeyData != null) && (m_pItems.KeyData.Length > 0))
+			if ((m_pKey != null) && (m_pKey.Length > 0))
+			{
+				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt, m_pKey);
+			}
+			else
+			{
+				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt);
+			}
+
+			return (true);
 		}
 
 		//　
@@ -46,9 +62,10 @@ namespace Arteria_s.App.RoughCA
 			{
 				m_pKey = pKeyData;
 			}
-			return (pSQLContext.SaveCertificate(uAuthorityId, uInstance, ref m_pItems, ref m_pCrt, ref m_pKey, m_pCertificate));
+			var bResult = pSQLContext.SaveCertificate(uAuthorityId, uInstance, m_pItems, m_pCrt, m_pKey);
+			return (bResult);
 		}
-
+		/*
 		//　
 		//　pKeyData：当該証明書に紐付く秘密鍵
 		public bool Save2(VSQLContext pSQLContext, uint uAuthorityId, uint uInstance, string pKeyData = null)
@@ -62,17 +79,16 @@ namespace Arteria_s.App.RoughCA
 
 			try
 			{
-				status = pSQLContext.Save2(uAuthorityId, uInstance, m_pItems, m_pCrt, m_pKey);
+				status = pSQLContext.SaveCertificate(uAuthorityId, uInstance, m_pItems, m_pCrt, m_pKey);
 			}
 			catch (Exception ex)
 			{
 				Debug.WriteLine(ex);
 				status = false;
 			}
-
 			return (status);
 		}
-
+		*/
 		//　
 		public void Prepare()
 		{

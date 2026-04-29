@@ -19,8 +19,6 @@
 
 		<ScrollViewer x:Name="IdentityParameters" Grid.Column="0" Grid.Row="0" Padding="4, 4, 4, 4" LostFocus="IdentityParameters_LostFocus">
 			<StackPanel Orientation="Vertical" Style="{StaticResource CardStyleStackPanel}">
-				<TextBox x:Uid="TrustName"     x:Name="TrustName"     Margin="8,8,8,8" IsReadOnly="True" Header="ルート認証局識別子（RootAuthorityName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.TrustName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="IssueName"     x:Name="IssueName"     Margin="8,8,8,8" IsReadOnly="True" Header="発行認証局識別子（IssueAuthorityName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.IssueName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
 				<TextBox x:Uid="OrgName"       x:Name="OrgName"       Margin="8,8,8,8" IsReadOnly="True" Header="組織名（organizationName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.OrgName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
 				<TextBox x:Uid="OrgUnitName"   x:Name="OrgUnitName"   Margin="8,8,8,8" IsReadOnly="True" Header="部署名（organizationalUnitName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.OrgUnitName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
 				<TextBox x:Uid="LocalityName"  x:Name="LocalityName"  Margin="8,8,8,8" IsReadOnly="True" Header="市町村（localityName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.LocalityName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />

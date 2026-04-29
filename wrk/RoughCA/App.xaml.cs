@@ -168,7 +168,10 @@ namespace Arteria_s.App.RoughCA
 
 			//　
 			m_pProfile.Save(pDbParams);
-			
+
+			//　ルート証明書を再読み込み
+			m_pCertsStock = Authority.Instance;
+			m_pCertsStock.Load(m_pSQLContext, m_pDbParams.IdentityName, m_pDbParams.uInstance);
 		}
 
 		public VSQLContext	GetSQLContext()

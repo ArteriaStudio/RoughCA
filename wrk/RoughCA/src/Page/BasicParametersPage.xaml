@@ -19,6 +19,10 @@
 
 		<ScrollViewer x:Name="BasicParameters" Grid.Column="0" Grid.Row="0" Padding="4, 4, 4, 4" LostFocus="BasicParameters_LostFocus">
 			<StackPanel Orientation="Vertical" Style="{StaticResource CardStyleStackPanel}">
+				<RadioButtons x:Name="DBDrivers" Header="データベースドライバー" SelectedIndex="{x:Bind m_pDbParams.DriverIndex, Mode=TwoWay}" MaxColumns="2"  SelectionChanged="DBDrivers_SelectionChanged" Margin="8,8,8,8" IsEnabled="False">
+					<RadioButton Content="SQLite"/>
+					<RadioButton Content="Postgres"/>
+				</RadioButtons>
 				<TextBox x:Uid="DatabaseServerName" x:Name="DatabaseServerName" Margin="8,8,8,8" IsReadOnly="True" Header="サーバのホスト名（HostName）" PlaceholderText="" Text="{x:Bind m_pDbParams.HostName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
 				<TextBox x:Uid="InstanceName"       x:Name="InstanceName"       Margin="8,8,8,8" IsReadOnly="True" Header="インスタンス名（InstanceName）" PlaceholderText="" Text="{x:Bind m_pDbParams.InstanceName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
 				<TextBox x:Uid="SchemaName"         x:Name="SchemaName"         Margin="8,8,8,8" IsReadOnly="True" Header="スキーマ名（SchemaName）" PlaceholderText=""  Text="{x:Bind m_pDbParams.SchemaName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
