@@ -18,14 +18,14 @@ namespace Arteria_s.App.RoughCA
 		{
 			UserIdentity = -1;
 			HostName     = "";
-			InstanceName = "";
+			DatabaseName = "";
 			SchemaName   = "";
 			ClientKey    = "";
 			ClientCrt    = "";
 			TrustCrt     = "";
-			IdentityName = "";
-			TrustName    = "";
-			IssueName    = "";
+			//IdentityName = "";
+			//TrustName    = "";
+			//IssueName    = "";
 			DriverName   = "";
 			uInstance    = 0;
 
@@ -39,8 +39,8 @@ namespace Arteria_s.App.RoughCA
 		public int UserIdentity { get; set; }
 		[JsonPropertyName("HostName")]
 		public string HostName { get; set; }
-		[JsonPropertyName("InstanceName")]
-		public string InstanceName { get; set; }
+		[JsonPropertyName("DatabaseName")]
+		public string DatabaseName { get; set; }
 		[JsonPropertyName("SchemaName")]
 		public string SchemaName { get; set; }
 		[JsonPropertyName("ClientKey")]
@@ -49,12 +49,16 @@ namespace Arteria_s.App.RoughCA
 		public string ClientCrt { get; set; }
 		[JsonPropertyName("TrustCrt")]
 		public string TrustCrt { get; set; }
+		/*
 		[JsonPropertyName("IdentityName")]
 		public string IdentityName { get; set; }
+		*/
+		/*
 		[JsonPropertyName("TrustName")]
 		public string TrustName { get; set; }
 		[JsonPropertyName("IssueName")]
 		public string IssueName { get; set; }
+		*/
 		[JsonPropertyName("DriverName")]
 		public string DriverName { get; set; }
 		private int _DriverIndex = 0;
@@ -82,7 +86,7 @@ namespace Arteria_s.App.RoughCA
 				{
 					return (false);
 				}
-				if (IsNull(InstanceName) == true)
+				if (IsNull(DatabaseName) == true)
 				{
 					return (false);
 				}
@@ -102,10 +106,12 @@ namespace Arteria_s.App.RoughCA
 				{
 					return (false);
 				}
+				/*
 				if (IsNull(IdentityName) == true)
 				{
 					return (false);
 				}
+				*/
 			}
 			else if (DriverName.Equals("SQLite") == true)
 			{
@@ -142,7 +148,7 @@ namespace Arteria_s.App.RoughCA
 	{
 		private static readonly string m_pCompanyName = "Arteria";
 		private static readonly string m_pAppName = "RoughCA";
-		private const long LAYOUT_VERSION = 15;
+		private const long LAYOUT_VERSION = 16;
 		private static SqliteConnection m_pConnection;
 //		private static string m_pProfilepath;
 		//public DbParams m_pDbParams;
@@ -171,16 +177,16 @@ namespace Arteria_s.App.RoughCA
 				m_pDbParams = new DbParams();
 				m_pDbParams.UserIdentity = 0;
 				m_pDbParams.HostName     = "";
-				m_pDbParams.InstanceName = m_pAppName;
+				m_pDbParams.DatabaseName = m_pAppName;
 				m_pDbParams.SchemaName   = "aploper";
 				m_pDbParams.ClientKey    = pFolderPath + "\\postgresql.key";
 				m_pDbParams.ClientCrt    = pFolderPath + "\\postgresql.crt";
 				m_pDbParams.TrustCrt     = pFolderPath + "\\root.crt";
-				m_pDbParams.IdentityName = "";
-				m_pDbParams.TrustName    = "";
-				m_pDbParams.IssueName    = "";
-				//m_pDbParams.DriverName   = "SQLite";
-				m_pDbParams.DriverName = "Postgres";
+				//m_pDbParams.IdentityName = "";
+				//m_pDbParams.TrustName    = "";
+				//m_pDbParams.IssueName    = "";
+				m_pDbParams.DriverName   = "SQLite";
+				//m_pDbParams.DriverName = "Postgres";
 				m_pDbParams.uInstance  = 0;
 			}
 			//m_pDbParams.Normalize();
@@ -211,7 +217,7 @@ namespace Arteria_s.App.RoughCA
 			pSQLs.Add(@"CREATE TABLE IF NOT EXISTS LayoutVersion (Revision INTEGER);");
 			pSQLs.Add(@$"INSERT INTO LayoutVersion VALUES ({LAYOUT_VERSION});");
 			pSQLs.Add("DROP TABLE IF EXISTS DbParams;");
-			pSQLs.Add("CREATE TABLE DbParams (UserIdentity INTEGER NOT NULL, HostName TEXT NOT NULL, InstanceName TEXT NOT NULL, SchemaName TEXT NOT NULL, ClientKey TEXT NOT NULL, ClientCrt TEXT NOT NULL, TrustCrt TEXT NOT NULL, IdentityName TEXT NOT NULL, TrustName TEXT NOT NULL, IssueName TEXT NOT NULL, DriverName TEXT NOT NULL, PRIMARY KEY (UserIdentity))");
+			pSQLs.Add("CREATE TABLE DbParams (UserIdentity INTEGER NOT NULL, HostName TEXT NOT NULL, InstanceName TEXT NOT NULL, SchemaName TEXT NOT NULL, ClientKey TEXT NOT NULL, ClientCrt TEXT NOT NULL, TrustCrt TEXT NOT NULL, DriverName TEXT NOT NULL, PRIMARY KEY (UserIdentity))");
 			pSQLs.Add("DROP TABLE IF EXISTS OrgProfile;");
 			//pSQLs.Add("CREATE TABLE OrgProfile (OrgKey INTEGER NOT NULL, CaName TEXT NOT NULL, OrgName TEXT NOT NULL, OrgUnitName TEXT NOT NULL, localityName TEXT NULL, ProvinceName NOT NULL, countryName NOT NULL, PRIMARY KEY (OrgKey))");
 			pSQLs.Add("DROP TABLE IF EXISTS IssuedCerts;");
@@ -237,7 +243,7 @@ namespace Arteria_s.App.RoughCA
 			try
 			{
 				pConnection.Open();
-				var pSQL = "SELECT UserIdentity, HostName, InstanceName, SchemaName, ClientKey, ClientCrt, TrustCrt, IdentityName, TrustName, IssueName, DriverName FROM DbParams WHERE UserIdentity == 0";
+				var pSQL = "SELECT UserIdentity, HostName, InstanceName, SchemaName, ClientKey, ClientCrt, TrustCrt, DriverName FROM DbParams WHERE UserIdentity == 0";
 				var pCommand = new SqliteCommand(pSQL, pConnection);
 				using (var pReader = pCommand.ExecuteReader())
 				{
@@ -245,15 +251,16 @@ namespace Arteria_s.App.RoughCA
 					{
 						pDbParams.UserIdentity = pReader.GetInt32(0);
 						pDbParams.HostName     = pReader.GetString(1);
-						pDbParams.InstanceName = pReader.GetString(2);
+						pDbParams.DatabaseName = pReader.GetString(2);
 						pDbParams.SchemaName   = pReader.GetString(3);
 						pDbParams.ClientKey    = pReader.GetString(4);
 						pDbParams.ClientCrt	   = pReader.GetString(5);
 						pDbParams.TrustCrt     = pReader.GetString(6);
-						pDbParams.IdentityName = pReader.GetString(7);
-						pDbParams.TrustName    = pReader.GetString(8);
-						pDbParams.IssueName    = pReader.GetString(9);
-						pDbParams.DriverName   = pReader.GetString(10);
+						//pDbParams.IdentityName = pReader.GetString(7);
+						//pDbParams.TrustName    = pReader.GetString(8);
+						//pDbParams.IssueName    = pReader.GetString(9);
+						//pDbParams.DriverName   = pReader.GetString(10);
+						pDbParams.DriverName = pReader.GetString(7);
 					}
 				}
 				pConnection.Close();
@@ -305,22 +312,22 @@ namespace Arteria_s.App.RoughCA
 			try
 			{
 				pDbParams.UserIdentity = 0;
-				pDbParams.InstanceName = pDbParams.InstanceName.ToLower();
+				pDbParams.DatabaseName = pDbParams.DatabaseName.ToLower();
 				pConnection.Open();
-				var pSQL = "INSERT INTO DbParams VALUES (@UserIdentity, @HostName, @InstanceName, @SchemaName, @ClientKey, @ClientCrt, @TrustCrt, @IdentityName, @TrustName, @IssueName, @DriverName)";
-				pSQL += " ON CONFLICT (UserIdentity) DO UPDATE SET HostName = @HostName, InstanceName = @InstanceName, SchemaName = @SchemaName, ClientKey = @ClientKey, ClientCrt = @ClientCrt, TrustCrt = @TrustCrt, IdentityName = @IdentityName, TrustName = @TrustName, IssueName = @IssueName, DriverName = @DriverName";
+				var pSQL = "INSERT INTO DbParams VALUES (@UserIdentity, @HostName, @InstanceName, @SchemaName, @ClientKey, @ClientCrt, @TrustCrt, @DriverName)";
+				pSQL += " ON CONFLICT (UserIdentity) DO UPDATE SET HostName = @HostName, InstanceName = @InstanceName, SchemaName = @SchemaName, ClientKey = @ClientKey, ClientCrt = @ClientCrt, TrustCrt = @TrustCrt, DriverName = @DriverName";
 				var pCommand = new SqliteCommand(pSQL, pConnection);
 				pCommand.Parameters.Clear();
 				pCommand.Parameters.Add(new SqliteParameter("UserIdentity", pDbParams.UserIdentity));
 				pCommand.Parameters.Add(new SqliteParameter("HostName",     pDbParams.HostName));
-				pCommand.Parameters.Add(new SqliteParameter("InstanceName", pDbParams.InstanceName));
+				pCommand.Parameters.Add(new SqliteParameter("InstanceName", pDbParams.DatabaseName));
 				pCommand.Parameters.Add(new SqliteParameter("SchemaName",   pDbParams.SchemaName));
 				pCommand.Parameters.Add(new SqliteParameter("ClientKey",    pDbParams.ClientKey));
 				pCommand.Parameters.Add(new SqliteParameter("ClientCrt",    pDbParams.ClientCrt));
 				pCommand.Parameters.Add(new SqliteParameter("TrustCrt",     pDbParams.TrustCrt));
-				pCommand.Parameters.Add(new SqliteParameter("IdentityName", pDbParams.IdentityName));
-				pCommand.Parameters.Add(new SqliteParameter("TrustName",    pDbParams.TrustName));
-				pCommand.Parameters.Add(new SqliteParameter("IssueName",    pDbParams.IssueName));
+				//pCommand.Parameters.Add(new SqliteParameter("IdentityName", pDbParams.IdentityName));
+				//pCommand.Parameters.Add(new SqliteParameter("TrustName",    pDbParams.TrustName));
+				//pCommand.Parameters.Add(new SqliteParameter("IssueName",    pDbParams.IssueName));
 				pCommand.Parameters.Add(new SqliteParameter("DriverName",   pDbParams.DriverName));
 				var nCount = pCommand.ExecuteNonQuery();
 				if (nCount <= 0)

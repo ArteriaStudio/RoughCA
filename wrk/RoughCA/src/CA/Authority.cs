@@ -60,30 +60,40 @@ namespace Arteria_s.App.RoughCA
 			{
 				//　認証局の証明書データを入力
 				m_pAuthorityItem = new Certificate();
-				var pAuthorityName = pIdentityName;
+				var pAuthorityName = pIdentityName;//debug: need update it. 
 				if (m_pAuthorityItem.Load(pSQLContext, pAuthorityName, m_uAuthorityId) == false)
 				{
-					//　自己署名認証局の証明書を作成
-					if (m_pAuthorityItem.CreateForAuthority(m_pOrgProfile, pAuthorityName, null) == false)
-					{
-						//　異常系：証明書の作成に失敗
-						return (false);
-					}
-					if (m_pAuthorityItem.Validate() == false)
-					{
-						return (false);
-					}
-					if (m_pAuthorityItem.IsHaveKey() == false)
-					{
-						return (false);
-					}
-					if (m_pAuthorityItem.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
+					if (CreateAuthority(pSQLContext, pAuthorityName, uInstance) == false)
 					{
 						return (false);
 					}
 				}
 			}
 
+			return (true);
+		}
+
+		//　認証局の証明書を新規作成
+		private bool CreateAuthority(VSQLContext pSQLContext, string pAuthorityName, uint uInstance)
+		{
+			//　自己署名認証局の証明書を作成
+			if (m_pAuthorityItem.CreateForAuthority(m_pOrgProfile, pAuthorityName, null) == false)
+			{
+				//　異常系：証明書の作成に失敗
+				return (false);
+			}
+			if (m_pAuthorityItem.Validate() == false)
+			{
+				return (false);
+			}
+			if (m_pAuthorityItem.IsHaveKey() == false)
+			{
+				return (false);
+			}
+			if (m_pAuthorityItem.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
+			{
+				return (false);
+			}
 			return (true);
 		}
 

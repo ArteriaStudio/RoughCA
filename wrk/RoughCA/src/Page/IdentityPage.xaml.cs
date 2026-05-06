@@ -199,7 +199,9 @@ namespace Arteria_s.App.RoughCA
 			var pSQLContext = pApp.GetSQLContext();
 			var pAuthority  = Authority.Instance;
 
-			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pDbParams.IdentityName) == false)
+			var pIdentityName = pDbParams.DatabaseName;
+			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pIdentityName) == false)
+//			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pDbParams.IdentityName) == false)
 			{
 				//　エラー
 				;

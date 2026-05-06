@@ -50,6 +50,15 @@
     <WebView2UseWinRT>False</WebView2UseWinRT>
     <WebView2EnableCsWinRTProjection>True</WebView2EnableCsWinRTProjection>
     <WebView2LoaderPreference>Dynamic</WebView2LoaderPreference>
+    <GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <PackageCertificateThumbprint>EB880D36AA2F807E90A10223747FD021A8BC4628</PackageCertificateThumbprint>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA512</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <GenerateTestArtifacts>False</GenerateTestArtifacts>
+    <AppxBundle>Never</AppxBundle>
+    <AppInstallerUri>\\aureole\home\Drive\Packages</AppInstallerUri>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
 
   <!--

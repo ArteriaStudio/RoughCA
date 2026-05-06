@@ -47,7 +47,7 @@ namespace Arteria_s.App.RoughCA
 			{
 				return(false);
 			}
-			if (IsNotNull(InstanceName.Text) == false)
+			if (IsNotNull(DatabaseName.Text) == false)
 			{
 				return (false);
 			}
@@ -67,10 +67,12 @@ namespace Arteria_s.App.RoughCA
 			{
 				return (false);
 			}
+			/*
 			if (IsNotNull(IdentityName.Text) == false)
 			{
 				return (false);
 			}
+			*/
 
 			return (true);
 		}
@@ -220,36 +222,50 @@ namespace Arteria_s.App.RoughCA
 				return;
 			}
 			DatabaseServerName.IsReadOnly = !bWriteable.Value;
-			InstanceName.IsReadOnly       = !bWriteable.Value;
+			DatabaseName.IsReadOnly       = !bWriteable.Value;
 			SchemaName.IsReadOnly         = !bWriteable.Value;
 			ClientKey.IsReadOnly          = !bWriteable.Value;
 			ClientCrt.IsReadOnly          = !bWriteable.Value;
 			RootCACrt.IsReadOnly          = !bWriteable.Value;
-			IdentityName.IsReadOnly       = !bWriteable.Value;
 
 			BrowseClientKey.IsEnabled = bWriteable.Value;
 			BrowseClientCrt.IsEnabled = bWriteable.Value;
 			BrowseRootCACrt.IsEnabled = bWriteable.Value;
 			DBDrivers.IsEnabled       = bWriteable.Value;
 
+			UpdateDisplayState(bWriteable.Value);
+
 			m_bWriteable = bWriteable.Value;
 		}
 		private bool m_bWriteable = false;
 
-		private void DBDrivers_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		private void UpdateDisplayState(bool bWriteable)
 		{
-			if (Varidate() == false)
+			if (bWriteable == false)
 			{
-				//Save.IsEnabled = false;
+				ExpanderSQLite.IsEnabled = false;
+				ExpanderPostgreSQL.IsEnabled = false;
 			}
 			else
 			{
-				if (m_bIsDirty == true)
+				switch (DBDrivers.SelectedIndex)
 				{
-					//Save.IsEnabled = true;
+				case 0: // SQLite
+					ExpanderSQLite.IsEnabled = true;
+					ExpanderPostgreSQL.IsEnabled = false;
+					break;
+				case 1: // PostgreSQL
+					ExpanderSQLite.IsEnabled = false;
+					ExpanderPostgreSQL.IsEnabled = true;
+					break;
 				}
 			}
-			m_bIsDirty = true;
+		}
+
+		//　表示状態を更新
+		private void DBDrivers_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			UpdateDisplayState(m_bWriteable);
 		}
 	}
 }

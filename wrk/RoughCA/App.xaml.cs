@@ -134,11 +134,11 @@ namespace Arteria_s.App.RoughCA
 				//　データベース処理インスタンスを選択
 				if (m_pDbParams.DriverName.Equals("Postgres") == true)
 				{
-					m_pSQLContext = new SQLContext(m_pDbParams.HostName, m_pDbParams.InstanceName, m_pDbParams.SchemaName, m_pDbParams.ClientKey, m_pDbParams.ClientCrt, m_pDbParams.TrustCrt);
+					m_pSQLContext = new SQLContext(m_pDbParams.HostName, m_pDbParams.DatabaseName, m_pDbParams.SchemaName, m_pDbParams.ClientKey, m_pDbParams.ClientCrt, m_pDbParams.TrustCrt);
 				}
 				else if (m_pDbParams.DriverName.Equals("SQLite") == true)
 				{
-					m_pSQLContext = new SQLiteContext(m_pDbParams.HostName, m_pDbParams.InstanceName, m_pDbParams.SchemaName, m_pDbParams.ClientKey, m_pDbParams.ClientCrt, m_pDbParams.TrustCrt);
+					m_pSQLContext = new SQLiteContext(m_pDbParams.HostName, m_pDbParams.DatabaseName, m_pDbParams.SchemaName, m_pDbParams.ClientKey, m_pDbParams.ClientCrt, m_pDbParams.TrustCrt);
 				}
 				else
 				{
@@ -147,13 +147,14 @@ namespace Arteria_s.App.RoughCA
 				pContexts[m_pDbParams.DriverName] = m_pSQLContext;
 
 				m_pCertsStock = Authority.Instance;
-				m_pCertsStock.Load(m_pSQLContext, m_pDbParams.IdentityName, m_pDbParams.uInstance);
+				m_pCertsStock.Load(m_pSQLContext, m_pDbParams.DatabaseName, m_pDbParams.uInstance);
 			}
 			m_pPrepareFlags = new PrepareFlags();
 			m_pPrepareFlags.Check(m_pSQLContext, m_pDbParams, m_pCertsStock);
 
 			m_pWindow = new MainWindow();
-			m_pWindow.Title = "RoughCA [" + m_pDbParams.IdentityName + "]";
+			m_pWindow.Title = "RoughCA [" + m_pDbParams.DatabaseName + "]";
+			//m_pWindow.Title = "RoughCA [" + "..." + "]";
 			m_pWindow.Activate();
 		}
 
@@ -171,7 +172,7 @@ namespace Arteria_s.App.RoughCA
 
 			//　ルート証明書を再読み込み
 			m_pCertsStock = Authority.Instance;
-			m_pCertsStock.Load(m_pSQLContext, m_pDbParams.IdentityName, m_pDbParams.uInstance);
+			m_pCertsStock.Load(m_pSQLContext, m_pDbParams.DatabaseName, m_pDbParams.uInstance);
 		}
 
 		public VSQLContext	GetSQLContext()

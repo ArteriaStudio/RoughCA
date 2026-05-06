@@ -29,6 +29,7 @@ namespace Arteria_s.DB.Base
 		private const long LAYOUT_VERSION = 21;
 
 		//　
+		//　DatabaseName：データベース名
 		public SQLiteContext(string DatabaseServer, string DatabaseName, string SchemaName, string ClientKey, string ClientCrt, string TrustCrt)
 		{
 			var pAppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
