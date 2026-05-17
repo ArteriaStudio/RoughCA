@@ -171,8 +171,8 @@ namespace Arteria_s.App.RoughCA
 			{
 				return;
 			}
-//			TrustName.IsReadOnly     = !bWriteable.Value;
-//			IssueName.IsReadOnly     = !bWriteable.Value;
+			TrustName.IsReadOnly     = !bWriteable.Value;
+			IssueName.IsReadOnly     = !bWriteable.Value;
 			OrgName.IsReadOnly       = !bWriteable.Value;
 			OrgUnitName.IsReadOnly   = !bWriteable.Value;
 			LocalityName.IsReadOnly  = !bWriteable.Value;

@@ -13,8 +13,8 @@ namespace Arteria_s.App.RoughCA
 			OrgKey = 0;
 			SerialNumber = 0;
 		}
-//		public string TrustName { get; set; }	//　ルート認証局名
-//		public string IssueName { get; set; }	//　発行認証局名
+		public string TrustName { get; set; }	//　ルート認証局名
+		public string IssueName { get; set; }	//　発行認証局名
 		public long OrgKey { get; set; }
 		public string OrgName { get; set; }
 		public string OrgUnitName { get; set; }
@@ -27,6 +27,14 @@ namespace Arteria_s.App.RoughCA
 
 		public override bool Validate()
 		{
+			if (IsNotNull(TrustName) == false)
+			{
+				return (false);
+			}
+			if (IsNotNull(IssueName) == false)
+			{
+				return (false);
+			}
 			if (IsNotNull(OrgName) == false)
 			{
 				return (false);

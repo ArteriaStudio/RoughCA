@@ -113,7 +113,7 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		//　認証局証明書を生成
-		//　pCommonName：
+		//　pCommonName：共通名に記す認証局名
 		//　pCACertificate：署名する認証局の証明書データ
 		public bool CreateForAuthority(OrgProfile pOrgProfile, string pCommonName, Certificate pCACertificate)
 		{

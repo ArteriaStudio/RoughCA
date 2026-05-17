@@ -1,13 +1,14 @@
-﻿using Npgsql;
+﻿using Arteria_s.DB.Base;
+using Npgsql;
 using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
+using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using Arteria_s.DB.Base;
 
 namespace Arteria_s.App.RoughCA
 {
@@ -60,10 +61,19 @@ namespace Arteria_s.App.RoughCA
 			{
 				//　認証局の証明書データを入力
 				m_pAuthorityItem = new Certificate();
-				var pAuthorityName = pIdentityName;//debug: need update it. 
+				var pAuthorityName = m_pOrgProfile.TrustName;
 				if (m_pAuthorityItem.Load(pSQLContext, pAuthorityName, m_uAuthorityId) == false)
 				{
+					//　ルート認証局の証明書を作成
 					if (CreateAuthority(pSQLContext, pAuthorityName, uInstance) == false)
+					{
+						return (false);
+					}
+				}
+				if (m_pAuthorityItem.Load(pSQLContext, m_pOrgProfile.IssueName, m_uAuthorityId) == false)
+				{
+					//　発行認証局の証明書を作成
+					if (CreateForAuthority(pSQLContext, m_pOrgProfile.IssueName, uInstance) == false)
 					{
 						return (false);
 					}
@@ -73,7 +83,7 @@ namespace Arteria_s.App.RoughCA
 			return (true);
 		}
 
-		//　認証局の証明書を新規作成
+		//　ルート認証局の証明書を新規作成
 		private bool CreateAuthority(VSQLContext pSQLContext, string pAuthorityName, uint uInstance)
 		{
 			//　自己署名認証局の証明書を作成
@@ -94,6 +104,41 @@ namespace Arteria_s.App.RoughCA
 			{
 				return (false);
 			}
+			return (true);
+		}
+
+		//　発行認証局の証明書を新規作成
+		//　pCommonName：共通名に記す認証局名
+		private bool CreateForAuthority(VSQLContext pSQLContext, string pCommonName, uint uInstance)
+		{
+			var pCertificate = new Certificate();
+			if (pCertificate.CreateForAuthority(m_pOrgProfile, pCommonName, m_pAuthorityItem) == false)
+			{
+				throw (new AppException(AppError.FailureCreateCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+			}
+			if (pCertificate.Validate() == false)
+			{
+				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+			}
+			if (pCertificate.IsHaveKey() == false)
+			{
+				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+			}
+			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
+//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
+			{
+				//　同一のサブジェクトを持つ証明書が既に発行されている。
+				var fOverWrite = false;
+				if (fOverWrite == false)
+				{
+					throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+				}
+			}
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
+			{
+				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
+			}
+
 			return (true);
 		}
 

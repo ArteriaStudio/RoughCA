@@ -26,7 +26,7 @@ namespace Arteria_s.DB.Base
 
 		private static readonly string m_pCompanyName = "Arteria";
 		private static readonly string m_pAppName = "RoughCA";
-		private const long LAYOUT_VERSION = 21;
+		private const long LAYOUT_VERSION = 22;
 
 		//　
 		//　DatabaseName：データベース名
@@ -102,7 +102,7 @@ namespace Arteria_s.DB.Base
 			pSQLs.Add("DROP TABLE IF EXISTS TIssuedCerts;");
 			pSQLs.Add("CREATE TABLE TIssuedCerts(SequenceNumber INTEGER NOT NULL, SerialNumber TEXT NOT NULL UNIQUE, SubjectName TEXT NOT NULL, CommonName TEXT NOT NULL, TypeOf INTEGER NOT NULL, Revoked INTEGER NOT NULL, LaunchAt  TEXT NOT NULL, ExpireAt TEXT NOT NULL, RevokeAt TEXT, AuthorityId INTEGER NOT NULL, PemData TEXT NOT NULL, KeyData TEXT, CONSTRAINT TIssuedCerts_pkey  PRIMARY KEY (AuthorityId, SequenceNumber));");
 			pSQLs.Add("DROP TABLE IF EXISTS TOrgProfile;");
-			pSQLs.Add("CREATE TABLE TOrgProfile (OrgKey INTEGER NOT NULL, OrgName TEXT NOT NULL, OrgunitName TEXT NOT NULL, LocalityName TEXT NOT NULL, ProvinceName TEXT NOT NULL, CountryName TEXT NOT NULL, ServerName TEXT NOT NULL, SerialNumber INTEGER NOT NULL, UpdateAt TEXT NOT NULL, CONSTRAINT TOrgProfile_pkey PRIMARY KEY (OrgKey));");
+			pSQLs.Add("CREATE TABLE TOrgProfile (OrgKey INTEGER NOT NULL, OrgName TEXT NOT NULL, OrgunitName TEXT NOT NULL, LocalityName TEXT NOT NULL, ProvinceName TEXT NOT NULL, CountryName TEXT NOT NULL, ServerName TEXT NOT NULL, SerialNumber INTEGER NOT NULL, TrustName TEXT NOT NULL, IssueName TEXT NOT NULL, UpdateAt TEXT NOT NULL, CONSTRAINT TOrgProfile_pkey PRIMARY KEY (OrgKey));");
 			pSQLs.Add("DROP TABLE IF EXISTS TCounters;");
 			pSQLs.Add("CREATE TABLE TCounters (CrlNumber TEXT NOT NULL);");
 			pSQLs.Add(@$"PRAGMA user_version = {LAYOUT_VERSION};");
@@ -202,7 +202,7 @@ namespace Arteria_s.DB.Base
 		public override bool LoadOrgProfile(ref OrgProfile pOrgProfile, uint uInstance)
 		{
 			m_pConnection.Open();
-			var pSQL = "SELECT OrgKey, OrgName, OrgUnitName, LocalityName, ProvinceName, CountryName, ServerName, SerialNumber, UpdateAt FROM TOrgProfile WHERE OrgKey = @OrgKey";
+			var pSQL = "SELECT OrgKey, OrgName, OrgUnitName, LocalityName, ProvinceName, CountryName, ServerName, SerialNumber, TrustName, IssueName, UpdateAt FROM TOrgProfile WHERE OrgKey = @OrgKey";
 			using (var pCommand = m_pConnection.CreateCommand())
 			{
 				pCommand.CommandText = pSQL;
@@ -220,7 +220,9 @@ namespace Arteria_s.DB.Base
 						pOrgProfile.CountryName  = pReader.GetString(5);
 						pOrgProfile.ServerName   = pReader.GetString(6);
 						pOrgProfile.SerialNumber = pReader.GetInt64(7);
-						pOrgProfile.UpdataAt     = pReader.GetDateTime(8);
+						pOrgProfile.TrustName    = pReader.GetString(8);
+						pOrgProfile.IssueName    = pReader.GetString(9);
+						pOrgProfile.UpdataAt     = pReader.GetDateTime(10);
 					}
 				}
 			}
@@ -231,8 +233,8 @@ namespace Arteria_s.DB.Base
 		public override bool SaveOrgProfile(OrgProfile pOrgProfile)
 		{
 			m_pConnection.Open();
-			var pSQL = "INSERT INTO TOrgProfile VALUES (@OrgKey, @OrgName, @OrgUnitName, @LocalityName, @ProvinceName, @CountryName, @ServerName, @SerialNumber, CURRENT_TIMESTAMP)";
-			pSQL += " ON CONFLICT (OrgKey) DO UPDATE SET OrgName = @OrgName, OrgUnitName = @OrgUnitName, LocalityName = @LocalityName, ProvinceName = @ProvinceName, CountryName = @CountryName, ServerName = @ServerName, SerialNumber = @SerialNumber, UpdateAt = CURRENT_TIMESTAMP";
+			var pSQL = "INSERT INTO TOrgProfile (OrgKey, OrgName, OrgUnitName, LocalityName, ProvinceName, CountryName, ServerName, SerialNumber, TrustName, IssueName, UpdateAt) VALUES (@OrgKey, @OrgName, @OrgUnitName, @LocalityName, @ProvinceName, @CountryName, @ServerName, @SerialNumber, @TrustName, @IssueName, CURRENT_TIMESTAMP)";
+			pSQL += " ON CONFLICT (OrgKey) DO UPDATE SET OrgName = @OrgName, OrgUnitName = @OrgUnitName, LocalityName = @LocalityName, ProvinceName = @ProvinceName, CountryName = @CountryName, ServerName = @ServerName, SerialNumber = @SerialNumber, TrustName = @TrustName, IssueName = @IssueName, UpdateAt = CURRENT_TIMESTAMP";
 			using (var pCommand = m_pConnection.CreateCommand())
 			{
 				pCommand.CommandText = pSQL;
@@ -245,6 +247,8 @@ namespace Arteria_s.DB.Base
 				pCommand.Parameters.Add(new SqliteParameter("CountryName",  pOrgProfile.CountryName));
 				pCommand.Parameters.Add(new SqliteParameter("SerialNumber", pOrgProfile.SerialNumber));
 				pCommand.Parameters.Add(new SqliteParameter("ServerName",   pOrgProfile.ServerName));
+				pCommand.Parameters.Add(new SqliteParameter("TrustName",    pOrgProfile.TrustName));
+				pCommand.Parameters.Add(new SqliteParameter("IssueName",    pOrgProfile.IssueName));
 				var lResult = pCommand.ExecuteNonQuery();
 				Debug.Assert(lResult == 1, $"SQL={pSQL}; SQL文を設定し忘れていませんか？CommandTextメンバーに設定する必要があります。");
 			}
