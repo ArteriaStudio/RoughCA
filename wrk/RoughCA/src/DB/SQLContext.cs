@@ -68,7 +68,7 @@ namespace Arteria_s.DB.Base
 
 		public override bool LoadOrgProfile(ref OrgProfile pOrgProfile, uint uInstance)
 		{
-			var pSQL = "SELECT OrgKey, OrgName, OrgUnitName, LocalityName, ProvinceName, CountryName, ServerName, UpdateAt FROM TOrgProfile WHERE OrgKey = @OrgKey";
+			var pSQL = "SELECT OrgKey, OrgName, OrgUnitName, LocalityName, ProvinceName, CountryName, ServerName, UpdateAt, TrustName, IssueName FROM TOrgProfile WHERE OrgKey = @OrgKey";
 			using (var pCommand = new NpgsqlCommand(pSQL, m_pConnection))
 			{
 				pCommand.Parameters.Clear();
@@ -85,6 +85,8 @@ namespace Arteria_s.DB.Base
 						pOrgProfile.CountryName = pReader.GetString(5);
 						pOrgProfile.ServerName = pReader.GetString(6);
 						pOrgProfile.UpdataAt = pReader.GetDateTime(7);
+						pOrgProfile.TrustName = pReader.GetString(8);
+						pOrgProfile.IssueName = pReader.GetString(9);
 					}
 				}
 			}
@@ -94,8 +96,8 @@ namespace Arteria_s.DB.Base
 
 		public override bool SaveOrgProfile(OrgProfile pOrgProfile)
 		{
-			var pSQL = "INSERT INTO TOrgProfile VALUES (@OrgKey, @OrgName, @OrgUnitName, @LocalityName, @ProvinceName, @CountryName, @ServerName, now())";
-			pSQL += " ON CONFLICT ON CONSTRAINT TOrgProfile_pkey DO UPDATE SET OrgName = @OrgName, OrgUnitName = @OrgUnitName, LocalityName = @LocalityName, ProvinceName = @ProvinceName, CountryName = @CountryName, ServerName = @ServerName, UpdateAt = now()";
+			var pSQL = "INSERT INTO TOrgProfile VALUES (@OrgKey, @OrgName, @OrgUnitName, @LocalityName, @ProvinceName, @CountryName, @ServerName, @TrustName, @IssueName, now())";
+			pSQL += " ON CONFLICT ON CONSTRAINT TOrgProfile_pkey DO UPDATE SET OrgName = @OrgName, OrgUnitName = @OrgUnitName, LocalityName = @LocalityName, ProvinceName = @ProvinceName, CountryName = @CountryName, ServerName = @ServerName, TrustName = @TrustName, IssueName = @IssueName, UpdateAt = now()";
 			using (var pCommand = new NpgsqlCommand(pSQL, m_pConnection))
 			{
 				pCommand.Parameters.Clear();
@@ -106,6 +108,8 @@ namespace Arteria_s.DB.Base
 				pCommand.Parameters.AddWithValue("ProvinceName", pOrgProfile.ProvinceName);
 				pCommand.Parameters.AddWithValue("CountryName", pOrgProfile.CountryName);
 				pCommand.Parameters.AddWithValue("ServerName", pOrgProfile.ServerName);
+				pCommand.Parameters.AddWithValue("TrustName", pOrgProfile.TrustName);
+				pCommand.Parameters.AddWithValue("IssueName", pOrgProfile.IssueName);
 				pCommand.ExecuteNonQuery();
 			}
 

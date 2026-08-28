@@ -93,7 +93,6 @@ namespace Arteria_s.App.RoughCA
 			{
 				return (false);
 			}
-			/*
 			if (IsNotNull(TrustName.Text) == false)
 			{
 				return (false);
@@ -102,7 +101,6 @@ namespace Arteria_s.App.RoughCA
 			{
 				return (false);
 			}
-			*/
 
 			return (true);
 		}
@@ -179,6 +177,8 @@ namespace Arteria_s.App.RoughCA
 			ProvinceName.IsReadOnly  = !bWriteable.Value;
 			CountryName.IsReadOnly   = !bWriteable.Value;
 			ServerName.IsReadOnly    = !bWriteable.Value;
+			TrustName.IsReadOnly     = !bWriteable.Value;
+			IssueName.IsReadOnly     = !bWriteable.Value;
 
 			m_bWriteable = bWriteable.Value;
 		}

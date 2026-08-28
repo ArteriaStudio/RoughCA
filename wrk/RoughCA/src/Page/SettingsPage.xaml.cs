@@ -18,8 +18,7 @@ namespace Arteria_s.App.RoughCA
 			try
 			{
 				this.InitializeComponent();
-			} catch (Exception ex)
-			{
+			} catch (Exception ex) {
 				Debug.WriteLine(ex);
 			}
 
