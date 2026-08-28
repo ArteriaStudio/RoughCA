@@ -27,8 +27,6 @@
 				<TextBox x:Uid="ProvinceName"  x:Name="ProvinceName"  Margin="8,8,8,8" IsReadOnly="True" Header="都道府県（stateOrProvinceName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.ProvinceName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
 				<TextBox x:Uid="CountryName"   x:Name="CountryName"   Margin="8,8,8,8" IsReadOnly="True" Header="国名（countryName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.CountryName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
 				<TextBox x:Uid="ServerName"    x:Name="ServerName"    Margin="8,8,8,8" IsReadOnly="True" Header="証明情報公開サーバ（publishServerName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.ServerName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="TrustName"     x:Name="TrustName"     Margin="8,8,8,8" IsReadOnly="True" Header="信頼の起点認証局名（trustName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.TrustName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="IssueName"     x:Name="IssueName"     Margin="8,8,8,8" IsReadOnly="True" Header="発行認証局名（issueName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.IssueName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
 				<StackPanel Orientation="Horizontal" Padding="4, 4, 4, 4" Style="{StaticResource CardStyleStackPanel}">
 					<Button  x:Uid="SignRequest"  x:Name="SignRequest" Margin="8,8,8,8" IsEnabled="True"  Click="SignRequest_Click" />
 					<Button  x:Uid="CertAccept"   x:Name="CertAccept"  Margin="8,8,8,8" IsEnabled="True"  Click="CertAccept_Click" />
