@@ -138,4 +138,4 @@ RoughCA/
 ## License
 
 This project is licensed under the [MIT License](LICENSE).  
-Copyright (c) 2024 ArteriaStudio
+2024-2026 ArteriaStudio
