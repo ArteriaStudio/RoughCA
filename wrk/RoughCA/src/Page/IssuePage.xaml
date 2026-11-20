@@ -1,4 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : IssuePage.xaml
+  Description : 証明書作成画面（種別選択および発行パラメータ入力フォーム）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-20
+================================================================================
+-->
 <Page
 	x:Class="Arteria_s.App.RoughCA.IssuePage"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,33 +15,17 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d"
-	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	Background="Transparent">
 
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
-
-		<Grid Grid.Column="0" Grid.Row="0">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*"/>
-			</Grid.ColumnDefinitions>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="*"/>
-			</Grid.RowDefinitions>
-
-			<StackPanel Grid.Column="0" Grid.Row="0" Margin="8, 8, 8, 8" Orientation="Horizontal">
-				<ComboBox x:Uid="CertificateType" x:Name="CertificateType" Header="証明書の種類" Margin="2, 2, 2, 2" SelectionChanged="CertificateType_SelectionChanged">
+	<ScrollViewer Padding="24,16,24,24">
+		<StackPanel MaxWidth="680" HorizontalAlignment="Left" Spacing="16">
+			<!-- 証明書種別カード -->
+			<StackPanel Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,16" Spacing="12">
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xEB95;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+					<TextBlock Text="証明書タイプ" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+				</StackPanel>
+				<ComboBox x:Uid="CertificateType" x:Name="CertificateType" Header="証明書の種類" MinWidth="320" HorizontalAlignment="Stretch" SelectionChanged="CertificateType_SelectionChanged">
 					<ComboBoxItem x:Uid="ServerCertificate" Tag="Server" Content="サーバー証明書" />
 					<ComboBoxItem x:Uid="ClientCertificate" Tag="Client" Content="クライアント証明書" />
 					<ComboBoxItem x:Uid="RDSignCertificate" Tag="RDSign" Content="リモートデスクトップリスナー証明書" />
@@ -41,13 +33,25 @@
 					<ComboBoxItem x:Uid="CodeCertificate"   Tag="Code"   Content="コード署名証明書" />
 				</ComboBox>
 			</StackPanel>
-			<TextBox x:Uid="CommonName"  x:Name="CommonName"  Grid.Column="0" Grid.Row="1" Margin="8, 8, 8, 8" Header="共通名" Text="{x:Bind m_pForm.m_pCommonName, Mode=TwoWay}"  PlaceholderText="証明書に記載する名前"  TextChanged="TextBox_TextChanged" />
-			<TextBox x:Uid="HostName"    x:Name="HostName"    Grid.Column="0" Grid.Row="2" Margin="8, 8, 8, 8" Header="FQDN"  Text="{x:Bind m_pForm.m_pHostName, Mode=TwoWay}"    PlaceholderText="FQDN形式での識別名称" TextChanged="TextBox_TextChanged" />
-			<TextBox x:Uid="MailAddress" x:Name="MailAddress" Grid.Column="0" Grid.Row="3" Margin="8, 8, 8, 8" Header="メール" Text="{x:Bind m_pForm.m_pMailAddress, Mode=TwoWay}" PlaceholderText="メールアドレス"       TextChanged="TextBox_TextChanged" />
-			<TextBox x:Uid="NetAddress"  x:Name="NetAddress"  Grid.Column="0" Grid.Row="4" Margin="8, 8, 8, 8" Header="ネットアドレス" Text="{x:Bind m_pForm.m_pNetAddress, Mode=TwoWay}" PlaceholderText="192.168.0.1"  TextChanged="TextBox_TextChanged" />
-			<StackPanel Grid.Column="0" Grid.Row="5" Margin="8, 8, 8, 8" Orientation="Horizontal" HorizontalAlignment="Right">
-				<Button x:Uid="IssueButton" x:Name="IssueButton" Style="{StaticResource AccentButtonStyle}" IsEnabled="False" Content="発行" Click="IssueButton_Click" />
+
+			<!-- パラメータ入力カード -->
+			<StackPanel Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,20" Spacing="14">
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xE8A5;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+					<TextBlock Text="証明書パラメータ" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+				</StackPanel>
+
+				<TextBox x:Uid="CommonName"  x:Name="CommonName"  Header="共通名" Text="{x:Bind m_pForm.m_pCommonName, Mode=TwoWay}"  PlaceholderText="証明書に記載する名前"  TextChanged="TextBox_TextChanged" />
+				<TextBox x:Uid="HostName"    x:Name="HostName"    Header="FQDN"  Text="{x:Bind m_pForm.m_pHostName, Mode=TwoWay}"    PlaceholderText="FQDN形式での識別名称" TextChanged="TextBox_TextChanged" />
+				<TextBox x:Uid="MailAddress" x:Name="MailAddress" Header="メール" Text="{x:Bind m_pForm.m_pMailAddress, Mode=TwoWay}" PlaceholderText="メールアドレス"       TextChanged="TextBox_TextChanged" />
+				<TextBox x:Uid="NetAddress"  x:Name="NetAddress"  Header="ネットアドレス" Text="{x:Bind m_pForm.m_pNetAddress, Mode=TwoWay}" PlaceholderText="192.168.0.1"  TextChanged="TextBox_TextChanged" />
+
+				<Border Height="1" Margin="0,4,0,4" Background="{ThemeResource HeaderDividerBrush}" />
+
+				<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+					<Button x:Uid="IssueButton" x:Name="IssueButton" Style="{StaticResource AccentButtonStyle}" MinWidth="120" IsEnabled="False" Content="発行" Click="IssueButton_Click" />
+				</StackPanel>
 			</StackPanel>
-		</Grid>
-	</Grid>
+		</StackPanel>
+	</ScrollViewer>
 </Page>

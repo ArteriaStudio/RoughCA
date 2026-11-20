@@ -1,54 +1,119 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : MainWindow.xaml
+  Description : メインウィンドウ（Mica背景・タイトルバー・ナビゲーション・ログドック）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-20
+================================================================================
+-->
 <Window
 	x:Class="Arteria_s.App.RoughCA.MainWindow"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-
 	xmlns:local="using:Arteria_s.App.RoughCA"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d">
 
-	<!-- 左端に設置、戻るボタンを非表示、ペインは閉じる -->
-	<NavigationView PaneDisplayMode="Left" IsBackButtonVisible="Collapsed" IsPaneOpen="False" SelectionChanged="NavigationView_SelectionChanged">
-		<NavigationView.PaneHeader>
-			<!-- 高さは、32[ppx]、水平幅は任意 -->
-			<Image Name="PaneHeader" Source="ms-appx:///Assets/EasyCA.png" />
-		</NavigationView.PaneHeader>
-		<NavigationView.MenuItems>
-			<NavigationViewItem x:Uid="ListupCertificate" Tag="ListupCertificate" Icon="Home" Content="発行履歴と失効処理"/>
-			<NavigationViewItem x:Uid="CreateCertificate" Tag="CreateCertificate" Icon="Add" Content="証明書を作成"/>
-			<NavigationViewItem x:Uid="PrimitiveProcedure" Tag="PrimitiveProcedure" Icon="Caption" Content="プリミティヴ">
-				<NavigationViewItem.MenuItems>
-					<NavigationViewItem x:Uid="Request" Tag="Request" Icon="Send" Content="署名要求を作成"/>
-					<NavigationViewItem x:Uid="Signing" Tag="Signing" Icon="Accept" Content="署名を実行"/>
-				</NavigationViewItem.MenuItems>
-			</NavigationViewItem>
-		</NavigationView.MenuItems>
-		<NavigationView.FooterMenuItems>
-			<NavigationViewItem x:Uid="Author" Tag="Author" Icon="ContactInfo" Content="著作権表示"/>
-		</NavigationView.FooterMenuItems>
+	<Window.SystemBackdrop>
+		<MicaBackdrop Kind="BaseAlt" />
+	</Window.SystemBackdrop>
 
-		<Grid>
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*"/>
-			</Grid.ColumnDefinitions>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="*"/>
-				<RowDefinition Height="0.3*"/>
-			</Grid.RowDefinitions>
-			<Grid Grid.Row="0" Style="{StaticResource CaptionPane}">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<!-- カスタムタイトルバー -->
+		<Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent" Padding="16,0,0,0">
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+				<Image Source="ms-appx:///Assets/Square44x44Logo.scale-200.png" Width="18" Height="18" />
+				<TextBlock x:Name="TitleBarText" Text="RoughCA" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" FontWeight="SemiBold" />
+			</StackPanel>
+		</Grid>
+
+		<!-- メインナビゲーション -->
+		<NavigationView
+			x:Name="NavView"
+			Grid.Row="1"
+			PaneDisplayMode="Left"
+			IsBackButtonVisible="Collapsed"
+			IsPaneOpen="False"
+			IsTitleBarAutoPaddingEnabled="False"
+			SelectionChanged="NavigationView_SelectionChanged">
+			<NavigationView.PaneHeader>
+				<StackPanel Orientation="Horizontal" Spacing="10" Margin="12,8,12,8" VerticalAlignment="Center">
+					<Image Name="PaneHeader" Source="ms-appx:///Assets/EasyCA.png" Height="28" />
+				</StackPanel>
+			</NavigationView.PaneHeader>
+			<NavigationView.MenuItems>
+				<NavigationViewItem x:Uid="ListupCertificate" Tag="ListupCertificate" Icon="Home" Content="発行履歴と失効処理"/>
+				<NavigationViewItem x:Uid="CreateCertificate" Tag="CreateCertificate" Icon="Add" Content="証明書を作成"/>
+				<NavigationViewItem x:Uid="PrimitiveProcedure" Tag="PrimitiveProcedure" Icon="Caption" Content="プリミティヴ">
+					<NavigationViewItem.MenuItems>
+						<NavigationViewItem x:Uid="Request" Tag="Request" Icon="Send" Content="署名要求を作成"/>
+						<NavigationViewItem x:Uid="Signing" Tag="Signing" Icon="Accept" Content="署名を実行"/>
+					</NavigationViewItem.MenuItems>
+				</NavigationViewItem>
+			</NavigationView.MenuItems>
+			<NavigationView.FooterMenuItems>
+				<NavigationViewItem x:Uid="Author" Tag="Author" Icon="ContactInfo" Content="著作権表示"/>
+			</NavigationView.FooterMenuItems>
+
+			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
-				<TextBlock x:Uid="Caption"  Name="Caption"  Grid.Column="0" HorizontalAlignment="Left"  VerticalAlignment="Center" Style="{StaticResource CaptionText}" />
-				<TextBlock x:Uid="Location" Name="Location" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource CaptionText}" />
-			</Grid>
-			<Frame Grid.Row="1" x:Name="ContentFrame" />
-			<Frame Grid.Row="2" x:Name="MessageFrame" />
-		</Grid>
-	</NavigationView>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="*"/>
+					<RowDefinition x:Name="MessageRow" Height="180"/>
+				</Grid.RowDefinitions>
 
+				<!-- ページヘッダー -->
+				<Grid Grid.Row="0" Style="{ThemeResource CaptionPane}">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+
+					<TextBlock x:Uid="Caption" Name="Caption" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{ThemeResource CaptionText}" />
+
+					<DropDownButton x:Name="LocationBadge"
+									Grid.Column="1" Grid.Row="0"
+									Background="{ThemeResource AccentBadgeBackgroundBrush}"
+									BorderBrush="{ThemeResource AccentBadgeBorderBrush}"
+									BorderThickness="1"
+									CornerRadius="14"
+									Padding="12,5,10,5"
+									VerticalAlignment="Center"
+									ToolTipService.ToolTip="クリックして認証局プロファイルを切り替え">
+						<DropDownButton.Content>
+							<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+								<FontIcon Glyph="&#xE968;" FontSize="12" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+								<TextBlock x:Uid="Location" Name="Location" Style="{StaticResource CaptionTextBlockStyle}" FontWeight="SemiBold" Foreground="{ThemeResource AccentBadgeForegroundBrush}" VerticalAlignment="Center" />
+							</StackPanel>
+						</DropDownButton.Content>
+						<DropDownButton.Flyout>
+							<MenuFlyout x:Name="ProfileSwitchFlyout" Placement="BottomEdgeAlignedRight" Opening="ProfileSwitchFlyout_Opening" />
+						</DropDownButton.Flyout>
+					</DropDownButton>
+
+					<Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Height="1" Margin="0,12,0,0" Background="{ThemeResource HeaderDividerBrush}" />
+				</Grid>
+
+				<!-- メインコンテンツ -->
+				<Frame Grid.Row="1" x:Name="ContentFrame" />
+
+				<!-- メッセージログ（下部ドック） -->
+				<Frame Grid.Row="2" x:Name="MessageFrame" />
+			</Grid>
+		</NavigationView>
+	</Grid>
 </Window>

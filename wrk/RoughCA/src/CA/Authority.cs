@@ -42,42 +42,74 @@ namespace Arteria_s.App.RoughCA
 		private uint		m_uAuthorityId; 	//　認証局識別子
 		private string		m_pAuthorityName;	//　認証局名
 
-		//　認証局の証明書と鍵を入力
+		//　認証局の証明書と鍵を入力（未発行の場合は自動作成）
 		public bool Load(VSQLContext pSQLContext, string pIdentityName, uint uInstance)
 		{
+			return LoadInternal(pSQLContext, pIdentityName, uInstance, loadOrgProfileFromDb: true, out _, out _);
+		}
+
+		//　現在の組織プロファイルに基づき、未発行のルート認証局・発行認証局の鍵と自己証明書を作成して確保する
+		public bool EnsureAuthorityCertificates(VSQLContext pSQLContext, string pIdentityName, uint uInstance, out bool createdRoot, out bool createdIssue)
+		{
+			return LoadInternal(pSQLContext, pIdentityName, uInstance, loadOrgProfileFromDb: false, out createdRoot, out createdIssue);
+		}
+
+		private bool LoadInternal(VSQLContext pSQLContext, string pIdentityName, uint uInstance, bool loadOrgProfileFromDb, out bool createdRoot, out bool createdIssue)
+		{
+			createdRoot = false;
+			createdIssue = false;
+
+			//　切り替え時に前の認証局情報が残らないようリセット
+			m_pAuthorityItem = null;
+			if (loadOrgProfileFromDb || m_pOrgProfile == null)
+			{
+				m_pOrgProfile = new OrgProfile();
+			}
+
 			//　認証局識別子を作成
 			m_uAuthorityId = ConvertIdentity(pIdentityName);
 			m_pAuthorityName = pIdentityName;
 
 			//　組織プロファイルと認証局情報を入力
-			m_pOrgProfile = new OrgProfile();
-			pSQLContext.LoadOrgProfile(ref m_pOrgProfile, uInstance);
-//			m_pOrgProfile.Load(pSQLContext, iUserIdentity);
+			if (loadOrgProfileFromDb)
+			{
+				pSQLContext.LoadOrgProfile(ref m_pOrgProfile, uInstance);
+			}
+
 			if (m_pOrgProfile.Validate() == false)
 			{
-				;
+				return (false);
 			}
-			else
+
+			//　ルート認証局の証明書データを入力（存在しなければ鍵と自己署名証明書を新規作成）
+			m_pAuthorityItem = new Certificate();
+			var pAuthorityName = m_pOrgProfile.TrustName;
+			if (m_pAuthorityItem.Load(pSQLContext, pAuthorityName, m_uAuthorityId) == false)
 			{
-				//　認証局の証明書データを入力
-				m_pAuthorityItem = new Certificate();
-				var pAuthorityName = m_pOrgProfile.TrustName;
-				if (m_pAuthorityItem.Load(pSQLContext, pAuthorityName, m_uAuthorityId) == false)
+				//　ルート認証局の証明書を作成
+				if (CreateAuthority(pSQLContext, pAuthorityName, uInstance) == false)
 				{
-					//　ルート認証局の証明書を作成
-					if (CreateAuthority(pSQLContext, pAuthorityName, uInstance) == false)
-					{
-						return (false);
-					}
+					return (false);
 				}
-				if (m_pAuthorityItem.Load(pSQLContext, m_pOrgProfile.IssueName, m_uAuthorityId) == false)
+				createdRoot = true;
+			}
+
+			//　発行認証局名がルート認証局名と異なる場合、発行認証局の証明書を確保
+			if (!string.Equals(m_pOrgProfile.IssueName, pAuthorityName, StringComparison.Ordinal))
+			{
+				var pIssueCert = new Certificate();
+				if (pIssueCert.Load(pSQLContext, m_pOrgProfile.IssueName, m_uAuthorityId) == false)
 				{
 					//　発行認証局の証明書を作成
 					if (CreateForAuthority(pSQLContext, m_pOrgProfile.IssueName, uInstance) == false)
 					{
 						return (false);
 					}
+					createdIssue = true;
+					//　作成した発行認証局証明書を読み込み直す
+					pIssueCert.Load(pSQLContext, m_pOrgProfile.IssueName, m_uAuthorityId);
 				}
+				m_pAuthorityItem = pIssueCert;
 			}
 
 			return (true);

@@ -51,14 +51,20 @@ namespace Arteria_s.DB.Base
 			return (true);
 		}
 
-		//　
-		~SQLContext()
+		public override void Close()
 		{
 			if (m_pConnection != null)
 			{
 				m_pConnection.Close();
+				m_pConnection.Dispose();
+				m_pConnection = null;
 			}
-			m_pConnection = null;
+		}
+
+		//　
+		~SQLContext()
+		{
+			Close();
 		}
 
 		public NpgsqlCommand CreateCommand(string pSQL)

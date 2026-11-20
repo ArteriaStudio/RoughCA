@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -486,6 +487,87 @@ namespace Arteria_s.App.RoughCA
 					;
 				}
 			}
+		}
+
+		//　一覧表示用のフォーマット・バッジヘルパー
+		public static string FormatDate(DateTime dt)
+		{
+			if (dt == DateTime.MinValue)
+			{
+				return "-";
+			}
+			return dt.ToString("yyyy/MM/dd");
+		}
+
+		public static string GetStatusText(bool revoked, DateTime expireAt)
+		{
+			if (revoked)
+			{
+				return "失効";
+			}
+			if (expireAt != DateTime.MinValue && expireAt <= DateTime.Now)
+			{
+				return "期限切れ";
+			}
+			if (expireAt != DateTime.MinValue && expireAt <= DateTime.Now.AddDays(30))
+			{
+				return "期限間近";
+			}
+			return "有効";
+		}
+
+		public static Brush GetStatusBackground(bool revoked, DateTime expireAt)
+		{
+			var isDark = Application.Current?.RequestedTheme == ApplicationTheme.Dark;
+			if (revoked || (expireAt != DateTime.MinValue && expireAt <= DateTime.Now))
+			{
+				return new SolidColorBrush(isDark
+					? Windows.UI.Color.FromArgb(0x2B, 0xFF, 0x99, 0xA4)
+					: Windows.UI.Color.FromArgb(0x1F, 0xC4, 0x2B, 0x1C));
+			}
+			if (expireAt != DateTime.MinValue && expireAt <= DateTime.Now.AddDays(30))
+			{
+				return new SolidColorBrush(isDark
+					? Windows.UI.Color.FromArgb(0x2B, 0xFC, 0xE1, 0x00)
+					: Windows.UI.Color.FromArgb(0x24, 0xC1, 0x9C, 0x00));
+			}
+			return new SolidColorBrush(isDark
+				? Windows.UI.Color.FromArgb(0x2B, 0x2E, 0xA0, 0x43)
+				: Windows.UI.Color.FromArgb(0x1F, 0x10, 0x7C, 0x10));
+		}
+
+		public static Brush GetStatusForeground(bool revoked, DateTime expireAt)
+		{
+			var isDark = Application.Current?.RequestedTheme == ApplicationTheme.Dark;
+			if (revoked || (expireAt != DateTime.MinValue && expireAt <= DateTime.Now))
+			{
+				return new SolidColorBrush(isDark
+					? Windows.UI.Color.FromArgb(0xFF, 0xFF, 0x99, 0xA4)
+					: Windows.UI.Color.FromArgb(0xFF, 0xB4, 0x23, 0x18));
+			}
+			if (expireAt != DateTime.MinValue && expireAt <= DateTime.Now.AddDays(30))
+			{
+				return new SolidColorBrush(isDark
+					? Windows.UI.Color.FromArgb(0xFF, 0xFC, 0xE1, 0x00)
+					: Windows.UI.Color.FromArgb(0xFF, 0x8A, 0x5A, 0x00));
+			}
+			return new SolidColorBrush(isDark
+				? Windows.UI.Color.FromArgb(0xFF, 0x6C, 0xCB, 0x5F)
+				: Windows.UI.Color.FromArgb(0xFF, 0x0E, 0x6A, 0x0E));
+		}
+
+		public static string GetTypeLabel(CertificateType typeOf)
+		{
+			return typeOf switch
+			{
+				CertificateType.CA => "CA",
+				CertificateType.Server => "Server",
+				CertificateType.Client => "Client",
+				CertificateType.Demand => "CSR",
+				CertificateType.RemoteDesktopListener => "RDP",
+				CertificateType.CodeSign => "CodeSign",
+				_ => typeOf.ToString()
+			};
 		}
 	}
 }

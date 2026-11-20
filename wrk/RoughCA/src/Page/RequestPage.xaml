@@ -1,4 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : RequestPage.xaml
+  Description : 署名要求作成画面（プレースホルダ）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-20
+================================================================================
+-->
 <Page
 	x:Class="Arteria_s.App.RoughCA.RequestPage"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,17 +15,12 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d"
-	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	Background="Transparent">
 
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
-
-		<Grid Grid.Column="0" Grid.Row="0" Background="Gray">
-		</Grid>
+	<Grid Padding="24,16,24,24">
+		<StackPanel MaxWidth="680" HorizontalAlignment="Left" Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,16" Spacing="8" VerticalAlignment="Top">
+			<TextBlock Text="署名要求を作成" Style="{ThemeResource SectionHeaderTextBlockStyle}" />
+			<TextBlock Text="この機能は現在準備中です。" Style="{ThemeResource ItemCaptionTextBlockStyle}" />
+		</StackPanel>
 	</Grid>
 </Page>

@@ -1,4 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : BasicParametersPage.xaml
+  Description : データベース接続設定画面（プロファイル管理・SQLite / PostgreSQL 設定）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-20
+================================================================================
+-->
 <Page
 	x:Class="Arteria_s.App.RoughCA.BasicParametersPage"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,71 +15,102 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d"
-	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	Background="Transparent">
 
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
+	<ScrollViewer x:Name="BasicParameters" Padding="16,16,16,24" LostFocus="BasicParameters_LostFocus">
+		<StackPanel MaxWidth="720" HorizontalAlignment="Left" Spacing="16">
+			<!-- プロファイル管理カード -->
+			<StackPanel Orientation="Vertical" Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,16" Spacing="12">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+						<FontIcon Glyph="&#xE77B;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+						<TextBlock Text="現在のプロファイル" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+					</StackPanel>
+					<Button x:Name="DeleteProfileButton" Grid.Column="1" IsEnabled="False" Click="DeleteProfileButton_Click">
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<FontIcon Glyph="&#xE74D;" FontSize="13" Foreground="{ThemeResource DangerAccentForegroundBrush}" />
+							<TextBlock Text="このプロファイルを削除" Foreground="{ThemeResource DangerAccentForegroundBrush}" />
+						</StackPanel>
+					</Button>
+				</Grid>
+				<TextBox x:Name="ProfileNameBox" IsReadOnly="True" Header="プロファイル名（ProfileName）" Text="{x:Bind m_pDbParams.ProfileName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+			</StackPanel>
 
-		<ScrollViewer x:Name="BasicParameters" Grid.Column="0" Grid.Row="0" Padding="4, 4, 4, 4" LostFocus="BasicParameters_LostFocus">
-			<StackPanel Orientation="Vertical" Style="{StaticResource CardStyleStackPanel}">
-				<RadioButtons x:Name="DBDrivers" Header="データベースドライバー" SelectedIndex="{x:Bind m_pDbParams.DriverIndex, Mode=TwoWay}" MaxColumns="2"  SelectionChanged="DBDrivers_SelectionChanged" Margin="8,8,8,8" IsEnabled="False">
+			<!-- ドライバー選択カード -->
+			<StackPanel Orientation="Vertical" Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,16" Spacing="8">
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xE968;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+					<TextBlock Text="データストア種別" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+				</StackPanel>
+				<RadioButtons x:Name="DBDrivers" Header="データベースドライバー" SelectedIndex="{x:Bind m_pDbParams.DriverIndex, Mode=TwoWay}" MaxColumns="2" SelectionChanged="DBDrivers_SelectionChanged" IsEnabled="False">
 					<RadioButton Content="SQLite"/>
 					<RadioButton Content="Postgres"/>
 				</RadioButtons>
-				<!--
-				<TextBox x:Uid="IdentityName"       x:Name="IdentityName"       Margin="8,8,8,8" IsReadOnly="True" Header="認証局識別子（IdentityName）" PlaceholderText=""  Text="{x:Bind m_pDbParams.IdentityName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				-->
-				<Expander x:Name="ExpanderSQLite" ExpandDirection="Down" Header="SQLite" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" IsEnabled="False" IsExpanded="False">
-					<StackPanel Orientation="Vertical" Style="{StaticResource CardStyleStackPanel}" Margin="4,4,4,4">
-					</StackPanel>
-				</Expander>
-				<Expander x:Name="ExpanderPostgreSQL" ExpandDirection="Down" Header="PostgreSQL" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" IsEnabled="False" IsExpanded="False">
-					<StackPanel Orientation="Vertical" Style="{StaticResource CardStyleStackPanel}" Margin="4,4,4,4">
-						<TextBlock Text="PostgreSQL"/>
-						<TextBox x:Uid="DatabaseServerName" x:Name="DatabaseServerName" Margin="8,8,8,8" IsReadOnly="True" Header="サーバのホスト名（HostName）" PlaceholderText="" Text="{x:Bind m_pDbParams.HostName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-						<TextBox x:Uid="DatabaseName"       x:Name="DatabaseName"       Margin="8,8,8,8" IsReadOnly="True" Header="データベース名（DatabaseName）" PlaceholderText="" Text="{x:Bind m_pDbParams.DatabaseName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-						<TextBox x:Uid="SchemaName"         x:Name="SchemaName"         Margin="8,8,8,8" IsReadOnly="True" Header="スキーマ名（SchemaName）" PlaceholderText=""  Text="{x:Bind m_pDbParams.SchemaName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-						<Grid>
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="Auto"/>
-							</Grid.ColumnDefinitions>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="*"/>
-							</Grid.RowDefinitions>
-							<TextBox x:Uid="ClientKey"       x:Name="ClientKey"       Grid.Column="0" Margin="8,8,8,8" IsReadOnly="True" Header="クライアント秘密鍵（ClientSecretKey）" PlaceholderText=""  Text="{x:Bind m_pDbParams.ClientKey, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-							<Button  x:Uid="BrowseClientKey" x:Name="BrowseClientKey" Grid.Column="1" Margin="8,8,8,8" IsEnabled="False" Click="BrowseClientKey_Click" Content="ファイルを選択"/>
-						</Grid>
-						<Grid>
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="Auto"/>
-							</Grid.ColumnDefinitions>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="*"/>
-							</Grid.RowDefinitions>
-							<TextBox x:Uid="ClientCrt"       x:Name="ClientCrt"       Grid.Column="0" Margin="8,8,8,8" IsReadOnly="True" Header="クライアント証明書（ClientCertificate）" PlaceholderText=""  Text="{x:Bind m_pDbParams.ClientCrt, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-							<Button  x:Uid="BrowseClientCrt" x:Name="BrowseClientCrt" Grid.Column="1" Margin="8,8,8,8" IsEnabled="False" Click="BrowseClienCrt_Click" Content="ファイルを選択"/>
-						</Grid>
-						<Grid>
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="Auto"/>
-							</Grid.ColumnDefinitions>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="*"/>
-							</Grid.RowDefinitions>
-							<TextBox x:Uid="RootCACrt"       x:Name="RootCACrt"       Grid.Column="0" Margin="8,8,8,8" IsReadOnly="True" Header="ルート（＝信頼端点）証明書（RootCertificate）" PlaceholderText=""  Text="{x:Bind m_pDbParams.TrustCrt, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-							<Button  x:Uid="BrowseRootCACrt" x:Name="BrowseRootCACrt" Grid.Column="1" Margin="8,8,8,8" IsEnabled="False" Click="BrowseRootCACrt_Click" Content="ファイルを選択"/>
-						</Grid>
-					</StackPanel>
-				</Expander>
 			</StackPanel>
-		</ScrollViewer>
-	</Grid>
+
+			<!-- SQLite 設定 -->
+			<Expander x:Name="ExpanderSQLite" ExpandDirection="Down" Header="SQLite 設定" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Style="{ThemeResource CardStyleExpander}" IsEnabled="False" IsExpanded="False">
+				<StackPanel Orientation="Vertical" Padding="8,8,8,8" Spacing="12">
+					<TextBox x:Name="SqliteDatabaseName" IsReadOnly="True" Header="データベース名 / 認証局識別子（DatabaseName）" PlaceholderText="例: RoughCA" Text="{x:Bind m_pDbParams.DatabaseName, Mode=TwoWay}" TextChanged="SqliteSettings_TextChanged" />
+					<Grid ColumnSpacing="8">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+						</Grid.ColumnDefinitions>
+						<TextBox x:Name="SqliteFilePath" Grid.Column="0" IsReadOnly="True" Header="SQLite ファイルパス（任意・空欄時は既定フォルダを使用）" PlaceholderText="空欄時は %APPDATA%\Arteria\RoughCA\{DatabaseName}.db" Text="{x:Bind m_pDbParams.SqliteFilePath, Mode=TwoWay}" TextChanged="SqliteSettings_TextChanged" />
+						<Button x:Name="BrowseSqliteFile" Grid.Column="1" VerticalAlignment="Bottom" IsEnabled="False" Click="BrowseSqliteFile_Click" Content="ファイルを選択" />
+					</Grid>
+					<StackPanel Orientation="Vertical" Spacing="2">
+						<TextBlock Text="実際に使用するファイルパス:" Style="{ThemeResource ItemCaptionTextBlockStyle}" />
+						<TextBlock x:Name="SqliteEffectivePathText" FontFamily="Consolas" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+					</StackPanel>
+				</StackPanel>
+			</Expander>
+
+			<!-- PostgreSQL 設定 -->
+			<Expander x:Name="ExpanderPostgreSQL" ExpandDirection="Down" Header="PostgreSQL 接続設定" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Style="{ThemeResource CardStyleExpander}" IsEnabled="False" IsExpanded="False">
+				<StackPanel Orientation="Vertical" Padding="8,8,8,8" Spacing="12">
+					<TextBox x:Uid="DatabaseServerName" x:Name="DatabaseServerName" IsReadOnly="True" Header="サーバのホスト名（HostName）" PlaceholderText="" Text="{x:Bind m_pDbParams.HostName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+					<TextBox x:Uid="DatabaseName"       x:Name="DatabaseName"       IsReadOnly="True" Header="データベース名（DatabaseName）" PlaceholderText="" Text="{x:Bind m_pDbParams.DatabaseName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+					<TextBox x:Uid="SchemaName"         x:Name="SchemaName"         IsReadOnly="True" Header="スキーマ名（SchemaName）" PlaceholderText=""  Text="{x:Bind m_pDbParams.SchemaName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+
+					<Border Height="1" Margin="0,4,0,4" Background="{ThemeResource HeaderDividerBrush}" />
+
+					<Grid ColumnSpacing="8">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+						</Grid.ColumnDefinitions>
+						<TextBox x:Uid="ClientKey"       x:Name="ClientKey"       Grid.Column="0" IsReadOnly="True" Header="クライアント秘密鍵（ClientSecretKey）" PlaceholderText=""  Text="{x:Bind m_pDbParams.ClientKey, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+						<Button  x:Uid="BrowseClientKey" x:Name="BrowseClientKey" Grid.Column="1" VerticalAlignment="Bottom" IsEnabled="False" Click="BrowseClientKey_Click" Content="ファイルを選択"/>
+					</Grid>
+					<Grid ColumnSpacing="8">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+						</Grid.ColumnDefinitions>
+						<TextBox x:Uid="ClientCrt"       x:Name="ClientCrt"       Grid.Column="0" IsReadOnly="True" Header="クライアント証明書（ClientCertificate）" PlaceholderText=""  Text="{x:Bind m_pDbParams.ClientCrt, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+						<Button  x:Uid="BrowseClientCrt" x:Name="BrowseClientCrt" Grid.Column="1" VerticalAlignment="Bottom" IsEnabled="False" Click="BrowseClienCrt_Click" Content="ファイルを選択"/>
+					</Grid>
+					<Grid ColumnSpacing="8">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+						</Grid.ColumnDefinitions>
+						<TextBox x:Uid="RootCACrt"       x:Name="RootCACrt"       Grid.Column="0" IsReadOnly="True" Header="ルート（＝信頼端点）証明書（RootCertificate）" PlaceholderText=""  Text="{x:Bind m_pDbParams.TrustCrt, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+						<Button  x:Uid="BrowseRootCACrt" x:Name="BrowseRootCACrt" Grid.Column="1" VerticalAlignment="Bottom" IsEnabled="False" Click="BrowseRootCACrt_Click" Content="ファイルを選択"/>
+					</Grid>
+				</StackPanel>
+			</Expander>
+
+			<!-- 保存して再接続ボタン -->
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+				<Button x:Name="ApplyReconnectButton" Style="{StaticResource AccentButtonStyle}" IsEnabled="False" Click="ApplyReconnectButton_Click" Content="保存して再接続" />
+			</StackPanel>
+		</StackPanel>
+	</ScrollViewer>
 </Page>

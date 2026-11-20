@@ -557,7 +557,7 @@ namespace Arteria_s.App.RoughCA
 		public bool Import(string pImportFilepath)
 		{
 			var pBytes = File.ReadAllBytes(pImportFilepath);
-			m_pCertificate = new X509Certificate2(pBytes);
+			m_pCertificate = X509CertificateLoader.LoadCertificate(pBytes);
 			if (m_pCertificate == null)
 			{
 				return (false);

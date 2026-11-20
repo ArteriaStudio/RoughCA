@@ -1,4 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : DefaultPage.xaml
+  Description : 発行履歴・失効処理画面（操作ツールバーおよび証明書一覧）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-20
+================================================================================
+-->
 <Page
 	x:Class="Arteria_s.App.RoughCA.DefaultPage"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,9 +15,9 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d"
-	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	Background="Transparent">
 
-	<Grid>
+	<Grid Padding="24,12,24,12" RowSpacing="12">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*"/>
 		</Grid.ColumnDefinitions>
@@ -18,87 +26,154 @@
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 
-		<StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Padding="1, 1, 1, 1" Style="{StaticResource CardStyleStackPanel}">
-			<Button x:Name="RevokeButton" Margin="4, 8, 4, 8" Style="{StaticResource ButtonRevealStyle}" Click="RevokeButton_Click">
-				<StackPanel Orientation="Horizontal">
-					<SymbolIcon Symbol="Cancel" />
-					<TextBlock x:Uid="RevokeCertificate" Margin="12, 0, 0, 0" Text="失効" />
-				</StackPanel>
-			</Button>
-			<Button x:Name="UpdateButton" Margin="4, 8, 4, 8" Style="{StaticResource ButtonRevealStyle}" Click="UpdateButton_Click">
-				<StackPanel Orientation="Horizontal">
-					<SymbolIcon Symbol="Go" />
-					<TextBlock x:Uid="UpdateCertificate" Margin="12, 0, 0, 0" Text="証明書を更新" />
-				</StackPanel>
-			</Button>
-			<Button x:Name="ExportButton" Margin="4, 8, 4, 8" Style="{StaticResource ButtonRevealStyle}" Click="ExportButton_Click">
-				<StackPanel Orientation="Horizontal">
-					<SymbolIcon Symbol="Download" />
-					<TextBlock x:Uid="ExportToFile" Margin="12, 0, 0, 0" Text="ファイルに出力" />
-				</StackPanel>
-			</Button>
-			<Button x:Name="SignupButton" Margin="4, 8, 4, 8" Style="{StaticResource ButtonRevealStyle}" Click="SignatureButton_Click" >
-				<StackPanel Orientation="Horizontal">
-					<SymbolIcon Symbol="Add" />
-					<TextBlock x:Uid="SignupCertificate" Margin="12, 0, 0, 0" Text="署名要求に署名" />
-				</StackPanel>
-			</Button>
-			<Button x:Name="AppendButton" Margin="4, 8, 4, 8" Style="{StaticResource ButtonRevealStyle}" Click="SignatureCAButton_Click" >
-				<StackPanel Orientation="Horizontal">
-					<SymbolIcon Symbol="Add" />
-					<TextBlock x:Uid="AddCertificate" Margin="12, 0, 0, 0" Text="署名要求（認証局）に署名" />
-				</StackPanel>
-			</Button>
-			<Button x:Name="RefreshButton" Margin="4, 8, 4, 8" Style="{StaticResource ButtonRevealStyle}" Click="RefreshButton_Click" >
-				<StackPanel Orientation="Horizontal">
-					<SymbolIcon Symbol="Admin" />
-					<TextBlock x:Uid="UpdateCRL" Margin="12, 0, 0, 0" Text="CRLを更新" />
-				</StackPanel>
-			</Button>
-			<!-- セパレータ（仮実装：おそらく右端に整列させる） -->
-			<Rectangle Width="24" Height="Auto" />
-			<Button x:Name="ReloadButton" Margin="4, 8, 4, 8" Style="{StaticResource ButtonRevealStyle}" Click="ReloadButton_Click" >
-				<StackPanel Orientation="Horizontal">
-					<SymbolIcon Symbol="Refresh" />
-					<TextBlock x:Uid="ReloadList" Margin="12, 0, 0, 0" Text="再表示" />
-				</StackPanel>
-			</Button>
-		</StackPanel>
+		<!-- 操作ツールバーカード -->
+		<Grid Grid.Row="0" Style="{ThemeResource CardStyleGrid}" Padding="12,8,12,8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
 
-		<ListView x:Name="CertsList" Grid.Column="0" Grid.Row="1" SelectionMode="Single" IsMultiSelectCheckBoxEnabled="False" ItemsSource="{x:Bind m_pCertificates}" SelectionChanged="CertsList_SelectionChanged" >
+			<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+				<!-- 選択した証明書への操作 -->
+				<Button x:Name="ExportButton" Style="{StaticResource AccentButtonStyle}" Click="ExportButton_Click">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<FontIcon Glyph="&#xE896;" FontSize="14" />
+						<TextBlock x:Uid="ExportToFile" Text="ファイルに出力" />
+					</StackPanel>
+				</Button>
+				<Button x:Name="UpdateButton" Click="UpdateButton_Click">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<FontIcon Glyph="&#xE72C;" FontSize="14" />
+						<TextBlock x:Uid="UpdateCertificate" Text="証明書を更新" />
+					</StackPanel>
+				</Button>
+				<Button x:Name="RevokeButton" Click="RevokeButton_Click">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<FontIcon Glyph="&#xE711;" FontSize="14" Foreground="{ThemeResource DangerAccentForegroundBrush}" />
+						<TextBlock x:Uid="RevokeCertificate" Text="失効" Foreground="{ThemeResource DangerAccentForegroundBrush}" />
+					</StackPanel>
+				</Button>
+
+				<!-- 区切り線 -->
+				<Border Width="1" Height="22" Margin="4,0,4,0" Background="{ThemeResource HeaderDividerBrush}" VerticalAlignment="Center" />
+
+				<!-- 認証局の操作 -->
+				<Button x:Name="SignupButton" Click="SignatureButton_Click">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<FontIcon Glyph="&#xE932;" FontSize="14" />
+						<TextBlock x:Uid="SignupCertificate" Text="署名要求に署名" />
+					</StackPanel>
+				</Button>
+				<Button x:Name="AppendButton" Click="SignatureCAButton_Click">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<FontIcon Glyph="&#xE72E;" FontSize="14" />
+						<TextBlock x:Uid="AddCertificate" Text="認証局署名要求に署名" />
+					</StackPanel>
+				</Button>
+				<Button x:Name="RefreshButton" Click="RefreshButton_Click">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<FontIcon Glyph="&#xEA18;" FontSize="14" />
+						<TextBlock x:Uid="UpdateCRL" Text="CRLを更新" />
+					</StackPanel>
+				</Button>
+			</StackPanel>
+
+			<!-- 右端：再表示 -->
+			<Button x:Name="ReloadButton" Grid.Column="1" Click="ReloadButton_Click" VerticalAlignment="Center">
+				<StackPanel Orientation="Horizontal" Spacing="8">
+					<SymbolIcon Symbol="Refresh" />
+					<TextBlock x:Uid="ReloadList" Text="再表示" />
+				</StackPanel>
+			</Button>
+		</Grid>
+
+		<!-- 証明書一覧 -->
+		<ListView x:Name="CertsList"
+				  Grid.Row="1"
+				  SelectionMode="Single"
+				  IsMultiSelectCheckBoxEnabled="False"
+				  ItemsSource="{x:Bind m_pCertificates}"
+				  SelectionChanged="CertsList_SelectionChanged"
+				  Padding="0,4,0,4">
+			<ListView.ItemContainerStyle>
+				<Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+					<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+					<Setter Property="Margin" Value="0,3,0,3" />
+					<Setter Property="Padding" Value="0" />
+				</Style>
+			</ListView.ItemContainerStyle>
 			<ListView.ItemTemplate>
 				<DataTemplate x:DataType="local:Certificate">
-					<Grid>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto"/>
-							<ColumnDefinition Width="0.6*"/>
-							<ColumnDefinition Width="200"/>
-							<ColumnDefinition Width="180"/>
-							<ColumnDefinition Width="180"/>
-							<ColumnDefinition Width="0.4*"/>
-						</Grid.ColumnDefinitions>
-						<Grid.RowDefinitions>
-							<RowDefinition Height="Auto"/>
-							<RowDefinition Height="*"/>
-						</Grid.RowDefinitions>
+					<Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+							BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+							BorderThickness="1"
+							CornerRadius="8"
+							Padding="14,10,14,10">
+						<Grid ColumnSpacing="14">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"/>
+								<ColumnDefinition Width="1.2*"/>
+								<ColumnDefinition Width="190"/>
+								<ColumnDefinition Width="110"/>
+								<ColumnDefinition Width="110"/>
+								<ColumnDefinition Width="Auto"/>
+							</Grid.ColumnDefinitions>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+							</Grid.RowDefinitions>
 
-						<Image Grid.Column="0" Grid.RowSpan="2" Source="Assets/Certificate.png" Width="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
-						<!-- TODO: 画像が表示されない（2023/10/31） -->
-						<!-- VSデバッグ環境だと出力ディレクトリに既定でファイルはコピーしない。結果、リリース環境との差違が生じる。 -->
-						<!--
-						<ImageIcon Grid.Column="0" Grid.Row="0" Grid.RowSpan="1" Source="ms-appx://Assets/Certificate.png" Width="32" />
-						-->
-						<Rectangle Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="4" Stroke="DarkGray" StrokeThickness="0" Opacity="0.5" />
-						<TextBlock Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Center" Margin="8, 4, 8, 4" Text="{x:Bind m_pItems.CommonName}"   Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-						<TextBlock Grid.Column="2" Grid.Row="0" Grid.RowSpan="1" VerticalAlignment="Center" Margin="8, 4, 8, 0" Text="SerialNumber"                   Style="{ThemeResource ItemCaptionTextBlockStyle}" />
-						<TextBlock Grid.Column="2" Grid.Row="1" Grid.RowSpan="1" VerticalAlignment="Center" Margin="8, 0, 8, 4" Text="{x:Bind m_pItems.SerialNumber}" Style="{ThemeResource BodyTextBlockStyle}"/>
-						<TextBlock Grid.Column="3" Grid.Row="0" Grid.RowSpan="1" VerticalAlignment="Center" Margin="8, 4, 8, 0" Text="Lauch"                          Style="{ThemeResource ItemCaptionTextBlockStyle}"/>
-						<TextBlock Grid.Column="3" Grid.Row="1" Grid.RowSpan="1" VerticalAlignment="Center" Margin="8, 0, 8, 4" Text="{x:Bind m_pItems.LaunchAt}"     Style="{ThemeResource BodyTextBlockStyle}"/>
-						<TextBlock Grid.Column="4" Grid.Row="0" Grid.RowSpan="1" VerticalAlignment="Center" Margin="8, 4, 8, 0" Text="Expiry"                         Style="{ThemeResource ItemCaptionTextBlockStyle}"/>
-						<TextBlock Grid.Column="4" Grid.Row="1" Grid.RowSpan="1" VerticalAlignment="Center" Margin="8, 0, 8, 4" Text="{x:Bind m_pItems.ExpireAt}"     Style="{ThemeResource BodyTextBlockStyle}"/>
-						<TextBlock Grid.Column="5" Grid.Row="0" Grid.RowSpan="1" VerticalAlignment="Center" Margin="8, 4, 8, 0" Text="CertificateType"                Style="{ThemeResource ItemCaptionTextBlockStyle}"/>
-						<TextBlock Grid.Column="5" Grid.Row="1" Grid.RowSpan="1" VerticalAlignment="Center" Margin="8, 0, 8, 4" Text="{x:Bind m_pItems.TypeOf}"       Style="{ThemeResource BodyTextBlockStyle}"/>
-					</Grid>
+							<!-- アイコン -->
+							<Border Grid.Column="0" Grid.RowSpan="2"
+									Width="36" Height="36"
+									CornerRadius="8"
+									Background="{ThemeResource AccentBadgeBackgroundBrush}"
+									VerticalAlignment="Center">
+								<FontIcon Glyph="&#xEB95;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+							</Border>
+
+							<!-- CommonName & ステータスバッジ -->
+							<StackPanel Grid.Column="1" Grid.RowSpan="2" Orientation="Vertical" VerticalAlignment="Center" Spacing="4">
+								<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+									<TextBlock Text="{x:Bind m_pItems.CommonName}" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+									<Border Background="{x:Bind local:DefaultPage.GetStatusBackground(m_pItems.Revoked, m_pItems.ExpireAt)}"
+											CornerRadius="10"
+											Padding="8,2,8,2"
+											VerticalAlignment="Center">
+										<TextBlock Text="{x:Bind local:DefaultPage.GetStatusText(m_pItems.Revoked, m_pItems.ExpireAt)}"
+												   Foreground="{x:Bind local:DefaultPage.GetStatusForeground(m_pItems.Revoked, m_pItems.ExpireAt)}"
+												   FontSize="11"
+												   FontWeight="SemiBold" />
+									</Border>
+								</StackPanel>
+								<TextBlock Text="{x:Bind m_pItems.SubjectName}" Style="{ThemeResource ItemCaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+							</StackPanel>
+
+							<!-- シリアル番号 -->
+							<TextBlock Grid.Column="2" Grid.Row="0" Text="Serial Number" Style="{ThemeResource ItemCaptionTextBlockStyle}" />
+							<TextBlock Grid.Column="2" Grid.Row="1" Text="{x:Bind m_pItems.SerialNumber}" FontFamily="Consolas" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+
+							<!-- 発行日 -->
+							<TextBlock Grid.Column="3" Grid.Row="0" Text="Issued" Style="{ThemeResource ItemCaptionTextBlockStyle}" />
+							<TextBlock Grid.Column="3" Grid.Row="1" Text="{x:Bind local:DefaultPage.FormatDate(m_pItems.LaunchAt)}" Style="{ThemeResource BodyTextBlockStyle}" />
+
+							<!-- 有効期限 -->
+							<TextBlock Grid.Column="4" Grid.Row="0" Text="Expires" Style="{ThemeResource ItemCaptionTextBlockStyle}" />
+							<TextBlock Grid.Column="4" Grid.Row="1" Text="{x:Bind local:DefaultPage.FormatDate(m_pItems.ExpireAt)}" Style="{ThemeResource BodyTextBlockStyle}" />
+
+							<!-- 証明書種別バッジ -->
+							<Border Grid.Column="5" Grid.RowSpan="2"
+									Background="{ThemeResource StatusNeutralBackgroundBrush}"
+									CornerRadius="6"
+									Padding="10,4,10,4"
+									VerticalAlignment="Center">
+								<TextBlock Text="{x:Bind local:DefaultPage.GetTypeLabel(m_pItems.TypeOf)}"
+										   Foreground="{ThemeResource StatusNeutralForegroundBrush}"
+										   FontSize="12"
+										   FontWeight="SemiBold" />
+							</Border>
+						</Grid>
+					</Border>
 				</DataTemplate>
 			</ListView.ItemTemplate>
 		</ListView>

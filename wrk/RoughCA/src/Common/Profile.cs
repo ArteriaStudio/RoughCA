@@ -1,40 +1,43 @@
 ﻿using Arteria_s.DB;
-using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Arteria_s.App.RoughCA
 {
-
 	public class DbParams : Data
 	{
-		private SortedDictionary<string, int> DriverNameToIndexMap = new SortedDictionary<string, int>();
-		private SortedDictionary<int, string> DriverIndexToNameMap = new SortedDictionary<int, string>();
+		private static readonly SortedDictionary<string, int> DriverNameToIndexMap = new SortedDictionary<string, int>
+		{
+			["SQLite"] = 0,
+			["Postgres"] = 1,
+		};
+		private static readonly SortedDictionary<int, string> DriverIndexToNameMap = new SortedDictionary<int, string>
+		{
+			[0] = "SQLite",
+			[1] = "Postgres",
+		};
+
 		public DbParams()
 		{
-			UserIdentity = -1;
-			HostName     = "";
-			DatabaseName = "";
-			SchemaName   = "";
-			ClientKey    = "";
-			ClientCrt    = "";
-			TrustCrt     = "";
-			//IdentityName = "";
-			//TrustName    = "";
-			//IssueName    = "";
-			DriverName   = "";
-			uInstance    = 0;
-
-			DriverNameToIndexMap["SQLite"] = 0;
-			DriverNameToIndexMap["Postgres"] = 1;
-			DriverIndexToNameMap[0] = "SQLite";
-			DriverIndexToNameMap[1] = "Postgres";
+			ProfileName    = "Default";
+			UserIdentity   = 0;
+			HostName       = "";
+			DatabaseName   = "RoughCA";
+			SchemaName     = "";
+			ClientKey      = "";
+			ClientCrt      = "";
+			TrustCrt       = "";
+			SqliteFilePath = "";
+			DriverName     = "SQLite";
+			uInstance      = 0;
 		}
 
+		[JsonPropertyName("ProfileName")]
+		public string ProfileName { get; set; }
 		[JsonPropertyName("UserIdentity")]
 		public int UserIdentity { get; set; }
 		[JsonPropertyName("HostName")]
@@ -49,27 +52,37 @@ namespace Arteria_s.App.RoughCA
 		public string ClientCrt { get; set; }
 		[JsonPropertyName("TrustCrt")]
 		public string TrustCrt { get; set; }
-		/*
-		[JsonPropertyName("IdentityName")]
-		public string IdentityName { get; set; }
-		*/
-		/*
-		[JsonPropertyName("TrustName")]
-		public string TrustName { get; set; }
-		[JsonPropertyName("IssueName")]
-		public string IssueName { get; set; }
-		*/
+		[JsonPropertyName("SqliteFilePath")]
+		public string SqliteFilePath { get; set; }
+
+		private string _DriverName = "SQLite";
 		[JsonPropertyName("DriverName")]
-		public string DriverName { get; set; }
-		private int _DriverIndex = 0;
-		public int DriverIndex {
-			get => _DriverIndex;
-			set {
-				if (value < 0) value = 0;
-				_DriverIndex = value;
-				DriverName = DriverIndexToNameMap[value];
+		public string DriverName
+		{
+			get => _DriverName;
+			set
+			{
+				_DriverName = value ?? "";
+				if (DriverNameToIndexMap.TryGetValue(_DriverName, out var idx))
+				{
+					_DriverIndex = idx;
+				}
 			}
 		}
+
+		private int _DriverIndex = 0;
+		[JsonIgnore]
+		public int DriverIndex
+		{
+			get => _DriverIndex;
+			set
+			{
+				if (value < 0 || !DriverIndexToNameMap.ContainsKey(value)) value = 0;
+				_DriverIndex = value;
+				_DriverName = DriverIndexToNameMap[value];
+			}
+		}
+
 		[JsonPropertyName("uInstance")]
 		public uint uInstance { get; set; }
 
@@ -106,246 +119,275 @@ namespace Arteria_s.App.RoughCA
 				{
 					return (false);
 				}
-				/*
-				if (IsNull(IdentityName) == true)
-				{
-					return (false);
-				}
-				*/
 			}
 			else if (DriverName.Equals("SQLite") == true)
 			{
-				//　SQLite に依存するパラメータはない。
-				;
+				if (IsNull(DatabaseName) == true && IsNull(SqliteFilePath) == true)
+				{
+					return (false);
+				}
 			}
 			else
 			{
 				return (false);
 			}
-			/*
-			if (IsNull(TrustName) == true)
-			{
-				return (false);
-			}
-			if (IsNull(IssueName) == true)
-			{
-				return (false);
-			}
-			*/
-			//Normalize();
 
 			return (true);
 		}
-		/*
-		public void Normalize()
-		{
-			DriverIndex = DriverNameToIndexMap[DriverName];
-		}
-		*/
+	}
+
+	public class ProfileStore
+	{
+		[JsonPropertyName("ActiveProfileName")]
+		public string ActiveProfileName { get; set; } = "Default";
+
+		[JsonPropertyName("Profiles")]
+		public List<DbParams> Profiles { get; set; } = new List<DbParams>();
 	}
 
 	public class Profile : ProfileBase
 	{
 		private static readonly string m_pCompanyName = "Arteria";
 		private static readonly string m_pAppName = "RoughCA";
-		private const long LAYOUT_VERSION = 16;
-		private static SqliteConnection m_pConnection;
-//		private static string m_pProfilepath;
-		//public DbParams m_pDbParams;
+		private const string pProfileFilename = "RoughCA.json";
+
+		public ProfileStore Store { get; private set; } = new ProfileStore();
+		public IReadOnlyList<DbParams> Profiles => Store.Profiles;
+		public string ActiveProfileName => Store.ActiveProfileName;
+		public string ProfileFolderPath => m_pProfileFolderPath;
 
 		public Profile(string pArgument) : base(m_pCompanyName, m_pAppName)
 		{
-			//m_pProfilepath = pArgument;
 		}
-	
+
+		public string GetDefaultSqlitePath(string databaseName)
+		{
+			var name = string.IsNullOrWhiteSpace(databaseName) ? m_pAppName : databaseName.Trim();
+			return Path.Combine(m_pProfileFolderPath, name + ".db");
+		}
+
+		public string ResolveSqlitePath(DbParams pDbParams)
+		{
+			if (pDbParams == null)
+			{
+				return GetDefaultSqlitePath(m_pAppName);
+			}
+			if (!string.IsNullOrWhiteSpace(pDbParams.SqliteFilePath))
+			{
+				return pDbParams.SqliteFilePath.Trim();
+			}
+			return GetDefaultSqlitePath(pDbParams.DatabaseName);
+		}
+
+		public static DbParams CreateDefaultDbParams(string profileName = "Default", string databaseName = null)
+		{
+			var pAppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+			var pFolderPath = Path.Combine(pAppDataFolder, "postgresql");
+
+			return new DbParams
+			{
+				ProfileName    = string.IsNullOrWhiteSpace(profileName) ? "Default" : profileName.Trim(),
+				UserIdentity   = 0,
+				HostName       = "",
+				DatabaseName   = string.IsNullOrWhiteSpace(databaseName) ? m_pAppName : databaseName.Trim(),
+				SchemaName     = "aploper",
+				ClientKey      = Path.Combine(pFolderPath, "postgresql.key"),
+				ClientCrt      = Path.Combine(pFolderPath, "postgresql.crt"),
+				TrustCrt       = Path.Combine(pFolderPath, "root.crt"),
+				SqliteFilePath = "",
+				DriverName     = "SQLite",
+				uInstance      = 0,
+			};
+		}
+
 		public bool Load(ref DbParams m_pDbParams)
 		{
-			m_pConnection = Open(LAYOUT_VERSION, m_pProfilePath);
-			if (m_pConnection == null)
+			Store = LoadProfileStore(m_pProfileFolderPath);
+			if (Store == null || Store.Profiles == null || Store.Profiles.Count == 0)
 			{
-				return(false);
+				var defaultParams = CreateDefaultDbParams("Default", m_pAppName);
+				Store = new ProfileStore
+				{
+					ActiveProfileName = defaultParams.ProfileName,
+					Profiles = new List<DbParams> { defaultParams }
+				};
+				SaveProfileStore(m_pProfileFolderPath, Store);
 			}
 
-			//　データベース接続情報を入力
-			m_pDbParams = LoadDbParams(m_pProfileFolderPath);
-//			m_pDbParams = LoadDbParams(m_pConnection);
-			if (m_pDbParams == null)
-			{
-				var pAppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-				var pFolderPath = pAppDataFolder + "\\postgresql";
-
-				m_pDbParams = new DbParams();
-				m_pDbParams.UserIdentity = 0;
-				m_pDbParams.HostName     = "";
-				m_pDbParams.DatabaseName = m_pAppName;
-				m_pDbParams.SchemaName   = "aploper";
-				m_pDbParams.ClientKey    = pFolderPath + "\\postgresql.key";
-				m_pDbParams.ClientCrt    = pFolderPath + "\\postgresql.crt";
-				m_pDbParams.TrustCrt     = pFolderPath + "\\root.crt";
-				//m_pDbParams.IdentityName = "";
-				//m_pDbParams.TrustName    = "";
-				//m_pDbParams.IssueName    = "";
-				m_pDbParams.DriverName   = "SQLite";
-				//m_pDbParams.DriverName = "Postgres";
-				m_pDbParams.uInstance  = 0;
-			}
-			//m_pDbParams.Normalize();
-
+			var active = FindProfile(Store.ActiveProfileName) ?? Store.Profiles[0];
+			Store.ActiveProfileName = active.ProfileName;
+			m_pDbParams = active;
 			return (true);
 		}
 
-		public bool Save(DbParams m_pDbParams)
+		public DbParams FindProfile(string profileName)
 		{
-			/*
-			m_pConnection = Open(LAYOUT_VERSION, m_pProfilePath);
-			if (m_pConnection == null)
+			if (string.IsNullOrWhiteSpace(profileName) || Store?.Profiles == null)
 			{
-				return (false);
+				return null;
 			}
-			return(SaveDbParams(m_pConnection, m_pDbParams));
-			*/
-			//m_pDbParams.Normalize();
-			return (SaveDbParams(m_pProfileFolderPath, m_pDbParams));
+			return Store.Profiles.FirstOrDefault(p => string.Equals(p.ProfileName, profileName, StringComparison.OrdinalIgnoreCase));
 		}
 
-		//　テーブルレイアウトを最新に更新
-		protected override bool DoUpgradeLayout(SqliteCommand pCommand)
+		public bool Save(DbParams pDbParams)
 		{
-			List<string> pSQLs = new List<string>();
-
-			pSQLs.Add(@"DROP TABLE IF EXISTS LayoutVersion;");
-			pSQLs.Add(@"CREATE TABLE IF NOT EXISTS LayoutVersion (Revision INTEGER);");
-			pSQLs.Add(@$"INSERT INTO LayoutVersion VALUES ({LAYOUT_VERSION});");
-			pSQLs.Add("DROP TABLE IF EXISTS DbParams;");
-			pSQLs.Add("CREATE TABLE DbParams (UserIdentity INTEGER NOT NULL, HostName TEXT NOT NULL, InstanceName TEXT NOT NULL, SchemaName TEXT NOT NULL, ClientKey TEXT NOT NULL, ClientCrt TEXT NOT NULL, TrustCrt TEXT NOT NULL, DriverName TEXT NOT NULL, PRIMARY KEY (UserIdentity))");
-			pSQLs.Add("DROP TABLE IF EXISTS OrgProfile;");
-			//pSQLs.Add("CREATE TABLE OrgProfile (OrgKey INTEGER NOT NULL, CaName TEXT NOT NULL, OrgName TEXT NOT NULL, OrgUnitName TEXT NOT NULL, localityName TEXT NULL, ProvinceName NOT NULL, countryName NOT NULL, PRIMARY KEY (OrgKey))");
-			pSQLs.Add("DROP TABLE IF EXISTS IssuedCerts;");
-			//pSQLs.Add("CREATE TABLE IssuedCerts (SequenceNumber INTEGER NOT NULL, SerialNumber TEXT NOT NULL, CommonName TEXT NOT NULL, Revoked INTEGER NOT NULL,  PemData TEXT NOT NULL, PRIMARY KEY (SequenceNumber))");
-			pSQLs.Add("DROP TABLE IF EXISTS TIssuedCerts;");
-			pSQLs.Add("CREATE TABLE TIssuedCerts(SequenceNumber INTEGER NOT NULL, SerialNumber TEXT NOT NULL UNIQUE, SubjectName TEXT NOT NULL, CommonName TEXT NOT NULL, TypeOf INTEGER NOT NULL, Revoked INTEGER NOT NULL, LaunchAt  TEXT NOT NULL, ExpireAt TEXT NOT NULL, RevokeAt TEXT, AuthorityId INTEGER NOT NULL, CONSTRAINT TIssuedCerts_pkey  PRIMARY KEY (AuthorityId, SequenceNumber));");
-			pSQLs.Add(@$"PRAGMA user_version = {LAYOUT_VERSION};");
-
-			foreach (var pSQL in pSQLs)
+			if (pDbParams == null)
 			{
-				pCommand.CommandText = pSQL;
-				pCommand.ExecuteNonQuery();
+				return false;
+			}
+			if (string.IsNullOrWhiteSpace(pDbParams.ProfileName))
+			{
+				pDbParams.ProfileName = "Default";
 			}
 
-			return(true);
+			var index = Store.Profiles.FindIndex(p => ReferenceEquals(p, pDbParams));
+			if (index < 0)
+			{
+				index = Store.Profiles.FindIndex(p => string.Equals(p.ProfileName, pDbParams.ProfileName, StringComparison.OrdinalIgnoreCase));
+			}
+
+			if (index >= 0)
+			{
+				Store.Profiles[index] = pDbParams;
+			}
+			else
+			{
+				Store.Profiles.Add(pDbParams);
+			}
+
+			Store.ActiveProfileName = pDbParams.ProfileName;
+			return SaveProfileStore(m_pProfileFolderPath, Store);
 		}
 
-		//　
-		protected DbParams LoadDbParams(SqliteConnection pConnection)
+		public DbParams SelectProfile(string profileName)
 		{
-			var pDbParams = new DbParams();
-
-			try
+			var target = FindProfile(profileName);
+			if (target == null)
 			{
-				pConnection.Open();
-				var pSQL = "SELECT UserIdentity, HostName, InstanceName, SchemaName, ClientKey, ClientCrt, TrustCrt, DriverName FROM DbParams WHERE UserIdentity == 0";
-				var pCommand = new SqliteCommand(pSQL, pConnection);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					while (pReader.Read())
-					{
-						pDbParams.UserIdentity = pReader.GetInt32(0);
-						pDbParams.HostName     = pReader.GetString(1);
-						pDbParams.DatabaseName = pReader.GetString(2);
-						pDbParams.SchemaName   = pReader.GetString(3);
-						pDbParams.ClientKey    = pReader.GetString(4);
-						pDbParams.ClientCrt	   = pReader.GetString(5);
-						pDbParams.TrustCrt     = pReader.GetString(6);
-						//pDbParams.IdentityName = pReader.GetString(7);
-						//pDbParams.TrustName    = pReader.GetString(8);
-						//pDbParams.IssueName    = pReader.GetString(9);
-						//pDbParams.DriverName   = pReader.GetString(10);
-						pDbParams.DriverName = pReader.GetString(7);
-					}
-				}
-				pConnection.Close();
+				return null;
 			}
-			catch (SqliteException e)
-			{
-				//　Brunch: レイアウトバージョンのテーブルが存在しない
-				System.Diagnostics.Debug.Write("" + e.ToString());
-				if (e.SqliteErrorCode == 1)
-				{
-					return (null);
-				}
-			}
-			if (pDbParams.UserIdentity == -1)
-			{
-				return (null);
-			}
-
-			return (pDbParams);
+			Store.ActiveProfileName = target.ProfileName;
+			SaveProfileStore(m_pProfileFolderPath, Store);
+			return target;
 		}
 
-		private const string pProfileFilename = "RoughCA.json";
-
-		//　
-		protected DbParams LoadDbParams(string pProfileFolder)
+		public bool AddProfile(DbParams newProfile, bool activate = true)
 		{
-			var pFilepath = pProfileFolder + "\\" + pProfileFilename;
+			if (newProfile == null || string.IsNullOrWhiteSpace(newProfile.ProfileName))
+			{
+				return false;
+			}
+			newProfile.ProfileName = newProfile.ProfileName.Trim();
+			if (FindProfile(newProfile.ProfileName) != null)
+			{
+				return false;
+			}
+
+			Store.Profiles.Add(newProfile);
+			if (activate)
+			{
+				Store.ActiveProfileName = newProfile.ProfileName;
+			}
+			return SaveProfileStore(m_pProfileFolderPath, Store);
+		}
+
+		public bool DeleteProfile(string profileName, out DbParams newActiveProfile)
+		{
+			newActiveProfile = null;
+			if (Store.Profiles.Count <= 1)
+			{
+				return false;
+			}
+			var target = FindProfile(profileName);
+			if (target == null)
+			{
+				return false;
+			}
+
+			Store.Profiles.Remove(target);
+			if (string.Equals(Store.ActiveProfileName, target.ProfileName, StringComparison.OrdinalIgnoreCase))
+			{
+				Store.ActiveProfileName = Store.Profiles[0].ProfileName;
+			}
+			newActiveProfile = FindProfile(Store.ActiveProfileName) ?? Store.Profiles[0];
+			return SaveProfileStore(m_pProfileFolderPath, Store);
+		}
+
+		//　ProfileBase の抽象メソッド（現在は JSON ストアに統一）
+		protected override bool DoUpgradeLayout(Microsoft.Data.Sqlite.SqliteCommand pCommand)
+		{
+			return (true);
+		}
+
+		protected ProfileStore LoadProfileStore(string pProfileFolder)
+		{
+			var pFilepath = Path.Combine(pProfileFolder, pProfileFilename);
 			if (File.Exists(pFilepath) == false)
 			{
-				return (null);
+				return null;
 			}
+
 			var pJSON = File.ReadAllText(pFilepath);
-			return (JsonSerializer.Deserialize<DbParams>(pJSON));
-		}
+			if (string.IsNullOrWhiteSpace(pJSON))
+			{
+				return null;
+			}
 
-		//　
-		protected bool SaveDbParams(string pProfileFolder, DbParams pDbParams)
-		{
-			var pFilepath = pProfileFolder + "\\" + pProfileFilename;
-			var pOptions = new JsonSerializerOptions() { WriteIndented = true };
-			var pJSON = JsonSerializer.Serialize(pDbParams);
-			File.WriteAllText(pFilepath, pJSON);
-			return (true);
-		}
-
-		//
-		protected bool SaveDbParams(SqliteConnection pConnection, DbParams pDbParams)
-		{
 			try
 			{
-				pDbParams.UserIdentity = 0;
-				pDbParams.DatabaseName = pDbParams.DatabaseName.ToLower();
-				pConnection.Open();
-				var pSQL = "INSERT INTO DbParams VALUES (@UserIdentity, @HostName, @InstanceName, @SchemaName, @ClientKey, @ClientCrt, @TrustCrt, @DriverName)";
-				pSQL += " ON CONFLICT (UserIdentity) DO UPDATE SET HostName = @HostName, InstanceName = @InstanceName, SchemaName = @SchemaName, ClientKey = @ClientKey, ClientCrt = @ClientCrt, TrustCrt = @TrustCrt, DriverName = @DriverName";
-				var pCommand = new SqliteCommand(pSQL, pConnection);
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.Add(new SqliteParameter("UserIdentity", pDbParams.UserIdentity));
-				pCommand.Parameters.Add(new SqliteParameter("HostName",     pDbParams.HostName));
-				pCommand.Parameters.Add(new SqliteParameter("InstanceName", pDbParams.DatabaseName));
-				pCommand.Parameters.Add(new SqliteParameter("SchemaName",   pDbParams.SchemaName));
-				pCommand.Parameters.Add(new SqliteParameter("ClientKey",    pDbParams.ClientKey));
-				pCommand.Parameters.Add(new SqliteParameter("ClientCrt",    pDbParams.ClientCrt));
-				pCommand.Parameters.Add(new SqliteParameter("TrustCrt",     pDbParams.TrustCrt));
-				//pCommand.Parameters.Add(new SqliteParameter("IdentityName", pDbParams.IdentityName));
-				//pCommand.Parameters.Add(new SqliteParameter("TrustName",    pDbParams.TrustName));
-				//pCommand.Parameters.Add(new SqliteParameter("IssueName",    pDbParams.IssueName));
-				pCommand.Parameters.Add(new SqliteParameter("DriverName",   pDbParams.DriverName));
-				var nCount = pCommand.ExecuteNonQuery();
-				if (nCount <= 0)
+				using var doc = JsonDocument.Parse(pJSON);
+				if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+					doc.RootElement.TryGetProperty("Profiles", out _))
 				{
-					return (false);
+					var store = JsonSerializer.Deserialize<ProfileStore>(pJSON);
+					if (store?.Profiles != null && store.Profiles.Count > 0)
+					{
+						foreach (var p in store.Profiles)
+						{
+							if (string.IsNullOrWhiteSpace(p.ProfileName))
+							{
+								p.ProfileName = string.IsNullOrWhiteSpace(p.DatabaseName) ? "Default" : p.DatabaseName;
+							}
+						}
+						return store;
+					}
 				}
-				pConnection.Close();
+
+				//　旧形式（単一 DbParams JSON）からの自動マイグレーション
+				var legacy = JsonSerializer.Deserialize<DbParams>(pJSON);
+				if (legacy != null)
+				{
+					if (string.IsNullOrWhiteSpace(legacy.ProfileName))
+					{
+						legacy.ProfileName = "Default";
+					}
+					if (string.IsNullOrWhiteSpace(legacy.DatabaseName))
+					{
+						legacy.DatabaseName = m_pAppName;
+					}
+					var migrated = new ProfileStore
+					{
+						ActiveProfileName = legacy.ProfileName,
+						Profiles = new List<DbParams> { legacy }
+					};
+					SaveProfileStore(pProfileFolder, migrated);
+					return migrated;
+				}
 			}
-			catch (SqliteException e)
+			catch (JsonException ex)
 			{
-				//　Brunch: レイアウトバージョンのテーブルが存在しない
-				System.Diagnostics.Debug.Write("" + e.ToString());
-				if (e.SqliteErrorCode == 1)
-				{
-					return (false);
-				}
+				System.Diagnostics.Debug.WriteLine("Profile JSON parse error: " + ex);
 			}
 
+			return null;
+		}
+
+		protected bool SaveProfileStore(string pProfileFolder, ProfileStore pStore)
+		{
+			var pFilepath = Path.Combine(pProfileFolder, pProfileFilename);
+			var pOptions = new JsonSerializerOptions { WriteIndented = true };
+			var pJSON = JsonSerializer.Serialize(pStore, pOptions);
+			File.WriteAllText(pFilepath, pJSON);
 			return (true);
 		}
 	}

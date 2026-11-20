@@ -28,5 +28,6 @@ namespace Arteria_s.DB.Base
 		abstract public bool BeginTransaction();
 		abstract public bool Commit();
 		abstract public bool Rollback();
+		public virtual void Close() { }
 	}
 }

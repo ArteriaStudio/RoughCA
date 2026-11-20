@@ -1,4 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : SettingsPage.xaml
+  Description : 設定画面（タブ切り替えおよび編集ロック制御）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-20
+================================================================================
+-->
 <Page
 	x:Class="Arteria_s.App.RoughCA.SettingsPage"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,10 +15,23 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d"
-	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	Background="Transparent">
 
-	<Grid>
-		<TabView Name="ParametersTab" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsAddTabButtonVisible="False" SelectionChanged="ParametersTab_SelectionChanged" >
+	<Grid Padding="16,8,16,8" RowSpacing="8">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<InfoBar x:Name="EditModeInfoBar"
+				 Grid.Row="0"
+				 IsOpen="False"
+				 IsClosable="False"
+				 Severity="Informational"
+				 Title="編集モード"
+				 Message="設定の編集が有効になっています。変更内容はフォーカス移動時に自動保存されます。" />
+
+		<TabView Name="ParametersTab" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsAddTabButtonVisible="False" SelectionChanged="ParametersTab_SelectionChanged">
 			<TabViewItem x:Uid="ConnectionTab" IsClosable="False">
 				<TabViewItem.IconSource>
 					<SymbolIconSource Symbol="Home" />
@@ -34,8 +55,9 @@
 			</TabView.TabStripHeader>
 			<TabView.TabStripFooter>
 				<Grid x:Name="CustomDragRegion" Background="Transparent">
-					<StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
-						<ToggleButton x:Uid="Lock" Name="Lock" Margin="8,8,8,8" IsEnabled="True" Style="{StaticResource ToggleButtonRevealStyle}" Click="Lock_Click" />
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="8" Margin="8,4,8,4">
+						<FontIcon x:Name="LockStatusIcon" Glyph="&#xE72E;" FontSize="14" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+						<ToggleButton x:Uid="Lock" Name="Lock" IsEnabled="True" Click="Lock_Click" />
 					</StackPanel>
 				</Grid>
 			</TabView.TabStripFooter>

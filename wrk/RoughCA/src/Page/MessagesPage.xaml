@@ -1,4 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : MessagesPage.xaml
+  Description : 下部メッセージログパネル（種別バッジ・件数表示・開閉制御）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-20
+================================================================================
+-->
 <Page
 	x:Class="Arteria_s.App.RoughCA.MessagesPage"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,43 +15,120 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d"
-	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	Background="Transparent">
 
-	<Grid Padding="0,8,0,0">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
+	<Border Background="{ThemeResource LogPanelBackgroundBrush}"
+			BorderBrush="{ThemeResource HeaderDividerBrush}"
+			BorderThickness="0,1,0,0">
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
 
-		<Rectangle Grid.Row="0" Fill="Gray" Height="1" StrokeThickness="4" />
-		<TextBlock Grid.Row="1" Margin="8, 8, 8, 0" Style="{StaticResource ItemCaptionTextBlockStyle}" x:Uid="MessageLog" />
-		<ListView Grid.Row="2" Margin="8, 4, 8, 4" ItemsSource="{x:Bind m_pMessages}" >
-			<ListView.ItemTemplate>
-				<DataTemplate x:DataType="local:Message">
-					<Grid>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto"/>
-							<ColumnDefinition Width="0.25*"/>
-							<ColumnDefinition Width="0.30*"/>
-							<ColumnDefinition Width="*"/>
-							<ColumnDefinition Width="0.35*"/>
-							<ColumnDefinition Width="0.80*"/>
-						</Grid.ColumnDefinitions>
-						<Grid.RowDefinitions>
-							<RowDefinition Height="Auto"/>
-						</Grid.RowDefinitions>
-						<TextBlock Grid.Column="1" Grid.Row="0" Grid.RowSpan="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8, 4, 8, 4" TextWrapping="NoWrap" Text="{x:Bind Facility}" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-						<TextBlock Grid.Column="2" Grid.Row="1" Grid.RowSpan="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8, 0, 8, 4" TextWrapping="NoWrap" Text="{x:Bind TimeAt}"   Style="{ThemeResource BodyTextBlockStyle}"/>
-						<TextBlock Grid.Column="3" Grid.Row="0" Grid.RowSpan="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8, 0, 8, 4" TextWrapping="NoWrap" Text="{x:Bind Text}"     Style="{ThemeResource BodyTextBlockStyle}"/>
-						<TextBlock Grid.Column="4" Grid.Row="0" Grid.RowSpan="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8, 0, 8, 4" TextWrapping="NoWrap" Text="{x:Bind Which}"    Style="{ThemeResource BodyTextBlockStyle}"/>
-						<TextBlock Grid.Column="5" Grid.Row="0" Grid.RowSpan="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8, 0, 8, 4" TextWrapping="NoWrap" Text="{x:Bind Where}"    Style="{ThemeResource BodyTextBlockStyle}"/>
-					</Grid>
-				</DataTemplate>
-			</ListView.ItemTemplate>
-		</ListView>
-	</Grid>
+			<!-- ログヘッダーバー -->
+			<Grid Grid.Row="0" Padding="24,6,16,6" Background="Transparent">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+
+				<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xE756;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+					<TextBlock Style="{ThemeResource ItemCaptionTextBlockStyle}" FontWeight="SemiBold" x:Uid="MessageLog" Text="メッセージログ" VerticalAlignment="Center" />
+					<Border Background="{ThemeResource StatusNeutralBackgroundBrush}" CornerRadius="10" Padding="7,1,7,1" VerticalAlignment="Center">
+						<TextBlock x:Name="LogCountText" Text="0" FontSize="11" Foreground="{ThemeResource StatusNeutralForegroundBrush}" />
+					</Border>
+				</StackPanel>
+
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<Button x:Name="ClearLogButton" Click="ClearLogButton_Click" Padding="8,4,8,4" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="ログをクリア">
+						<FontIcon Glyph="&#xE74D;" FontSize="12" />
+					</Button>
+					<Button x:Name="ToggleExpandButton" Click="ToggleExpandButton_Click" Padding="8,4,8,4" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="ログパネルを開閉">
+						<FontIcon x:Name="ToggleExpandIcon" Glyph="&#xE70D;" FontSize="12" />
+					</Button>
+				</StackPanel>
+			</Grid>
+
+			<!-- ログリスト -->
+			<ListView x:Name="LogListView"
+					  Grid.Row="1"
+					  Margin="16,0,16,6"
+					  SelectionMode="None"
+					  ItemsSource="{x:Bind m_pMessages}">
+				<ListView.ItemContainerStyle>
+					<Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+						<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+						<Setter Property="MinHeight" Value="28" />
+						<Setter Property="Padding" Value="0" />
+						<Setter Property="Margin" Value="0,1,0,1" />
+					</Style>
+				</ListView.ItemContainerStyle>
+				<ListView.ItemTemplate>
+					<DataTemplate x:DataType="local:Message">
+						<Grid ColumnSpacing="10" Padding="4,4,8,4">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="4"/>
+								<ColumnDefinition Width="74"/>
+								<ColumnDefinition Width="86"/>
+								<ColumnDefinition Width="1.2*"/>
+								<ColumnDefinition Width="0.5*"/>
+								<ColumnDefinition Width="0.8*"/>
+							</Grid.ColumnDefinitions>
+
+							<!-- 左端アクセントバー -->
+							<Border Grid.Column="0"
+									CornerRadius="2"
+									Background="{x:Bind local:MessagesPage.GetFacilityForeground(Facility)}"
+									Margin="0,2,0,2" />
+
+							<!-- 種別バッジ -->
+							<Border Grid.Column="1"
+									Background="{x:Bind local:MessagesPage.GetFacilityBackground(Facility)}"
+									CornerRadius="4"
+									Padding="6,1,6,1"
+									HorizontalAlignment="Left"
+									VerticalAlignment="Center">
+								<TextBlock Text="{x:Bind local:MessagesPage.GetFacilityLabel(Facility)}"
+										   Foreground="{x:Bind local:MessagesPage.GetFacilityForeground(Facility)}"
+										   FontSize="10"
+										   FontWeight="SemiBold" />
+							</Border>
+
+							<!-- 時刻 -->
+							<TextBlock Grid.Column="2"
+									   Text="{x:Bind TimeAt}"
+									   FontFamily="Consolas"
+									   FontSize="12"
+									   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+									   VerticalAlignment="Center" />
+
+							<!-- メッセージ本文 -->
+							<TextBlock Grid.Column="3"
+									   Text="{x:Bind Text}"
+									   Style="{ThemeResource BodyTextBlockStyle}"
+									   FontSize="12"
+									   TextTrimming="CharacterEllipsis"
+									   VerticalAlignment="Center" />
+
+							<!-- 対象識別子 -->
+							<TextBlock Grid.Column="4"
+									   Text="{x:Bind Which}"
+									   Style="{ThemeResource ItemCaptionTextBlockStyle}"
+									   TextTrimming="CharacterEllipsis"
+									   VerticalAlignment="Center" />
+
+							<!-- 対象パス -->
+							<TextBlock Grid.Column="5"
+									   Text="{x:Bind Where}"
+									   Style="{ThemeResource ItemCaptionTextBlockStyle}"
+									   TextTrimming="CharacterEllipsis"
+									   VerticalAlignment="Center" />
+						</Grid>
+					</DataTemplate>
+				</ListView.ItemTemplate>
+			</ListView>
+		</Grid>
+	</Border>
 </Page>

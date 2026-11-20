@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using Windows.Storage.Pickers;
@@ -133,34 +134,49 @@ namespace Arteria_s.App.RoughCA
 		}
 
 		
+		//　未入力または不正な項目名の一覧を返す
+		public List<string> GetMissingFields()
+		{
+			var missing = new List<string>();
+			if (!IsNotNull(TrustName.Text))    missing.Add("ルート認証局名");
+			if (!IsNotNull(IssueName.Text))    missing.Add("発行用認証局名");
+			if (!IsNotNull(OrgName.Text))      missing.Add("組織名");
+			if (!IsNotNull(OrgUnitName.Text))  missing.Add("部署名");
+			if (!IsNotNull(ProvinceName.Text)) missing.Add("都道府県");
+			if (!IsNotNull(LocalityName.Text)) missing.Add("市町村");
+			if (!IsNotNull(CountryName.Text))
+			{
+				missing.Add("国名");
+			}
+			else if (!IsValidCountryCode(CountryName.Text.Trim()))
+			{
+				missing.Add("国名（2文字のISO国コード、例: JP）");
+			}
+			if (!IsNotNull(ServerName.Text))   missing.Add("証明情報公開サーバ");
+			return missing;
+		}
+
+		//　現在の画面入力値を同期した OrgProfile を取得
+		public OrgProfile GetCurrentOrgProfile()
+		{
+			if (m_pOrgProfile == null)
+			{
+				m_pOrgProfile = new OrgProfile();
+			}
+			m_pOrgProfile.TrustName    = TrustName.Text?.Trim() ?? "";
+			m_pOrgProfile.IssueName    = IssueName.Text?.Trim() ?? "";
+			m_pOrgProfile.OrgName      = OrgName.Text?.Trim() ?? "";
+			m_pOrgProfile.OrgUnitName  = OrgUnitName.Text?.Trim() ?? "";
+			m_pOrgProfile.ProvinceName = ProvinceName.Text?.Trim() ?? "";
+			m_pOrgProfile.LocalityName = LocalityName.Text?.Trim() ?? "";
+			m_pOrgProfile.CountryName  = CountryName.Text?.Trim().ToUpperInvariant() ?? "";
+			m_pOrgProfile.ServerName   = ServerName.Text?.Trim() ?? "";
+			return m_pOrgProfile;
+		}
+
 		private void IdentityParameters_LostFocus(object sender, RoutedEventArgs e)
 		{
-			if (m_bWriteable == false)
-			{
-				return;
-			}
-			if (Validate() == false)
-			{
-				return;
-			}
-
-			var pApp = App.Current as RoughCA.App;
-			var pDbParams = pApp.m_pDbParams;
-/*
-			pDbParams.HostName
-			pDbParams.InstanceName
-			pDbParams.SchemaName
-			pDbParams.ClientKey
-			pDbParams.ClientCrt
-			pDbParams.TrustCrt
-			pDbParams.IdentityName
-*/
-/*
-			pDbParams.TrustName = TrustName.Text;
-			pDbParams.IssueName = IssueName.Text;
-*/
-			pApp.SaveOrgProfile(pDbParams);
-
+			//　認証局証明書の生成を伴う確定処理は、編集解除（ロック）時に SettingsPage から一括実行する
 		}
 
 		public void IsWriteable(bool? bWriteable)
@@ -169,16 +185,15 @@ namespace Arteria_s.App.RoughCA
 			{
 				return;
 			}
-			TrustName.IsReadOnly     = !bWriteable.Value;
-			IssueName.IsReadOnly     = !bWriteable.Value;
-			OrgName.IsReadOnly       = !bWriteable.Value;
-			OrgUnitName.IsReadOnly   = !bWriteable.Value;
-			LocalityName.IsReadOnly  = !bWriteable.Value;
-			ProvinceName.IsReadOnly  = !bWriteable.Value;
-			CountryName.IsReadOnly   = !bWriteable.Value;
-			ServerName.IsReadOnly    = !bWriteable.Value;
-			TrustName.IsReadOnly     = !bWriteable.Value;
-			IssueName.IsReadOnly     = !bWriteable.Value;
+			var isReadOnly = !bWriteable.Value;
+			TrustName.IsReadOnly     = isReadOnly;
+			IssueName.IsReadOnly     = isReadOnly;
+			OrgName.IsReadOnly       = isReadOnly;
+			OrgUnitName.IsReadOnly   = isReadOnly;
+			LocalityName.IsReadOnly  = isReadOnly;
+			ProvinceName.IsReadOnly  = isReadOnly;
+			CountryName.IsReadOnly   = isReadOnly;
+			ServerName.IsReadOnly    = isReadOnly;
 
 			m_bWriteable = bWriteable.Value;
 		}

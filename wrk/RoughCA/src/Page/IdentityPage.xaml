@@ -1,4 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : IdentityPage.xaml
+  Description : 基本認証局情報画面（組織プロファイル入力および認証局セットアップ）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-20
+================================================================================
+-->
 <Page
 	x:Class="Arteria_s.App.RoughCA.IdentityPage"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,31 +15,52 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d"
-	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	Background="Transparent">
 
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
+	<ScrollViewer x:Name="IdentityParameters" Padding="16,16,16,24" LostFocus="IdentityParameters_LostFocus">
+		<StackPanel MaxWidth="720" HorizontalAlignment="Left" Spacing="16">
+			<!-- 認証局識別情報カード -->
+			<StackPanel Orientation="Vertical" Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,20" Spacing="12">
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xEA18;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+					<TextBlock Text="認証局名" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+				</StackPanel>
+				<TextBox x:Uid="TrustName" x:Name="TrustName" IsReadOnly="True" Header="ルート認証局名（trustName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.TrustName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="IssueName" x:Name="IssueName" IsReadOnly="True" Header="発行用認証局名（issueName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.IssueName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+			</StackPanel>
 
-		<ScrollViewer x:Name="IdentityParameters" Grid.Column="0" Grid.Row="0" Padding="4, 4, 4, 4" LostFocus="IdentityParameters_LostFocus">
-			<StackPanel Orientation="Vertical" Style="{StaticResource CardStyleStackPanel}">
-				<TextBox x:Uid="TrustName"     x:Name="TrustName"     Margin="8,8,8,8" IsReadOnly="True" Header="ルート認証局名（trustName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.TrustName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="IssueName"     x:Name="IssueName"     Margin="8,8,8,8" IsReadOnly="True" Header="発行用認証局名（issueName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.IssueName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="OrgName"       x:Name="OrgName"       Margin="8,8,8,8" IsReadOnly="True" Header="組織名（organizationName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.OrgName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="OrgUnitName"   x:Name="OrgUnitName"   Margin="8,8,8,8" IsReadOnly="True" Header="部署名（organizationalUnitName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.OrgUnitName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="LocalityName"  x:Name="LocalityName"  Margin="8,8,8,8" IsReadOnly="True" Header="市町村（localityName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.LocalityName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="ProvinceName"  x:Name="ProvinceName"  Margin="8,8,8,8" IsReadOnly="True" Header="都道府県（stateOrProvinceName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.ProvinceName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="CountryName"   x:Name="CountryName"   Margin="8,8,8,8" IsReadOnly="True" Header="国名（countryName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.CountryName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<TextBox x:Uid="ServerName"    x:Name="ServerName"    Margin="8,8,8,8" IsReadOnly="True" Header="証明情報公開サーバ（publishServerName）" PlaceholderText=""  Text="{x:Bind m_pOrgProfile.ServerName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
-				<StackPanel Orientation="Horizontal" Padding="4, 4, 4, 4" Style="{StaticResource CardStyleStackPanel}">
-					<Button  x:Uid="SignRequest"  x:Name="SignRequest" Margin="8,8,8,8" IsEnabled="True"  Click="SignRequest_Click" />
-					<Button  x:Uid="CertAccept"   x:Name="CertAccept"  Margin="8,8,8,8" IsEnabled="True"  Click="CertAccept_Click" />
+			<!-- 組織プロファイルカード -->
+			<StackPanel Orientation="Vertical" Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,20" Spacing="12">
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xE731;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+					<TextBlock Text="組織プロファイル（Subject）" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+				</StackPanel>
+				<TextBox x:Uid="OrgName"      x:Name="OrgName"      IsReadOnly="True" Header="組織名（organizationName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.OrgName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<TextBox x:Uid="OrgUnitName"  x:Name="OrgUnitName"  IsReadOnly="True" Header="部署名（organizationalUnitName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.OrgUnitName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				<Grid ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="180"/>
+					</Grid.ColumnDefinitions>
+					<TextBox x:Uid="ProvinceName" x:Name="ProvinceName" Grid.Column="0" IsReadOnly="True" Header="都道府県（ST）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.ProvinceName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+					<TextBox x:Uid="LocalityName" x:Name="LocalityName" Grid.Column="1" IsReadOnly="True" Header="市町村（L）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.LocalityName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+					<TextBox x:Uid="CountryName"  x:Name="CountryName"  Grid.Column="2" IsReadOnly="True" Header="国名（C）" PlaceholderText="JP" Text="{x:Bind m_pOrgProfile.CountryName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+				</Grid>
+				<TextBox x:Uid="ServerName" x:Name="ServerName" IsReadOnly="True" Header="証明情報公開サーバ（publishServerName）" PlaceholderText="" Text="{x:Bind m_pOrgProfile.ServerName, Mode=TwoWay}" TextChanged="Settings_TextChanged" />
+			</StackPanel>
+
+			<!-- 認証局証明書アクションカード -->
+			<StackPanel Orientation="Vertical" Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,16" Spacing="12">
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xE72E;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+					<TextBlock Text="認証局のセットアップ" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal" Spacing="12">
+					<Button x:Uid="SignRequest" x:Name="SignRequest" Style="{StaticResource AccentButtonStyle}" IsEnabled="True" Click="SignRequest_Click" />
+					<Button x:Uid="CertAccept"  x:Name="CertAccept"  IsEnabled="True" Click="CertAccept_Click" />
 				</StackPanel>
 			</StackPanel>
-		</ScrollViewer>
-	</Grid>
+		</StackPanel>
+	</ScrollViewer>
 </Page>

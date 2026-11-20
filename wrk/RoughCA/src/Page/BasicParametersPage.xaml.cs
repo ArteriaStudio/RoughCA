@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Diagnostics;
 using Windows.Storage.Pickers;
 using Windows.Storage;
 using Arteria_s.UI.Base;
@@ -17,192 +18,158 @@ namespace Arteria_s.App.RoughCA
 	{
 		private DbParams m_pDbParams;
 		private bool m_bIsDirty;
+		private bool m_bNeedsReconnect;
+		private bool m_bWriteable = false;
 
 		public BasicParametersPage()
 		{
-			this.InitializeComponent();
 			var pApp = App.Current as RoughCA.App;
-			var pProfile = pApp.m_pProfile;
-			//m_pDbParams = pProfile.m_pDbParams;
-			m_pDbParams = pApp.m_pDbParams;
+			m_pDbParams = pApp.m_pDbParams ?? Profile.CreateDefaultDbParams();
 			m_bIsDirty = false;
+			m_bNeedsReconnect = false;
+
+			this.InitializeComponent();
+			UpdateEffectiveSqlitePath();
+			m_bIsDirty = false;
+			m_bNeedsReconnect = false;
 		}
 
 		private bool IsNotNull(string pText)
 		{
-			if (pText == null)
-			{
-				return(false);
-			}
-			if (pText.Length <= 0)
-			{
-				return (false);
-			}
-			return (true);
+			return !string.IsNullOrWhiteSpace(pText);
 		}
 
 		private bool Varidate()
 		{
-			if (IsNotNull(DatabaseServerName.Text) == false)
+			if (!IsNotNull(ProfileNameBox.Text))
 			{
-				return(false);
+				return false;
 			}
-			if (IsNotNull(DatabaseName.Text) == false)
-			{
-				return (false);
-			}
-			if (IsNotNull(SchemaName.Text) == false)
-			{
-				return (false);
-			}
-			if (IsNotNull(ClientKey.Text) == false)
-			{
-				return (false);
-			}
-			if (IsNotNull(ClientCrt.Text) == false)
-			{
-				return (false);
-			}
-			if (IsNotNull(RootCACrt.Text) == false)
-			{
-				return (false);
-			}
-			/*
-			if (IsNotNull(IdentityName.Text) == false)
-			{
-				return (false);
-			}
-			*/
 
-			return (true);
+			if (DBDrivers.SelectedIndex == 0)
+			{
+				// SQLite
+				return IsNotNull(SqliteDatabaseName.Text) || IsNotNull(SqliteFilePath.Text);
+			}
+			else if (DBDrivers.SelectedIndex == 1)
+			{
+				// PostgreSQL
+				if (!IsNotNull(DatabaseServerName.Text)) return false;
+				if (!IsNotNull(DatabaseName.Text)) return false;
+				if (!IsNotNull(SchemaName.Text)) return false;
+				if (!IsNotNull(ClientKey.Text)) return false;
+				if (!IsNotNull(ClientCrt.Text)) return false;
+				if (!IsNotNull(RootCACrt.Text)) return false;
+				return true;
+			}
+
+			return false;
 		}
 
-		private void Save_Click(object sender, RoutedEventArgs e)
+		private void UpdateEffectiveSqlitePath()
 		{
-			if (Varidate() == false)
+			var pApp = App.Current as RoughCA.App;
+			if (pApp?.m_pProfile == null || SqliteEffectivePathText == null)
 			{
 				return;
 			}
-
-			var pApp = App.Current as RoughCA.App;
-			var bResult = pApp.m_pProfile.Save(m_pDbParams);
-			//Save.IsEnabled = false;
-		}
-
-
-		private void Settings_TextChanged(object sender, TextChangedEventArgs e)
-		{
-			if (Varidate() == false)
+			var customPath = SqliteFilePath?.Text?.Trim();
+			if (!string.IsNullOrWhiteSpace(customPath))
 			{
-				//Save.IsEnabled = false;
+				SqliteEffectivePathText.Text = customPath;
 			}
 			else
 			{
-				if (m_bIsDirty == true)
-				{
-					//Save.IsEnabled = true;
-				}
+				SqliteEffectivePathText.Text = pApp.m_pProfile.GetDefaultSqlitePath(SqliteDatabaseName?.Text);
 			}
-			m_bIsDirty = true;
-
-			return;
 		}
 
-		private async void BrowseClienCrt_Click(object sender, RoutedEventArgs e)
+		private void Settings_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			//　コモンダイアログを使う道は、忘れるか諦めるのが好ましい（2022/10/12）
-			//　最適解：エクスプローラでファイルをドロップしろと利用者に伝える
-			//　相互運用機能に頼る（2022/10/15）
+			m_bIsDirty = true;
+			m_bNeedsReconnect = true;
+		}
+
+		private void SqliteSettings_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			m_bIsDirty = true;
+			m_bNeedsReconnect = true;
+			UpdateEffectiveSqlitePath();
+		}
+
+		private async void BrowseSqliteFile_Click(object sender, RoutedEventArgs e)
+		{
 			var pApp = Application.Current as App;
 			var pOpenPicker = PickerHelper.NewFileOpenPicker(pApp.m_pWindow);
 
 			pOpenPicker.ViewMode = PickerViewMode.List;
-			pOpenPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-			pOpenPicker.FileTypeFilter.Add(".csv");
+			pOpenPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+			pOpenPicker.FileTypeFilter.Add(".db");
+			pOpenPicker.FileTypeFilter.Add(".sqlite");
 			pOpenPicker.FileTypeFilter.Add("*");
-			//　FileTypeFilterのリストから初期表示に使うフィルターを選択する方法は未実装（2023/01/22）
 
-			// 2023/01/22　ChatGPT Suggestion is follow.
-			// pOpenPicker.SuggestedFileType = ".csv";
-			// pOpenPicker.SuggestedFileType = pOpenPicker.FileTypeFilter[1];
-			//　いや理想的な実装はそうだけど、それ（SuggestedFileType）が実装されていないのですよ…
+			StorageFile file = await pOpenPicker.PickSingleFileAsync();
+			if (file != null)
+			{
+				this.SqliteFilePath.Text = file.Path;
+				UpdateEffectiveSqlitePath();
+			}
+		}
+
+		private async void BrowseClienCrt_Click(object sender, RoutedEventArgs e)
+		{
+			var pApp = Application.Current as App;
+			var pOpenPicker = PickerHelper.NewFileOpenPicker(pApp.m_pWindow);
+
+			pOpenPicker.ViewMode = PickerViewMode.List;
+			pOpenPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+			pOpenPicker.FileTypeFilter.Add(".crt");
+			pOpenPicker.FileTypeFilter.Add("*");
 
 			StorageFile file = await pOpenPicker.PickSingleFileAsync();
 			if (file != null)
 			{
 				this.ClientCrt.Text = file.Path;
 			}
-			else
-			{
-				;
-			}
 		}
 
 		private async void BrowseRootCACrt_Click(object sender, RoutedEventArgs e)
 		{
-			//　コモンダイアログを使う道は、忘れるか諦めるのが好ましい（2022/10/12）
-			//　最適解：エクスプローラでファイルをドロップしろと利用者に伝える
-			//　相互運用機能に頼る（2022/10/15）
 			var pApp = Application.Current as App;
 			var pOpenPicker = PickerHelper.NewFileOpenPicker(pApp.m_pWindow);
 
 			pOpenPicker.ViewMode = PickerViewMode.List;
-			pOpenPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-			pOpenPicker.FileTypeFilter.Add(".csv");
+			pOpenPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+			pOpenPicker.FileTypeFilter.Add(".crt");
 			pOpenPicker.FileTypeFilter.Add("*");
-			//　FileTypeFilterのリストから初期表示に使うフィルターを選択する方法は未実装（2023/01/22）
-
-			// 2023/01/22　ChatGPT Suggestion is follow.
-			// pOpenPicker.SuggestedFileType = ".csv";
-			// pOpenPicker.SuggestedFileType = pOpenPicker.FileTypeFilter[1];
-			//　いや理想的な実装はそうだけど、それ（SuggestedFileType）が実装されていないのですよ…
 
 			StorageFile file = await pOpenPicker.PickSingleFileAsync();
 			if (file != null)
 			{
 				this.RootCACrt.Text = file.Path;
 			}
-			else
-			{
-				;
-			}
-
 		}
 
 		private async void BrowseClientKey_Click(object sender, RoutedEventArgs e)
 		{
-			//　コモンダイアログを使う道は、忘れるか諦めるのが好ましい（2022/10/12）
-			//　最適解：エクスプローラでファイルをドロップしろと利用者に伝える
-			//　相互運用機能に頼る（2022/10/15）
 			var pApp = Application.Current as App;
 			var pOpenPicker = PickerHelper.NewFileOpenPicker(pApp.m_pWindow);
 
 			pOpenPicker.ViewMode = PickerViewMode.List;
-			pOpenPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-			pOpenPicker.FileTypeFilter.Add(".csv");
+			pOpenPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+			pOpenPicker.FileTypeFilter.Add(".key");
 			pOpenPicker.FileTypeFilter.Add("*");
-			//　FileTypeFilterのリストから初期表示に使うフィルターを選択する方法は未実装（2023/01/22）
-
-			// 2023/01/22　ChatGPT Suggestion is follow.
-			// pOpenPicker.SuggestedFileType = ".csv";
-			// pOpenPicker.SuggestedFileType = pOpenPicker.FileTypeFilter[1];
-			//　いや理想的な実装はそうだけど、それ（SuggestedFileType）が実装されていないのですよ…
 
 			StorageFile file = await pOpenPicker.PickSingleFileAsync();
 			if (file != null)
 			{
 				this.ClientKey.Text = file.Path;
 			}
-			else
-			{
-				;
-			}
-
 		}
 
 		private void BasicParameters_LostFocus(object sender, RoutedEventArgs e)
 		{
-			if (m_bWriteable == false)
+			if (m_bWriteable == false || m_bIsDirty == false)
 			{
 				return;
 			}
@@ -210,9 +177,95 @@ namespace Arteria_s.App.RoughCA
 			{
 				return;
 			}
+
 			var pApp = App.Current as RoughCA.App;
-			var pDbParams = pApp.m_pDbParams;
-			var bResult = pApp.m_pProfile.Save(pDbParams);
+			pApp.m_pProfile.Save(m_pDbParams);
+			m_bIsDirty = false;
+			if (pApp.m_pWindow is MainWindow pWindow)
+			{
+				pWindow.UpdateLocationBadge(pApp);
+			}
+		}
+
+		//　編集解除時に呼び出され、変更があれば保存・再接続を行う
+		public bool CommitIfModified(out string errorMessage)
+		{
+			errorMessage = null;
+			if (!m_bNeedsReconnect && !m_bIsDirty)
+			{
+				return true;
+			}
+			if (Varidate() == false)
+			{
+				errorMessage = "データベース接続設定に未入力の項目があります。";
+				return false;
+			}
+
+			var pApp = App.Current as RoughCA.App;
+			var ok = pApp.SaveDbParamsAndReconnect(m_pDbParams, out errorMessage);
+			m_bIsDirty = false;
+			m_bNeedsReconnect = false;
+
+			if (pApp.m_pWindow is MainWindow pWindow)
+			{
+				pWindow.UpdateLocationBadge(pApp);
+			}
+			return ok;
+		}
+
+		private void ApplyReconnectButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (Varidate() == false)
+			{
+				return;
+			}
+
+			var pApp = App.Current as RoughCA.App;
+			var ok = pApp.SaveDbParamsAndReconnect(m_pDbParams, out var err);
+			m_bIsDirty = false;
+			m_bNeedsReconnect = false;
+
+			if (pApp.m_pWindow is MainWindow pWindow)
+			{
+				pWindow.RefreshAfterProfileChange(pApp, ok, $"プロファイル '{m_pDbParams.ProfileName}' の設定を保存して再接続しました。", err);
+			}
+		}
+
+		private async void DeleteProfileButton_Click(object sender, RoutedEventArgs e)
+		{
+			var pApp = App.Current as RoughCA.App;
+			if (pApp == null || pApp.m_pProfile.Profiles.Count <= 1)
+			{
+				return;
+			}
+
+			var targetName = m_pDbParams.ProfileName;
+			var dialog = new ContentDialog
+			{
+				Title = "プロファイルを削除",
+				Content = $"プロファイル '{targetName}' を設定一覧から削除しますか？\n（※データベースファイル自体は削除されません）",
+				PrimaryButtonText = "削除",
+				CloseButtonText = "キャンセル",
+				DefaultButton = ContentDialogButton.Close,
+				XamlRoot = this.Content.XamlRoot
+			};
+
+			try
+			{
+				var result = await dialog.ShowAsync();
+				if (result == ContentDialogResult.Primary)
+				{
+					var ok = pApp.DeleteProfile(targetName, out var err);
+					if (pApp.m_pWindow is MainWindow pWindow)
+					{
+						pWindow.RefreshAfterProfileChange(pApp, ok, $"プロファイル '{targetName}' を削除し、'{pApp.m_pDbParams?.ProfileName}' へ切り替えました。", err);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine("DeleteProfileButton_Click error: " + ex);
+			}
 		}
 
 		public void IsWriteable(bool? bWriteable)
@@ -221,23 +274,32 @@ namespace Arteria_s.App.RoughCA
 			{
 				return;
 			}
-			DatabaseServerName.IsReadOnly = !bWriteable.Value;
-			DatabaseName.IsReadOnly       = !bWriteable.Value;
-			SchemaName.IsReadOnly         = !bWriteable.Value;
-			ClientKey.IsReadOnly          = !bWriteable.Value;
-			ClientCrt.IsReadOnly          = !bWriteable.Value;
-			RootCACrt.IsReadOnly          = !bWriteable.Value;
+			var editable = bWriteable.Value;
 
-			BrowseClientKey.IsEnabled = bWriteable.Value;
-			BrowseClientCrt.IsEnabled = bWriteable.Value;
-			BrowseRootCACrt.IsEnabled = bWriteable.Value;
-			DBDrivers.IsEnabled       = bWriteable.Value;
+			ProfileNameBox.IsReadOnly     = !editable;
+			SqliteDatabaseName.IsReadOnly = !editable;
+			SqliteFilePath.IsReadOnly     = !editable;
+			DatabaseServerName.IsReadOnly = !editable;
+			DatabaseName.IsReadOnly       = !editable;
+			SchemaName.IsReadOnly         = !editable;
+			ClientKey.IsReadOnly          = !editable;
+			ClientCrt.IsReadOnly          = !editable;
+			RootCACrt.IsReadOnly          = !editable;
 
-			UpdateDisplayState(bWriteable.Value);
+			BrowseSqliteFile.IsEnabled     = editable;
+			BrowseClientKey.IsEnabled      = editable;
+			BrowseClientCrt.IsEnabled      = editable;
+			BrowseRootCACrt.IsEnabled      = editable;
+			DBDrivers.IsEnabled            = editable;
+			ApplyReconnectButton.IsEnabled = editable;
 
-			m_bWriteable = bWriteable.Value;
+			var pApp = App.Current as RoughCA.App;
+			DeleteProfileButton.IsEnabled = editable && (pApp?.m_pProfile?.Profiles.Count > 1);
+
+			UpdateDisplayState(editable);
+
+			m_bWriteable = editable;
 		}
-		private bool m_bWriteable = false;
 
 		private void UpdateDisplayState(bool bWriteable)
 		{
@@ -252,11 +314,15 @@ namespace Arteria_s.App.RoughCA
 				{
 				case 0: // SQLite
 					ExpanderSQLite.IsEnabled = true;
+					ExpanderSQLite.IsExpanded = true;
 					ExpanderPostgreSQL.IsEnabled = false;
+					ExpanderPostgreSQL.IsExpanded = false;
 					break;
 				case 1: // PostgreSQL
 					ExpanderSQLite.IsEnabled = false;
+					ExpanderSQLite.IsExpanded = false;
 					ExpanderPostgreSQL.IsEnabled = true;
+					ExpanderPostgreSQL.IsExpanded = true;
 					break;
 				}
 			}
@@ -265,6 +331,8 @@ namespace Arteria_s.App.RoughCA
 		//　表示状態を更新
 		private void DBDrivers_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
+			m_bIsDirty = true;
+			m_bNeedsReconnect = true;
 			UpdateDisplayState(m_bWriteable);
 		}
 	}

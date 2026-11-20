@@ -30,29 +30,54 @@ namespace Arteria_s.DB.Base
 
 		//　
 		//　DatabaseName：データベース名
-		public SQLiteContext(string DatabaseServer, string DatabaseName, string SchemaName, string ClientKey, string ClientCrt, string TrustCrt)
+		//　SqliteFilePath：任意のSQLiteファイルパス（空の場合は既定フォルダに {DatabaseName}.db を作成）
+		public SQLiteContext(string DatabaseServer, string DatabaseName, string SchemaName, string ClientKey, string ClientCrt, string TrustCrt, string SqliteFilePath = "")
 		{
-			var pAppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-			System.Diagnostics.Debug.WriteLine("AppData: " + pAppDataFolder);
+			string pProfilePath;
+			if (!string.IsNullOrWhiteSpace(SqliteFilePath))
+			{
+				pProfilePath = SqliteFilePath.Trim();
+				var pDir = System.IO.Path.GetDirectoryName(pProfilePath);
+				if (!string.IsNullOrWhiteSpace(pDir))
+				{
+					DirectoryHelper.CreateDirectorySafe(pDir);
+				}
+			}
+			else
+			{
+				var pAppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				System.Diagnostics.Debug.WriteLine("AppData: " + pAppDataFolder);
 
-			//　ユーザープロファイルのフォルダ名を生成
-			var pProfileFolderPath = pAppDataFolder + "/" + m_pCompanyName + "/" + m_pAppName;
+				//　ユーザープロファイルのフォルダ名を生成
+				var pProfileFolderPath = System.IO.Path.Combine(pAppDataFolder, m_pCompanyName, m_pAppName);
+				DirectoryHelper.CreateDirectorySafe(pProfileFolderPath);
 
-			DirectoryHelper.CreateDirectorySafe(pProfileFolderPath);
+				var dbFileName = string.IsNullOrWhiteSpace(DatabaseName) ? m_pAppName : DatabaseName.Trim();
+				if (!dbFileName.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
+				{
+					dbFileName += ".db";
+				}
+				pProfilePath = System.IO.Path.Combine(pProfileFolderPath, dbFileName);
+			}
 
-			//　ユーザープロファイルのパス名を生成
-			var pProfilePath = pProfileFolderPath + "/" + m_pAppName + ".db";
 			m_pConnection = Open(LAYOUT_VERSION, pProfilePath);
+		}
+
+		public override void Close()
+		{
+			if (m_pConnection != null)
+			{
+				m_pConnection.Close();
+				m_pConnection.Dispose();
+				m_pConnection = null;
+			}
+			SqliteConnection.ClearAllPools();
 		}
 
 		//　
 		~SQLiteContext()
 		{
-			if (m_pConnection != null)
-			{
-				m_pConnection.Close();
-			}
-			m_pConnection = null;
+			Close();
 		}
 
 		protected bool IsUpgradeLayout(SqliteCommand pCommand, long lRequireRevision)
