@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 
@@ -335,39 +336,57 @@ namespace ArteriaS.App.RoughCA
 			return;
 		}
 
-		//　CRL を最新に更新
+		//　CRL を最新に更新（ルート認証局および有効な発行認証局すべてを対象に生成・出力）
 		private void RefreshButton_Click(object sender, RoutedEventArgs e)
 		{
-			//　
 			var pApp = App.Current as RoughCA.App;
 			var pWindow = pApp.m_pWindow as MainWindow;
 			var pSQLContext = pApp.GetSQLContext();
 			var pAuthority = Authority.Instance;
 
-			//　DBコネクションにおいてトランザクジョンを開始
-			// ※ このトランザクションクラスは、リスナパタンでかなり使いやすい設計。
+			//　署名可能な有効な認証局証明書（ルートCA・発行CA）を取得
+			var pTargetAuthorities = pAuthority.ListupSigningAuthorities(pSQLContext);
+			if ((pTargetAuthorities.Count == 0) && (pAuthority.m_pAuthorityItem != null))
+			{
+				pTargetAuthorities.Add(pAuthority.m_pAuthorityItem);
+			}
+			if (pTargetAuthorities.Count == 0)
+			{
+				pWindow.AddMessage(new Message(AppFacility.Error, "CRLを生成できる有効な認証局証明書が見つかりませんでした。", ""));
+				return;
+			}
+
+			//　設定された出力先フォルダを取得
+			var pExportFolder = pApp.m_pProfile.ResolveExportFolder(pApp.m_pDbParams);
+			var pExportedFiles = new List<(string CommonName, string Filepath)>();
+
+			//　DBコネクションにおいてトランザクションを開始
 			var pTransaction = pSQLContext.BeginTransaction();
 			try
 			{
-				//　失効リストを生成する。
 				var iCrlDays = 128;
-				var pBytes = pAuthority.GenerateCRL(pSQLContext, iCrlDays);
-
-				//　設定された出力先フォルダにファイルを出力する。
-				var pExportFolder = pApp.m_pProfile.ResolveExportFolder(pApp.m_pDbParams);
-				var pExportFilepath = pAuthority.ExportCRL(pExportFolder, pBytes);
+				foreach (var pCACert in pTargetAuthorities)
+				{
+					//　各認証局が発行した失効証明書のみを含むCRLを生成・出力する
+					var pBytes = pAuthority.GenerateCRL(pSQLContext, iCrlDays, pCACert);
+					var pExportFilepath = pAuthority.ExportCRL(pExportFolder, pBytes, pCACert);
+					pExportedFiles.Add((pCACert.m_pItems.CommonName, pExportFilepath));
+				}
 
 				pSQLContext.Commit();
 
-				var pText = "次のパスにファイルを出力しました。";
-				var pMessage = new Message(AppFacility.Info, pText, pExportFilepath);
-				pWindow.AddMessage(pMessage);
+				foreach (var pExported in pExportedFiles)
+				{
+					var pText = $"次のパスにファイルを出力しました。（{pExported.CommonName}）";
+					var pMessage = new Message(AppFacility.Info, pText, pExported.Filepath);
+					pWindow.AddMessage(pMessage);
+				}
 			}
 			catch (Exception ex)
 			{
 				Debug.WriteLine(ex.ToString());
-				//pTransaction.Rollback();
 				pSQLContext.Rollback();
+				pWindow.AddMessage(new Message(AppFacility.Error, "CRLの生成に失敗しました。", ex.Message));
 			}
 
 			return;
@@ -413,6 +432,80 @@ namespace ArteriaS.App.RoughCA
 			}
 		}
 
+		//　署名に使用する認証局を選択するダイアログを表示
+		private async Task<Certificate> SelectSigningAuthorityAsync(string pTitle, string pCsrFileName, string pPreferredCommonName)
+		{
+			var pApp = App.Current as RoughCA.App;
+			var pSQLContext = pApp.GetSQLContext();
+			var pAuthority = Authority.Instance;
+
+			var pAuthorities = pAuthority.ListupSigningAuthorities(pSQLContext);
+			if (pAuthorities.Count == 0)
+			{
+				var pWindow = pApp.m_pWindow as MainWindow;
+				pWindow.AddMessage(new Message(AppFacility.Error, "署名に使用できる有効な認証局証明書が見つかりませんでした。", ""));
+				return (null);
+			}
+
+			var pComboBox = new ComboBox
+			{
+				Header = "署名する認証局",
+				HorizontalAlignment = HorizontalAlignment.Stretch
+			};
+
+			int iDefaultIndex = -1;
+			for (int i = 0; i < pAuthorities.Count; i++)
+			{
+				var pCert = pAuthorities[i];
+				pComboBox.Items.Add(new ComboBoxItem
+				{
+					Content = pAuthority.FormatAuthorityDisplayName(pCert),
+					Tag = pCert
+				});
+
+				if ((iDefaultIndex == -1) &&
+					!string.IsNullOrEmpty(pPreferredCommonName) &&
+					string.Equals(pCert.m_pItems.CommonName, pPreferredCommonName, StringComparison.Ordinal))
+				{
+					iDefaultIndex = i;
+				}
+			}
+			pComboBox.SelectedIndex = (iDefaultIndex >= 0) ? iDefaultIndex : 0;
+
+			var pPanel = new StackPanel { Spacing = 12 };
+			pPanel.Children.Add(new TextBlock
+			{
+				Text = $"対象ファイル：{pCsrFileName}",
+				TextWrapping = TextWrapping.Wrap
+			});
+			pPanel.Children.Add(pComboBox);
+
+			var pDialog = new ContentDialog
+			{
+				Title = pTitle,
+				Content = pPanel,
+				PrimaryButtonText = "署名",
+				CloseButtonText = "キャンセル",
+				DefaultButton = ContentDialogButton.Primary,
+				XamlRoot = this.Content.XamlRoot
+			};
+
+			try
+			{
+				var eResult = await pDialog.ShowAsync();
+				if (eResult == ContentDialogResult.Primary && pComboBox.SelectedItem is ComboBoxItem pSelected)
+				{
+					return (pSelected.Tag as Certificate);
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine(ex);
+			}
+
+			return (null);
+		}
+
 		//　署名要求に署名して証明書を作成（認証局が署名して証明書を登録するルート）
 		private async void SignatureButton_Click(object sender, RoutedEventArgs e)
 		{
@@ -420,6 +513,7 @@ namespace ArteriaS.App.RoughCA
 			pPicker.FileTypeFilter.Add(RoughCA_Const.CSR_EXTENSION);
 
 			var pApp = App.Current as RoughCA.App;
+			var pWindow = pApp.m_pWindow as MainWindow;
 			var hWnd = WindowNative.GetWindowHandle(pApp.m_pWindow);
 			InitializeWithWindow.Initialize(pPicker, hWnd);
 			var pFile = await pPicker.PickSingleFileAsync();
@@ -427,18 +521,34 @@ namespace ArteriaS.App.RoughCA
 			{
 				Debug.Write(pFile.Path);
 
-				var pProfile = pApp.m_pProfile;
-				var pSQLContext = pApp.GetSQLContext();
 				var pAuthority = Authority.Instance;
+				var pIssuerCert = await SelectSigningAuthorityAsync(
+					"署名要求に署名",
+					pFile.Name,
+					pAuthority.m_pOrgProfile?.IssueName);
+				if (pIssuerCert == null)
+				{
+					return;
+				}
+
+				var pSQLContext = pApp.GetSQLContext();
 				var pDBParams = pApp.m_pDbParams;
 				var fOverWrite = true;
-				if (pAuthority.CreateForServerCert(pSQLContext, pDBParams.uInstance, pFile.Path, fOverWrite) == false)
+				try
 				{
-					;
+					if (pAuthority.CreateForServerCert(pSQLContext, pDBParams.uInstance, pFile.Path, fOverWrite, pIssuerCert))
+					{
+						pWindow.AddMessage(new Message(AppFacility.Complete, "署名要求に署名して証明書を発行しました。", $"{pFile.Name}（発行元: {pIssuerCert.m_pItems.CommonName}）"));
+					}
 				}
-				else
+				catch (AppException pException)
 				{
-					;
+					pWindow.AddMessage(new Message(pException.m_eFacility, pException.GetText(), pException.GetParameter()));
+				}
+				catch (Exception ex)
+				{
+					Debug.WriteLine(ex);
+					pWindow.AddMessage(new Message(AppFacility.Error, "署名要求の署名に失敗しました。", ex.Message));
 				}
 			}
 		}
@@ -450,24 +560,42 @@ namespace ArteriaS.App.RoughCA
 			pPicker.FileTypeFilter.Add(RoughCA_Const.CSR_EXTENSION);
 
 			var pApp = App.Current as RoughCA.App;
+			var pWindow = pApp.m_pWindow as MainWindow;
 			var hWnd = WindowNative.GetWindowHandle(pApp.m_pWindow);
 			InitializeWithWindow.Initialize(pPicker, hWnd);
 			var pFile = await pPicker.PickSingleFileAsync();
-			if (pFile != null) {
+			if (pFile != null)
+			{
 				Debug.Write(pFile.Path);
 
-				var pProfile = pApp.m_pProfile;
+				var pAuthority = Authority.Instance;
+				var pIssuerCert = await SelectSigningAuthorityAsync(
+					"認証局署名要求に署名",
+					pFile.Name,
+					pAuthority.m_pOrgProfile?.TrustName);
+				if (pIssuerCert == null)
+				{
+					return;
+				}
+
 				var pSQLContext = pApp.GetSQLContext();
 				var pDBParams = pApp.m_pDbParams;
-				var pAuthority = Authority.Instance;
 				var fOverWrite = true;
-				if (pAuthority.CreateForCACert(pSQLContext, pDBParams.uInstance, pFile.Path, fOverWrite) == false)
+				try
 				{
-					;
+					if (pAuthority.CreateForCACert(pSQLContext, pDBParams.uInstance, pFile.Path, fOverWrite, pIssuerCert))
+					{
+						pWindow.AddMessage(new Message(AppFacility.Complete, "認証局署名要求に署名してCA証明書を発行しました。", $"{pFile.Name}（発行元: {pIssuerCert.m_pItems.CommonName}）"));
+					}
 				}
-				else
+				catch (AppException pException)
 				{
-					;
+					pWindow.AddMessage(new Message(pException.m_eFacility, pException.GetText(), pException.GetParameter()));
+				}
+				catch (Exception ex)
+				{
+					Debug.WriteLine(ex);
+					pWindow.AddMessage(new Message(AppFacility.Error, "認証局署名要求の署名に失敗しました。", ex.Message));
 				}
 			}
 		}

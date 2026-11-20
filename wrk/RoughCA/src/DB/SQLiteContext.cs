@@ -4,10 +4,12 @@ using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -602,6 +604,58 @@ namespace ArteriaS.DB.Base
 			return (pCertificates);
 		}
 
+		//　署名可能な有効な認証局証明書一覧を取得（トランザクション内外どちらからでも呼び出し可能）
+		public override List<Certificate> ListupSigningAuthorities(uint uAuthorityId)
+		{
+			var pAuthorities = new List<Certificate>();
+			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE AuthorityId = @AuthorityId AND Revoked = FALSE AND LaunchAt <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < ExpireAt AND TypeOf = @TypeOf AND KeyData IS NOT NULL AND KeyData <> '' ORDER BY SequenceNumber ASC;";
+			bool wasClosed = (m_pConnection.State != ConnectionState.Open);
+			if (wasClosed)
+			{
+				m_pConnection.Open();
+			}
+			try
+			{
+				using (var pCommand = m_pConnection.CreateCommand())
+				{
+					pCommand.CommandText = pSQL;
+					pCommand.Parameters.Clear();
+					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
+					pCommand.Parameters.AddWithValue("TypeOf", (int)CertificateType.CA);
+					using (var pReader = pCommand.ExecuteReader())
+					{
+						while (pReader.Read())
+						{
+							var pCertificate = new Certificate();
+							pCertificate.m_pItems.SequenceNumber = pReader.GetInt64(0);
+							pCertificate.m_pItems.SerialNumber   = pReader.GetString(1);
+							pCertificate.m_pItems.SubjectName    = pReader.GetString(2);
+							pCertificate.m_pItems.CommonName     = pReader.GetString(3);
+							pCertificate.m_pItems.TypeOf         = (CertificateType)pReader.GetInt32(4);
+							pCertificate.m_pItems.Revoked        = pReader.GetBoolean(5);
+							pCertificate.m_pItems.LaunchAt       = pReader.GetDateTime(6);
+							pCertificate.m_pItems.ExpireAt       = pReader.GetDateTime(7);
+							var pCertPem = pReader.GetString(8);
+							var pKeyPem = pReader.IsDBNull(9) ? null : pReader.GetString(9);
+							pCertificate.LoadFromPem(pCertPem, pKeyPem);
+							if (pCertificate.IsHaveKey())
+							{
+								pAuthorities.Add(pCertificate);
+							}
+						}
+					}
+				}
+			}
+			finally
+			{
+				if (wasClosed)
+				{
+					m_pConnection.Close();
+				}
+			}
+			return (pAuthorities);
+		}
+
 		public override Certificate Fetch(string pSerialNumber)
 		{
 			var pCertificate = new Certificate();
@@ -643,7 +697,7 @@ namespace ArteriaS.DB.Base
 			byte[] pBytes;
 			var pBuilder = new CertificateRevocationListBuilder();
 
-			var pSQL = "SELECT SerialNumber, RevokeAt FROM TIssuedCerts WHERE Revoked = TRUE AND AuthorityId = @AuthorityId;";
+			var pSQL = "SELECT SerialNumber, RevokeAt, PemData FROM TIssuedCerts WHERE Revoked = TRUE AND AuthorityId = @AuthorityId;";
 			using (var pCommand = m_pConnection.CreateCommand())
 			{
 				pCommand.CommandText = pSQL;
@@ -653,14 +707,34 @@ namespace ArteriaS.DB.Base
 				{
 					while (pReader.Read())
 					{
-						var SerialNumber = Convert.FromHexString(pReader.GetString(0));
+						var pSerialText = pReader.GetString(0);
 						var RevokeAt = pReader.GetDateTime(1);
+						var pPemData = pReader.GetString(2);
+
+						//　この認証局が署名した証明書のみをCRLに載せる（自己署名の自分自身は除外）
+						if (!string.IsNullOrEmpty(pPemData))
+						{
+							using (var pRevokedCert = X509Certificate2.CreateFromPem(pPemData))
+							{
+								if (!pRevokedCert.IssuerName.RawData.SequenceEqual(m_pCertificate.SubjectName.RawData))
+								{
+									continue;
+								}
+								if (string.Equals(pRevokedCert.SerialNumber, m_pCertificate.SerialNumber, StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
+							}
+						}
+
+						var SerialNumber = Convert.FromHexString(pSerialText);
 						pBuilder.AddEntry(SerialNumber, RevokeAt);
 					}
 				}
 			}
 
 			BigInteger iCRLNumber = 0;
+			bool hasCounterRow = false;
 
 			//　CRL番号を取得
 			pSQL = "SELECT CRLNumber FROM TCounters;";
@@ -675,15 +749,22 @@ namespace ArteriaS.DB.Base
 						var pNumber = pReader.GetString(0);
 						iCRLNumber = BigInteger.Parse(pNumber, NumberStyles.HexNumber);
 						iCRLNumber++;
+						hasCounterRow = true;
 						break;
 					}
+				}
+				if (!hasCounterRow)
+				{
+					iCRLNumber = 1;
 				}
 				DateTimeOffset pNextUpdate = DateTimeOffset.Now.AddDays(iDays);
 				pBytes = pBuilder.Build(m_pCertificate, iCRLNumber, pNextUpdate, HashAlgorithmName.SHA512);
 			}
 
 			//　CRLNumberのカウンタを更新
-			pSQL = "UPDATE TCounters SET CrlNumber = @CrlNumber;";
+			pSQL = hasCounterRow
+				? "UPDATE TCounters SET CrlNumber = @CrlNumber;"
+				: "INSERT INTO TCounters (CrlNumber) VALUES (@CrlNumber);";
 			using (var pCommand = m_pConnection.CreateCommand())
 			{
 				var pNumber = iCRLNumber.ToString("X");

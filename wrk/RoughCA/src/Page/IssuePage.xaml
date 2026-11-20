@@ -19,12 +19,13 @@
 
 	<ScrollViewer Padding="24,16,24,24">
 		<StackPanel MaxWidth="680" HorizontalAlignment="Left" Spacing="16">
-			<!-- 証明書種別カード -->
+			<!-- 証明書種別・発行元認証局カード -->
 			<StackPanel Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,16" Spacing="12">
 				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
 					<FontIcon Glyph="&#xEB95;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
-					<TextBlock Text="証明書タイプ" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+					<TextBlock Text="証明書タイプ・発行元" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
 				</StackPanel>
+				<ComboBox x:Uid="IssuerAuthority" x:Name="IssuerAuthority" Header="発行元の認証局" MinWidth="320" HorizontalAlignment="Stretch" SelectionChanged="IssuerAuthority_SelectionChanged" />
 				<ComboBox x:Uid="CertificateType" x:Name="CertificateType" Header="証明書の種類" MinWidth="320" HorizontalAlignment="Stretch" SelectionChanged="CertificateType_SelectionChanged">
 					<ComboBoxItem x:Uid="ServerCertificate" Tag="Server" Content="サーバー証明書" />
 					<ComboBoxItem x:Uid="ClientCertificate" Tag="Client" Content="クライアント証明書" />

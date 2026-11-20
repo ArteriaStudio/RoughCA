@@ -228,6 +228,9 @@
   <data name="CertificateType.Header" xml:space="preserve">
     <value>証明書の種類</value>
   </data>
+  <data name="IssuerAuthority.Header" xml:space="preserve">
+    <value>発行元の認証局</value>
+  </data>
   <data name="ServerCertificate.Content" xml:space="preserve">
     <value>サーバー証明書</value>
   </data>

@@ -21,6 +21,7 @@ namespace ArteriaS.DB.Base
 		abstract public bool SaveCertificate(uint uAuthorityId, uint uInstance, ItemsMentioned pItems, string pCertPem, string pKeyPem);
 		abstract public bool Revoke(uint uAuthorityId, string SerialNumber);
 		abstract public ObservableCollection<Certificate> ListupCertificates(Int64 m_uAuthorityId);
+		abstract public List<Certificate> ListupSigningAuthorities(uint uAuthorityId);
 		abstract public Certificate Fetch(string pSerialNumber);
 		abstract public byte[] GenerateCRL(uint m_uAuthorityId, int iDays, X509Certificate2 m_pCertificate);
 		abstract public bool BeginTransaction();

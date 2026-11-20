@@ -2,9 +2,11 @@
 using ArteriaS.OS.Base;
 using Npgsql;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography;
@@ -24,7 +26,8 @@ namespace ArteriaS.App.RoughCA
 
 		public static Authority Instance { get; set; } = new Authority();
 
-		public Certificate	m_pAuthorityItem;	//　認証局証明書
+		public Certificate	m_pAuthorityItem;		//　既定の発行認証局証明書
+		public Certificate	m_pRootAuthorityItem;	//　ルート認証局証明書
 
 		public bool Validate(VSQLContext pSQLContext)
 		{
@@ -62,6 +65,7 @@ namespace ArteriaS.App.RoughCA
 
 			//　切り替え時に前の認証局情報が残らないようリセット
 			m_pAuthorityItem = null;
+			m_pRootAuthorityItem = null;
 			if (loadOrgProfileFromDb || m_pOrgProfile == null)
 			{
 				m_pOrgProfile = new OrgProfile();
@@ -94,6 +98,7 @@ namespace ArteriaS.App.RoughCA
 				}
 				createdRoot = true;
 			}
+			m_pRootAuthorityItem = m_pAuthorityItem;
 
 			//　発行認証局名がルート認証局名と異なる場合、発行認証局の証明書を確保
 			if (!string.Equals(m_pOrgProfile.IssueName, pAuthorityName, StringComparison.Ordinal))
@@ -176,10 +181,11 @@ namespace ArteriaS.App.RoughCA
 
 		//　サーバ証明書を生成する。
 		//　fOverWrite：同一のサブジェクトを持つ証明書があった場合に有効な証明書を当該証明書に差し替える。
-		public bool CreateForServer(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pFQDN, bool fCA, bool fOverWrite)
+		public bool CreateForServer(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pFQDN, bool fCA, bool fOverWrite, Certificate pIssuerAuthority = null)
 		{
+			var pSigner = pIssuerAuthority ?? m_pAuthorityItem;
 			var pCertificate = new Certificate();
-			if (pCertificate.CreateForServer(m_pOrgProfile, pCommonName, pFQDN, m_pAuthorityItem, fCA) == false)
+			if (pCertificate.CreateForServer(m_pOrgProfile, pCommonName, pFQDN, pSigner, fCA) == false)
 			{
 				throw (new AppException(AppError.FailureCreateCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -208,10 +214,11 @@ namespace ArteriaS.App.RoughCA
 		}
 
 		//　メール証明書を生成する。
-		public bool CreateForClient(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pMailAddress, bool fCA, bool fOverWrite)
+		public bool CreateForClient(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pMailAddress, bool fCA, bool fOverWrite, Certificate pIssuerAuthority = null)
 		{
+			var pSigner = pIssuerAuthority ?? m_pAuthorityItem;
 			var pCertificate = new Certificate();
-			if (pCertificate.CreateForClient(m_pOrgProfile, pCommonName, pMailAddress, m_pAuthorityItem, fCA) == false)
+			if (pCertificate.CreateForClient(m_pOrgProfile, pCommonName, pMailAddress, pSigner, fCA) == false)
 			{
 				throw (new AppException(AppError.FailureCreateCertificate, AppFacility.Error, AppFlow.CreateCertificateForClient, pCommonName));
 			}
@@ -241,10 +248,11 @@ namespace ArteriaS.App.RoughCA
 
 		//　リモートデスクトップ接続リスナー証明書を生成する。
 		//　fOverWrite：同一のサブジェクトを持つ証明書があった場合に有効な証明書を当該証明書に差し替える。
-		public bool CreateForRDSign(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pFQDN, string pNetAddress, bool fCA, bool fOverWrite)
+		public bool CreateForRDSign(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pFQDN, string pNetAddress, bool fCA, bool fOverWrite, Certificate pIssuerAuthority = null)
 		{
+			var pSigner = pIssuerAuthority ?? m_pAuthorityItem;
 			var pCertificate = new Certificate();
-			if (pCertificate.CreateForRDSign(m_pOrgProfile, pCommonName, pFQDN, pNetAddress, m_pAuthorityItem, fCA) == false)
+			if (pCertificate.CreateForRDSign(m_pOrgProfile, pCommonName, pFQDN, pNetAddress, pSigner, fCA) == false)
 			{
 				throw (new AppException(AppError.FailureCreateCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -303,8 +311,9 @@ namespace ArteriaS.App.RoughCA
 
 		//　CA証明書の署名要求に署名してCA証明書を作成する。
 		//　
-		public bool CreateForCACert(VSQLContext pSQLContext, uint uInstance, string pImportFilepath, bool fOverWrite)
+		public bool CreateForCACert(VSQLContext pSQLContext, uint uInstance, string pImportFilepath, bool fOverWrite, Certificate pIssuerAuthority = null)
 		{
+			var pSigner = pIssuerAuthority ?? m_pAuthorityItem;
 			var pBytes = File.ReadAllBytes(pImportFilepath);
 
 			//　署名要求に記載された事項も入力（CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions）
@@ -315,7 +324,7 @@ namespace ArteriaS.App.RoughCA
 			var pCommonName = ItemsMentioned.GetDistinguishedValue("CN", pSignRequest.SubjectName);
 
 			var pCertificate = new Certificate();
-			if (pCertificate.CreateForAuthority(m_pOrgProfile, m_pAuthorityItem, pSignRequest) == false)
+			if (pCertificate.CreateForAuthority(m_pOrgProfile, pSigner, pSignRequest) == false)
 			{
 				throw (new AppException(AppError.FailureCreateCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -342,8 +351,9 @@ namespace ArteriaS.App.RoughCA
 
 		//　サーバー証明書の署名要求に署名してサーバー証明書を作成する。
 		//　
-		public bool CreateForServerCert(VSQLContext pSQLContext, uint uInstance, string pImportFilepath, bool fOverWrite)
+		public bool CreateForServerCert(VSQLContext pSQLContext, uint uInstance, string pImportFilepath, bool fOverWrite, Certificate pIssuerAuthority = null)
 		{
+			var pSigner = pIssuerAuthority ?? m_pAuthorityItem;
 			var pBytes = File.ReadAllBytes(pImportFilepath);
 
 			//　署名要求に記載された事項も入力（CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions）
@@ -359,7 +369,7 @@ namespace ArteriaS.App.RoughCA
 			pSignRequest.CertificateExtensions.Add(new X509SubjectAlternativeNameExtension(pExtBuilt.RawData));
 
 			var pCertificate = new Certificate();
-			if (pCertificate.CreateForServer(m_pOrgProfile, m_pAuthorityItem, pSignRequest) == false)
+			if (pCertificate.CreateForServer(m_pOrgProfile, pSigner, pSignRequest) == false)
 			{
 				throw (new AppException(AppError.FailureCreateCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
@@ -417,8 +427,15 @@ namespace ArteriaS.App.RoughCA
 		// <param>pBaseCertificate：元にする証明書</param>
 		public bool Update(VSQLContext pSQLContext, uint uInstance, Certificate pBaseCertificate)
 		{
+			//　元の証明書の IssuerName から発行元の認証局を自動特定する
+			var pIssuerAuthority = FindIssuerAuthority(pSQLContext, pBaseCertificate);
+			if (pIssuerAuthority == null)
+			{
+				throw (new AppException(AppError.InvalidCertificate, AppFacility.Error, AppFlow.CreateCertificateForUpdate, pBaseCertificate.m_pItems.CommonName));
+			}
+
 			var pCertificate = new Certificate();
-			if (pCertificate.CreateForUpdate(m_pOrgProfile, pBaseCertificate, m_pAuthorityItem) == false)
+			if (pCertificate.CreateForUpdate(m_pOrgProfile, pBaseCertificate, pIssuerAuthority) == false)
 			{
 				throw (new AppException(AppError.FailureCreateCertificate, AppFacility.Error, AppFlow.CreateCertificateForUpdate, pBaseCertificate.m_pItems.CommonName));
 			}
@@ -436,6 +453,36 @@ namespace ArteriaS.App.RoughCA
 			}
 
 			return (true);
+		}
+
+		//　指定された証明書の発行元（IssuerName）に対応する有効な認証局証明書を探索する
+		private Certificate FindIssuerAuthority(VSQLContext pSQLContext, Certificate pTargetCertificate)
+		{
+			if ((pTargetCertificate == null) || (pTargetCertificate.m_pCertificate == null))
+			{
+				return (null);
+			}
+
+			var pIssuerRawData = pTargetCertificate.m_pCertificate.IssuerName.RawData;
+			var pAuthorities = ListupSigningAuthorities(pSQLContext);
+			foreach (var pAuthorityCert in pAuthorities)
+			{
+				if ((pAuthorityCert.m_pCertificate != null) &&
+					pAuthorityCert.m_pCertificate.SubjectName.RawData.SequenceEqual(pIssuerRawData))
+				{
+					return (pAuthorityCert);
+				}
+			}
+
+			//　自己署名証明書自身の更新時は、失効処理直後で有効CA一覧から外れている可能性があるため対象自身をフォールバック確認
+			if (pTargetCertificate.IsHaveKey() &&
+				pTargetCertificate.m_pItems.TypeOf == CertificateType.CA &&
+				pTargetCertificate.m_pCertificate.SubjectName.RawData.SequenceEqual(pIssuerRawData))
+			{
+				return (pTargetCertificate);
+			}
+
+			return (null);
 		}
 
 		//　証明書を失効
@@ -463,6 +510,43 @@ namespace ArteriaS.App.RoughCA
 			return (pSQLContext.ListupCertificates(m_uAuthorityId));
 		}
 
+		//　署名可能な有効な認証局証明書（秘密鍵ありのCA証明書）一覧を取得
+		public List<Certificate> ListupSigningAuthorities(VSQLContext pSQLContext)
+		{
+			if (pSQLContext == null)
+			{
+				return (new List<Certificate>());
+			}
+			return (pSQLContext.ListupSigningAuthorities(m_uAuthorityId));
+		}
+
+		//　UI選択用の認証局表示名を生成
+		public string FormatAuthorityDisplayName(Certificate pAuthorityCert)
+		{
+			if ((pAuthorityCert == null) || (pAuthorityCert.m_pItems == null))
+			{
+				return ("");
+			}
+
+			var pCommonName = pAuthorityCert.m_pItems.CommonName;
+			bool isRoot  = (m_pOrgProfile != null) && string.Equals(pCommonName, m_pOrgProfile.TrustName, StringComparison.Ordinal);
+			bool isIssue = (m_pOrgProfile != null) && string.Equals(pCommonName, m_pOrgProfile.IssueName, StringComparison.Ordinal);
+
+			if (isRoot && isIssue)
+			{
+				return ($"{pCommonName}（ルート / 発行認証局）");
+			}
+			if (isRoot)
+			{
+				return ($"{pCommonName}（ルート認証局）");
+			}
+			if (isIssue)
+			{
+				return ($"{pCommonName}（既定の発行認証局）");
+			}
+			return (pCommonName);
+		}
+
 		//　<summary>シリアル番号で証明書を取得</summary>
 		public Certificate Fetch(VSQLContext pSQLContext, string pSerialNumber)
 		{
@@ -470,15 +554,17 @@ namespace ArteriaS.App.RoughCA
 		}
 
 		//　CRLを生成
-		public byte[] GenerateCRL(VSQLContext pSQLContext, int iDays)
+		public byte[] GenerateCRL(VSQLContext pSQLContext, int iDays, Certificate pAuthorityCert = null)
 		{
-			return (pSQLContext.GenerateCRL(m_uAuthorityId, iDays, m_pAuthorityItem.m_pCertificate));
+			var pTarget = pAuthorityCert ?? m_pAuthorityItem;
+			return (pSQLContext.GenerateCRL(m_uAuthorityId, iDays, pTarget.m_pCertificate));
 		}
 
-		public string ExportCRL(string pExportFolder, byte[] pBytesOfCrl)
+		public string ExportCRL(string pExportFolder, byte[] pBytesOfCrl, Certificate pAuthorityCert = null)
 		{
 			DirectoryHelper.CreateDirectorySafe(pExportFolder);
-			var pFilepath = Path.Combine(pExportFolder, m_pAuthorityItem.m_pItems.CommonName + RoughCA_Const.CRL_EXTENSION);
+			var pTarget = pAuthorityCert ?? m_pAuthorityItem;
+			var pFilepath = Path.Combine(pExportFolder, pTarget.m_pItems.CommonName + RoughCA_Const.CRL_EXTENSION);
 			File.WriteAllBytes(pFilepath, pBytesOfCrl);
 
 			return (pFilepath);

@@ -1,6 +1,8 @@
 ﻿using ArteriaS.DB;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System;
+using System.Collections.Generic;
 using static ArteriaS.App.RoughCA.CertInputForm;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -58,12 +60,65 @@ namespace ArteriaS.App.RoughCA
 		const int CertificateTypeSelectIndex_Code   = 4;
 
 		CertInputForm m_pForm = new CertInputForm();
+		List<Certificate> m_pIssuerAuthorities = new List<Certificate>();
 
 		public IssuePage()
 		{
 			this.InitializeComponent();
 
+			LoadIssuerAuthorities();
 			UpdateFormState();
+		}
+
+		//　署名可能な認証局一覧を読み込み、既定の発行認証局を初期選択する
+		private void LoadIssuerAuthorities()
+		{
+			IssuerAuthority.Items.Clear();
+			m_pIssuerAuthorities.Clear();
+
+			var pApp = App.Current as RoughCA.App;
+			var pSQLContext = pApp?.GetSQLContext();
+			var pAuthority = Authority.Instance;
+			if (pSQLContext == null)
+			{
+				return;
+			}
+
+			m_pIssuerAuthorities = pAuthority.ListupSigningAuthorities(pSQLContext);
+
+			int iDefaultIndex = -1;
+			var pDefaultIssueName = pAuthority.m_pOrgProfile?.IssueName;
+			for (int i = 0; i < m_pIssuerAuthorities.Count; i++)
+			{
+				var pCert = m_pIssuerAuthorities[i];
+				var pItem = new ComboBoxItem
+				{
+					Content = pAuthority.FormatAuthorityDisplayName(pCert),
+					Tag = pCert
+				};
+				IssuerAuthority.Items.Add(pItem);
+
+				if ((iDefaultIndex == -1) &&
+					!string.IsNullOrEmpty(pDefaultIssueName) &&
+					string.Equals(pCert.m_pItems.CommonName, pDefaultIssueName, StringComparison.Ordinal))
+				{
+					iDefaultIndex = i;
+				}
+			}
+
+			if (IssuerAuthority.Items.Count > 0)
+			{
+				IssuerAuthority.SelectedIndex = (iDefaultIndex >= 0) ? iDefaultIndex : 0;
+			}
+		}
+
+		private Certificate GetSelectedIssuerAuthority()
+		{
+			if (IssuerAuthority.SelectedItem is ComboBoxItem pItem)
+			{
+				return (pItem.Tag as Certificate);
+			}
+			return (null);
 		}
 
 		//　フォームの入力値を検査
@@ -71,7 +126,11 @@ namespace ArteriaS.App.RoughCA
 		{
 			bool IsEnabled = true;
 
-			if (CertificateType.SelectedIndex == -1)
+			if (GetSelectedIssuerAuthority() == null)
+			{
+				IsEnabled = false;
+			}
+			else if (CertificateType.SelectedIndex == -1)
 			{
 				IsEnabled = false;
 			}
@@ -151,6 +210,11 @@ namespace ArteriaS.App.RoughCA
 			IssueButton.IsEnabled = IsValidForm();
 		}
 
+		private void IssuerAuthority_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			IssueButton.IsEnabled = IsValidForm();
+		}
+
 		private void CertificateType_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			IssueButton.IsEnabled = IsValidForm();
@@ -205,6 +269,7 @@ namespace ArteriaS.App.RoughCA
 			var pSQLContext = pApp.GetSQLContext();
 			var pAuthority = Authority.Instance;
 			var pDBParams = pApp.m_pDbParams;
+			var pIssuerCert = GetSelectedIssuerAuthority();
 
 			try
 			{
@@ -212,19 +277,19 @@ namespace ArteriaS.App.RoughCA
 				{
 				case 0:
 					//　サーバ証明書
-					pAuthority.CreateForServer(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pHostName, false, true);
+					pAuthority.CreateForServer(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pHostName, false, true, pIssuerCert);
 					break;
 				case 1:
 					//　メール証明書
-					pAuthority.CreateForClient(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pMailAddress, false, true);
+					pAuthority.CreateForClient(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pMailAddress, false, true, pIssuerCert);
 					break;
 				case 2:
 					//　リモートデスクトップ接続リスナー証明書
-					pAuthority.CreateForRDSign(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pHostName, m_pForm.m_pNetAddress, false, true);
+					pAuthority.CreateForRDSign(pSQLContext, pDBParams.uInstance, m_pForm.m_pCommonName, m_pForm.m_pHostName, m_pForm.m_pNetAddress, false, true, pIssuerCert);
 					break;
 				}
 
-				pWindow.AddMessage(new Message(AppFacility.Complete, "証明書を発行しました。", m_pForm.m_pCommonName));
+				pWindow.AddMessage(new Message(AppFacility.Complete, "証明書を発行しました。", $"{m_pForm.m_pCommonName}（発行元: {pIssuerCert.m_pItems.CommonName}）"));
 			}
 			catch (AppException pException)
 			{

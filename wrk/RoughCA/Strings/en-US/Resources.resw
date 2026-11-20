@@ -228,6 +228,9 @@
   <data name="CertificateType.Header" xml:space="preserve">
     <value>Certificate Type</value>
   </data>
+  <data name="IssuerAuthority.Header" xml:space="preserve">
+    <value>Issuing Authority</value>
+  </data>
   <data name="ServerCertificate.Content" xml:space="preserve">
     <value>Server Certificate</value>
   </data>
