@@ -1,4 +1,5 @@
 ﻿using Arteria_s.DB.Base;
+using Arteria_s.OS.Base;
 using Npgsql;
 using System;
 using System.Security.Cryptography;
@@ -121,8 +122,9 @@ namespace Arteria_s.App.RoughCA
 		//　指定したフォルダに署名要求をDER 形式でファイルに出力
 		public string Export(string pExportFolder)
 		{
+			DirectoryHelper.CreateDirectorySafe(pExportFolder);
 			var pBytesOfReq = m_pRequest.CreateSigningRequest();
-			var pExportFilepathOfReq = pExportFolder + "\\" + m_pItems.CommonName + RoughCA_Const.CSR_EXTENSION;
+			var pExportFilepathOfReq = Path.Combine(pExportFolder, m_pItems.CommonName + RoughCA_Const.CSR_EXTENSION);
 			File.WriteAllBytes(pExportFilepathOfReq, pBytesOfReq);
 
 			return (pExportFilepathOfReq);

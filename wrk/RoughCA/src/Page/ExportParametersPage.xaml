@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+================================================================================
+  File        : ExportParametersPage.xaml
+  Description : ファイル出力設定画面（出力形式および出力先フォルダの設定）
+  Author      : Gemini 4 Neon（綴）
+  Updated     : 2026-11-21
+================================================================================
+-->
+<Page
+	x:Class="Arteria_s.App.RoughCA.ExportParametersPage"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="using:Arteria_s.App.RoughCA"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d"
+	Background="Transparent">
+
+	<ScrollViewer x:Name="ExportParameters" Padding="16,16,16,24" LostFocus="ExportParameters_LostFocus">
+		<StackPanel MaxWidth="720" HorizontalAlignment="Left" Spacing="16">
+			<!-- 出力形式カード -->
+			<StackPanel Orientation="Vertical" Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,16" Spacing="8">
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xE8A5;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+					<TextBlock Text="出力形式" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+				</StackPanel>
+				<RadioButtons x:Name="ExportFormatButtons" Header="証明書および秘密鍵の出力形式" SelectedIndex="{x:Bind m_pDbParams.ExportFormatIndex, Mode=TwoWay}" MaxColumns="2" SelectionChanged="ExportFormatButtons_SelectionChanged" IsEnabled="False">
+					<RadioButton Content="PEM" />
+					<RadioButton Content="DER" />
+				</RadioButtons>
+				<TextBlock Text="証明書（.crt）および秘密鍵（.key）の出力形式を切り替えます。" Style="{ThemeResource ItemCaptionTextBlockStyle}" TextWrapping="Wrap" />
+			</StackPanel>
+
+			<!-- 出力先フォルダカード -->
+			<StackPanel Orientation="Vertical" Style="{ThemeResource CardStyleStackPanel}" Padding="20,16,20,20" Spacing="12">
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<FontIcon Glyph="&#xE8B7;" FontSize="16" Foreground="{ThemeResource AccentBadgeForegroundBrush}" />
+					<TextBlock Text="出力先フォルダ" Style="{ThemeResource SectionHeaderTextBlockStyle}" Margin="0" />
+				</StackPanel>
+				<Grid ColumnSpacing="8">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<TextBox x:Name="ExportFolderBox" Grid.Column="0" IsReadOnly="True" Header="出力先フォルダ（任意・空欄時は既定フォルダを使用）" PlaceholderText="空欄時は %USERPROFILE%\Downloads" Text="{x:Bind m_pDbParams.ExportFolder, Mode=TwoWay}" TextChanged="ExportFolderBox_TextChanged" />
+					<Button x:Name="BrowseExportFolder" Grid.Column="1" VerticalAlignment="Bottom" IsEnabled="False" Click="BrowseExportFolder_Click" Content="フォルダを選択" />
+				</Grid>
+				<StackPanel Orientation="Vertical" Spacing="2">
+					<TextBlock Text="実際に使用する出力先フォルダ:" Style="{ThemeResource ItemCaptionTextBlockStyle}" />
+					<TextBlock x:Name="ExportEffectiveFolderText" FontFamily="Consolas" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+				</StackPanel>
+			</StackPanel>
+		</StackPanel>
+	</ScrollViewer>
+</Page>

@@ -13,5 +13,13 @@ namespace Arteria_s.UI.Base
 			WinRT.Interop.InitializeWithWindow.Initialize(pOpenPicker, hWnd);
 			return(pOpenPicker);
 		}
+
+		public static FolderPicker NewFolderPicker(Window pWindow)
+		{
+			FolderPicker pFolderPicker = new FolderPicker();
+			var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(pWindow);
+			WinRT.Interop.InitializeWithWindow.Initialize(pFolderPicker, hWnd);
+			return (pFolderPicker);
+		}
 	}
 }

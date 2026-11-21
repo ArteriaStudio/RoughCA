@@ -1,4 +1,5 @@
 ﻿using Arteria_s.DB.Base;
+using Arteria_s.OS.Base;
 using Npgsql;
 using System;
 using System.Collections.ObjectModel;
@@ -277,7 +278,7 @@ namespace Arteria_s.App.RoughCA
 		
 
 		//　認証局署名要求を生成する。
-		public bool CreateForDemand(VSQLContext pSQLContext, uint uInstance, string pCommonName)
+		public bool CreateForDemand(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pExportFolder = null)
 		{
 			var pSignRequest = new SignRequest();
 			if (pSignRequest.CreateForRemand(m_pOrgProfile, pCommonName) == false)
@@ -296,7 +297,10 @@ namespace Arteria_s.App.RoughCA
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForClient, pCommonName));
 			}
-			var pExportFolder = System.Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads";
+			if (string.IsNullOrWhiteSpace(pExportFolder))
+			{
+				pExportFolder = System.Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads";
+			}
 			var pExportFilepath = pSignRequest.Export(pExportFolder);
 
 			return (true);
@@ -478,7 +482,8 @@ namespace Arteria_s.App.RoughCA
 
 		public string ExportCRL(string pExportFolder, byte[] pBytesOfCrl)
 		{
-			var pFilepath = pExportFolder + "\\" + m_pAuthorityItem.m_pItems.CommonName + RoughCA_Const.CRL_EXTENSION;
+			DirectoryHelper.CreateDirectorySafe(pExportFolder);
+			var pFilepath = Path.Combine(pExportFolder, m_pAuthorityItem.m_pItems.CommonName + RoughCA_Const.CRL_EXTENSION);
 			File.WriteAllBytes(pFilepath, pBytesOfCrl);
 
 			return (pFilepath);

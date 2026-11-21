@@ -21,6 +21,17 @@ namespace Arteria_s.App.RoughCA
 			[1] = "Postgres",
 		};
 
+		private static readonly SortedDictionary<string, int> ExportFormatToIndexMap = new SortedDictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+		{
+			["PEM"] = 0,
+			["DER"] = 1,
+		};
+		private static readonly SortedDictionary<int, string> ExportFormatIndexToNameMap = new SortedDictionary<int, string>
+		{
+			[0] = "PEM",
+			[1] = "DER",
+		};
+
 		public DbParams()
 		{
 			ProfileName    = "Default";
@@ -33,6 +44,8 @@ namespace Arteria_s.App.RoughCA
 			TrustCrt       = "";
 			SqliteFilePath = "";
 			DriverName     = "SQLite";
+			ExportFormat   = "DER";
+			ExportFolder   = "";
 			uInstance      = 0;
 		}
 
@@ -85,6 +98,43 @@ namespace Arteria_s.App.RoughCA
 
 		[JsonPropertyName("uInstance")]
 		public uint uInstance { get; set; }
+
+		private string _ExportFormat = "DER";
+		[JsonPropertyName("ExportFormat")]
+		public string ExportFormat
+		{
+			get => _ExportFormat;
+			set
+			{
+				var normalized = string.IsNullOrWhiteSpace(value) ? "DER" : value.Trim().ToUpperInvariant();
+				if (ExportFormatToIndexMap.TryGetValue(normalized, out var idx))
+				{
+					_ExportFormat = ExportFormatIndexToNameMap[idx];
+					_ExportFormatIndex = idx;
+				}
+				else
+				{
+					_ExportFormat = "DER";
+					_ExportFormatIndex = 1;
+				}
+			}
+		}
+
+		private int _ExportFormatIndex = 1;
+		[JsonIgnore]
+		public int ExportFormatIndex
+		{
+			get => _ExportFormatIndex;
+			set
+			{
+				if (!ExportFormatIndexToNameMap.ContainsKey(value)) value = 1;
+				_ExportFormatIndex = value;
+				_ExportFormat = ExportFormatIndexToNameMap[value];
+			}
+		}
+
+		[JsonPropertyName("ExportFolder")]
+		public string ExportFolder { get; set; } = "";
 
 		public override bool Validate()
 		{
@@ -177,6 +227,30 @@ namespace Arteria_s.App.RoughCA
 				return pDbParams.SqliteFilePath.Trim();
 			}
 			return GetDefaultSqlitePath(pDbParams.DatabaseName);
+		}
+
+		public string GetDefaultExportFolder()
+		{
+			var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+			if (string.IsNullOrWhiteSpace(userProfile))
+			{
+				userProfile = Environment.GetEnvironmentVariable("USERPROFILE") ?? "";
+			}
+			return Path.Combine(userProfile, "Downloads");
+		}
+
+		public string ResolveExportFolder(DbParams pDbParams)
+		{
+			if (pDbParams != null && !string.IsNullOrWhiteSpace(pDbParams.ExportFolder))
+			{
+				return pDbParams.ExportFolder.Trim();
+			}
+			return GetDefaultExportFolder();
+		}
+
+		public bool IsPemExport(DbParams pDbParams)
+		{
+			return string.Equals(pDbParams?.ExportFormat, "PEM", StringComparison.OrdinalIgnoreCase);
 		}
 
 		public static DbParams CreateDefaultDbParams(string profileName = "Default", string databaseName = null)

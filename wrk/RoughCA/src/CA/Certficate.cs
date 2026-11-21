@@ -1,10 +1,12 @@
 ﻿using Arteria_s.DB.Base;
+using Arteria_s.OS.Base;
 using Npgsql;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace Arteria_s.App.RoughCA
 {
@@ -535,20 +537,38 @@ namespace Arteria_s.App.RoughCA
 		}
 		*/
 		//　指定したフォルダに証明書と鍵をファイル形式で出力
-		public string Export(string pExportFolder)
+		public string Export(string pExportFolder, bool bPemFormat = false)
 		{
+			DirectoryHelper.CreateDirectorySafe(pExportFolder);
+
 			//　証明書が秘密鍵を持っていれば、それを出力する。
 			var pPrivateKey = m_pCertificate.GetECDsaPrivateKey();
 			if (pPrivateKey != null)
 			{
-				var pBytesOfKey = pPrivateKey.ExportECPrivateKey();
-				var pExportFilepathOfKey = pExportFolder + "\\" + m_pItems.CommonName + RoughCA_Const.KEY_EXTENSION;
-				File.WriteAllBytes(pExportFilepathOfKey, pBytesOfKey);
+				var pExportFilepathOfKey = Path.Combine(pExportFolder, m_pItems.CommonName + RoughCA_Const.KEY_EXTENSION);
+				if (bPemFormat)
+				{
+					var pPemOfKey = pPrivateKey.ExportECPrivateKeyPem();
+					File.WriteAllText(pExportFilepathOfKey, pPemOfKey, Encoding.ASCII);
+				}
+				else
+				{
+					var pBytesOfKey = pPrivateKey.ExportECPrivateKey();
+					File.WriteAllBytes(pExportFilepathOfKey, pBytesOfKey);
+				}
 			}
 
-			var pBytesOfCrt = m_pCertificate.Export(X509ContentType.Cert);
-			var pExportFilepathOfCrt = pExportFolder + "\\" + m_pItems.CommonName + RoughCA_Const.CRT_EXTENSION;
-			File.WriteAllBytes(pExportFilepathOfCrt, pBytesOfCrt);
+			var pExportFilepathOfCrt = Path.Combine(pExportFolder, m_pItems.CommonName + RoughCA_Const.CRT_EXTENSION);
+			if (bPemFormat)
+			{
+				var pPemOfCrt = m_pCertificate.ExportCertificatePem();
+				File.WriteAllText(pExportFilepathOfCrt, pPemOfCrt, Encoding.ASCII);
+			}
+			else
+			{
+				var pBytesOfCrt = m_pCertificate.Export(X509ContentType.Cert);
+				File.WriteAllBytes(pExportFilepathOfCrt, pBytesOfCrt);
+			}
 
 			return (pExportFilepathOfCrt);
 		}

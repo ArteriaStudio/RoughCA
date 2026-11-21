@@ -215,7 +215,8 @@ namespace Arteria_s.App.RoughCA
 			var pAuthority  = Authority.Instance;
 
 			var pIdentityName = pDbParams.DatabaseName;
-			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pIdentityName) == false)
+			var pExportFolder = pProfile.ResolveExportFolder(pDbParams);
+			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pIdentityName, pExportFolder) == false)
 //			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pDbParams.IdentityName) == false)
 			{
 				//　エラー

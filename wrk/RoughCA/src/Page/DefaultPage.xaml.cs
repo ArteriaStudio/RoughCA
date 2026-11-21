@@ -105,9 +105,10 @@ namespace Arteria_s.App.RoughCA
 				var pCertificate = pAuthority.Fetch(pSQLContext, pSerialNumber);
 				if ((pCertificate != null) && (pCertificate.m_pCertificate != null))
 				{
-					//　ダウンロードフォルダにファイルを出力する。
-					var pExportFolder = System.Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads";
-					var pExportFilepath = pCertificate.Export(pExportFolder);
+					//　設定された出力先フォルダ・出力形式でファイルを出力する。
+					var pExportFolder = pApp.m_pProfile.ResolveExportFolder(pApp.m_pDbParams);
+					var bIsPem = pApp.m_pProfile.IsPemExport(pApp.m_pDbParams);
+					var pExportFilepath = pCertificate.Export(pExportFolder, bIsPem);
 
 					pWindow.AddMessage(new Message(AppFacility.Complete, "証明書をファイルに出力しました。", pCertificate.m_pItems.CommonName, pExportFilepath));
 				}
@@ -361,8 +362,8 @@ namespace Arteria_s.App.RoughCA
 				//var pBytes = pSQLContext.GenerateCRL(uAuthorityId, iCrlDays);
 				var pBytes = pAuthority.GenerateCRL(pSQLContext, iCrlDays);
 
-				//　ダウンロードフォルダにファイルを出力する。
-				var pExportFolder = System.Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads";
+				//　設定された出力先フォルダにファイルを出力する。
+				var pExportFolder = pApp.m_pProfile.ResolveExportFolder(pApp.m_pDbParams);
 				var pExportFilepath = pAuthority.ExportCRL(pExportFolder, pBytes);
 
 				//pTransaction.Commit();

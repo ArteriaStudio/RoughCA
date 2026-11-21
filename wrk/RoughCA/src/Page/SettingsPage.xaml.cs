@@ -26,9 +26,11 @@ namespace Arteria_s.App.RoughCA
 
 			ConnectionTab.Navigated += (s, e) => ApplyWriteableState();
 			AuthorityTag.Navigated  += (s, e) => ApplyWriteableState();
+			ExportTag.Navigated     += (s, e) => ApplyWriteableState();
 
 			ConnectionTab.Navigate(typeof(BasicParametersPage));
 			AuthorityTag.Navigate(typeof(IdentityPage));
+			ExportTag.Navigate(typeof(ExportParametersPage));
 
 			var pApp = App.Current as RoughCA.App;
 			if (pApp.m_pPrepareFlags.bExistDbParams == false)
@@ -65,6 +67,10 @@ namespace Arteria_s.App.RoughCA
 			{
 				pIdentityPage.IsWriteable(isUnlocked);
 			}
+			if (ExportTag?.Content is ExportParametersPage pExportParametersPage)
+			{
+				pExportParametersPage.IsWriteable(isUnlocked);
+			}
 		}
 
 		private void ParametersTab_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -75,14 +81,16 @@ namespace Arteria_s.App.RoughCA
 
 		private void Lock_Click(object sender, RoutedEventArgs e)
 		{
-			var pBasicParametersPage = ConnectionTab.Content as BasicParametersPage;
-			var pIdentityPage = AuthorityTag.Content as IdentityPage;
+			var pBasicParametersPage  = ConnectionTab.Content as BasicParametersPage;
+			var pIdentityPage         = AuthorityTag.Content as IdentityPage;
+			var pExportParametersPage = ExportTag.Content as ExportParametersPage;
 
 			var isUnlocked = Lock.IsChecked == true;
 			LockStatusIcon.Glyph = isUnlocked ? "\uE785" : "\uE72E";
 
 			pBasicParametersPage?.IsWriteable(Lock.IsChecked);
 			pIdentityPage?.IsWriteable(Lock.IsChecked);
+			pExportParametersPage?.IsWriteable(Lock.IsChecked);
 
 			if (isUnlocked)
 			{
@@ -93,11 +101,11 @@ namespace Arteria_s.App.RoughCA
 				return;
 			}
 
-			//　編集解除（ロック）時：接続設定の確定 → 組織プロファイルのチェック → 未作成ならルート認証局の鍵と自己証明書を作成
-			CommitOnLockRelease(pBasicParametersPage, pIdentityPage);
+			//　編集解除（ロック）時：接続設定・ファイル出力設定の確定 → 組織プロファイルのチェック → 未作成ならルート認証局の鍵と自己証明書を作成
+			CommitOnLockRelease(pBasicParametersPage, pIdentityPage, pExportParametersPage);
 		}
 
-		private void CommitOnLockRelease(BasicParametersPage pBasicParametersPage, IdentityPage pIdentityPage)
+		private void CommitOnLockRelease(BasicParametersPage pBasicParametersPage, IdentityPage pIdentityPage, ExportParametersPage pExportParametersPage)
 		{
 			var pApp = App.Current as RoughCA.App;
 			var pWindow = pApp?.m_pWindow as MainWindow;
@@ -116,6 +124,9 @@ namespace Arteria_s.App.RoughCA
 					return;
 				}
 			}
+
+			//　1.5. ファイル出力設定に変更があれば保存
+			pExportParametersPage?.CommitIfModified();
 
 			if (pIdentityPage == null)
 			{
