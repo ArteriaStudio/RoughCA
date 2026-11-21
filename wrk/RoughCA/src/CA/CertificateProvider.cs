@@ -57,6 +57,7 @@ namespace Arteria_s.App.RoughCA
 			OidCollection pEnhancedKeyUsageFlags = new OidCollection
 			{
 				// https://oidref.com/1.3.6.1.5.5.7.3.2
+				new Oid("1.3.6.1.5.5.7.3.2"),	//　clientAuth
 				new Oid("1.3.6.1.5.5.7.3.4"),	//　emailProtection
 			};
 			pRequest.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(pEnhancedKeyUsageFlags, false));
