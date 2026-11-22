@@ -31,8 +31,6 @@ namespace Arteria_s.App.RoughCA
 
 			var pApp = App.Current as RoughCA.App;
 			var pDbParams = pApp.m_pDbParams;
-//			m_pOrgProfile.TrustName = pDbParams.TrustName;
-//			m_pOrgProfile.IssueName = pDbParams.IssueName;
 		}
 
 		//　TODO: データオブジェクト側に検査処理を寄せること
@@ -105,19 +103,6 @@ namespace Arteria_s.App.RoughCA
 
 			return (true);
 		}
-/*
-		private void Save_Click(object sender, RoutedEventArgs e)
-		{
-			if (Validate() == false)
-			{
-				return;
-			}
-
-			var pApp = App.Current as RoughCA.App;
-			DbParams m_pDbParams;
-			pApp.SaveOrgProfile(m_pDbParams);
-		}
-*/
 
 		private void Settings_TextChanged(object sender, TextChangedEventArgs e)
 		{
@@ -217,7 +202,6 @@ namespace Arteria_s.App.RoughCA
 			var pIdentityName = pDbParams.DatabaseName;
 			var pExportFolder = pProfile.ResolveExportFolder(pDbParams);
 			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pIdentityName, pExportFolder) == false)
-//			if (pAuthority.CreateForDemand(pSQLContext, pDbParams.uInstance, pDbParams.IdentityName) == false)
 			{
 				//　エラー
 				;

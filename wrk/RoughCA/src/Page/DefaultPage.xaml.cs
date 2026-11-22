@@ -182,7 +182,6 @@ namespace Arteria_s.App.RoughCA
 			//　DBコネクションにおいてトランザクジョンを開始
 			// ※ このトランザクションクラスは、リスナパタンでかなり使いやすい設計。
 			pSQLContext.BeginTransaction();
-			//var pTransaction = pSQLContext.BeginTransaction();
 			try
 			{
 				//　選択された証明書データを獲得
@@ -196,10 +195,8 @@ namespace Arteria_s.App.RoughCA
 				//　証明書を失効する。
 				var uAuthorityId = pAuthority.GetAuthorityId();
 				pSQLContext.Revoke(uAuthorityId, pCertificate.m_pItems.SerialNumber);
-				//pAuthority.Revoke(pSQLContext, pCertificate);
 
 				//　有効期限を延長した証明書を発行する。
-				//pSQLContext.Update(pCertificate);
 				pAuthority.Update(pSQLContext, pDBParams.uInstance, pCertificate);
 
 				//　メモリ上のデータを更新する。
@@ -211,7 +208,6 @@ namespace Arteria_s.App.RoughCA
 						break;
 					}
 				}
-				//pTransaction.Commit();
 				pSQLContext.Commit();
 				pWindow.AddMessage(new Message(AppFacility.Complete, "証明書の有効期限を延長しました。", pCertificate.m_pItems.CommonName));
 			}
@@ -299,7 +295,6 @@ namespace Arteria_s.App.RoughCA
 				//　証明書を失効する。
 				var uAuthorityId = pAuthority.GetAuthorityId();
 				pSQLContext.Revoke(uAuthorityId, pCertificate.m_pItems.SerialNumber);
-				//pAuthority.Revoke(pSQLContext, pCertificate);
 
 				//　メモリ上のデータを更新する。
 				foreach (var pCert in m_pCertificates)
@@ -310,13 +305,11 @@ namespace Arteria_s.App.RoughCA
 						break;
 					}
 				}
-				//pTransaction.Commit();
 				pSQLContext.Commit();
 				pWindow.AddMessage(new Message(AppFacility.Complete, "証明書を失効しました。", pCertificate.m_pItems.CommonName));
 			}
 			catch (Exception)
 			{
-				//pTransaction.Rollback();
 				pSQLContext.Rollback();
 			}
 			
@@ -358,24 +351,13 @@ namespace Arteria_s.App.RoughCA
 			{
 				//　失効リストを生成する。
 				var iCrlDays = 128;
-				//var uAuthorityId = pAuthority.GetAuthorityId();
-				//var pBytes = pSQLContext.GenerateCRL(uAuthorityId, iCrlDays);
 				var pBytes = pAuthority.GenerateCRL(pSQLContext, iCrlDays);
 
 				//　設定された出力先フォルダにファイルを出力する。
 				var pExportFolder = pApp.m_pProfile.ResolveExportFolder(pApp.m_pDbParams);
 				var pExportFilepath = pAuthority.ExportCRL(pExportFolder, pBytes);
 
-				//pTransaction.Commit();
 				pSQLContext.Commit();
-
-				/*
-				//　
-				var pBytes2 = pAuthority.GenerateRootCRL(pSQLContext, iCrlDays);
-				var pExportFolder2 = System.Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads";
-				var pExportFilepath2 = pAuthority.ExportRootCRL(pExportFolder2, pBytes);
-				*/
-
 
 				var pText = "次のパスにファイルを出力しました。";
 				var pMessage = new Message(AppFacility.Info, pText, pExportFilepath);

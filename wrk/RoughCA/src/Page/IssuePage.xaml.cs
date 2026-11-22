@@ -54,7 +54,6 @@ namespace Arteria_s.App.RoughCA
 		const int CertificateTypeSelectIndex_Server = 0;
 		const int CertificateTypeSelectIndex_Client = 1;
 		const int CertificateTypeSelectIndex_RDSign = 2;
-//		const int CertificateTypeSelectIndex_Demand = 3;
 		const int CertificateTypeSelectIndex_CA     = 3;
 		const int CertificateTypeSelectIndex_Code   = 4;
 

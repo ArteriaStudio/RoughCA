@@ -346,7 +346,6 @@ namespace Arteria_s.DB.Base
 			var status = true;
 
 			BeginTransaction();
-			//var pTransaction = BeginTransaction();
 			try
 			{
 				var pSQL_UPDATE = "UPDATE TSignRequest SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
@@ -379,12 +378,10 @@ namespace Arteria_s.DB.Base
 					pCommand.ExecuteNonQuery();
 				}
 
-				//pTransaction.Commit();
 				Commit();
 			}
 			catch (Exception ex)
 			{
-				//pTransaction.Rollback();
 				Rollback();
 				Debug.WriteLine(ex);
 				status = false;
@@ -640,44 +637,7 @@ namespace Arteria_s.DB.Base
 			}
 			return (pCertificate);
 		}
-/*
-		public override bool Save2(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
-		{
-			var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
-			using (var pCommand = m_pConnection.CreateCommand())
-			{
-				pCommand.CommandText = pSQL_UPDATE;
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-				pCommand.ExecuteNonQuery();
-			}
 
-			var pSQL = "INSERT INTO TIssuedCerts (AuthorityId, SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, LaunchAt, ExpireAt, PemData, KeyData)";
-			pSQL += " VALUES (@AuthorityId, NEXTVAL('SQ_REQTS'), @SerialNumber, @SubjectName, @CommonName, @TypeOf, @LaunchAt, @ExpireAt, @PemData, @KeyData)";
-			pSQL += " ON CONFLICT ON CONSTRAINT tissuedcerts_pkey DO UPDATE SET";
-			pSQL += " SerialNumber = @SerialNumber, SubjectName = @SubjectName, CommonName = @CommonName, TypeOf = @TypeOf,";
-			pSQL += " LaunchAt = @LaunchAt, ExpireAt = @ExpireAt, PemData = @PemData, KeyData = @KeyData";
-			using (var pCommand = m_pConnection.CreateCommand())
-			{
-				pCommand.CommandText = pSQL;
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
-				pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
-				pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-				pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-				pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
-				pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt);
-				pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt);
-				pCommand.Parameters.AddWithValue("PemData", m_pCrt);
-				pCommand.Parameters.AddWithValue("KeyData", m_pKey);
-				pCommand.ExecuteNonQuery();
-			}
-
-			return (true);
-		}
-*/
 		public override byte[] GenerateCRL(uint m_uAuthorityId, int iDays, X509Certificate2 m_pCertificate)
 		{
 			byte[] pBytes;

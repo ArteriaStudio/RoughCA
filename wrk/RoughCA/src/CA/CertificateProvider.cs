@@ -24,21 +24,6 @@ namespace Arteria_s.App.RoughCA
 			pRequest.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(pRequest.PublicKey, false));
 			var pKeyUsageFlags = X509KeyUsageFlags.NonRepudiation | X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.EncipherOnly | X509KeyUsageFlags.CrlSign;
 			pRequest.CertificateExtensions.Add(new X509KeyUsageExtension(pKeyUsageFlags, false));
-			/*
-			OidCollection pEnhancedKeyUsageFlags = new OidCollection
-			{
-				// https://oidref.com/1.3.6.1.5.5.7.3.2
-				new Oid("1.3.6.1.5.5.7.3.1"),   //　serverAuth
-				new Oid("1.3.6.1.5.5.7.3.3"),	//　codeSigning
-				new Oid("1.3.6.1.5.5.7.3.4"),	//　emailProtection
-			};
-			pRequest.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(pEnhancedKeyUsageFlags, false));
-			*/
-			/*
-			 //　※ 自己署名証明書の生成時に使っているロジック（ユニーク性は保証されていない）
-			Span<byte> pSerialNumber = stackalloc byte[8];
-			RandomNumberGenerator.Fill(pSerialNumber);
-			 */
 
 			return (pRequest);
 		}
@@ -123,9 +108,6 @@ namespace Arteria_s.App.RoughCA
 
 			return (pRequest);
 		}
-
-		
-
 
 		//　自己署名証明書を作成
 		public static X509Certificate2	CreateSelfCertificate(CertificateRequest pRequest, string CommonName, int iLifeDays, string pServerName)
@@ -261,7 +243,6 @@ namespace Arteria_s.App.RoughCA
 			var pGenerator = X509SignatureGenerator.CreateForECDsa(pDSAKey);
 			var pIssueName = pTrustCrt.m_pCertificate.SubjectName;
 			return (pRequest.Create(pIssueName, pGenerator, pNotBefore, pNotAfter, pBytes));
-//			return (pRequest.Create(pTrustCrt.m_pCertificate, pNotBefore, pNotAfter, pSerialNumber));
 		}
 	}
 }

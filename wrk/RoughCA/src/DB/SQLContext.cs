@@ -182,7 +182,6 @@ namespace Arteria_s.DB.Base
 			var status = true;
 
 			BeginTransaction();
-			//var pTransaction = BeginTransaction();
 
 			try
 			{
@@ -214,12 +213,10 @@ namespace Arteria_s.DB.Base
 					pCommand.ExecuteNonQuery();
 				}
 
-				//pTransaction.Commit();
 				Commit();
 			}
 			catch (Exception ex)
 			{
-				//pTransaction.Rollback();
 				Rollback();
 				Debug.WriteLine(ex);
 				status = false;
@@ -303,12 +300,10 @@ namespace Arteria_s.DB.Base
 					pCommand.ExecuteNonQuery();
 				}
 
-				//pTransaction.Commit();
 				Commit();
 			}
 			catch (Exception ex)
 			{
-				//pTransaction.Rollback();
 				Rollback();
 				Debug.WriteLine(ex);
 				status = false;
@@ -342,35 +337,6 @@ namespace Arteria_s.DB.Base
 			}
 			return (true);
 		}
-
-		/*
-		//　有効な証明祖の中に同一のサブジェクト名を持つ要素が存在するか検査
-		public override bool IsExistSubject(uint uAuthorityId, Certificate pCertificate, ItemsMentioned m_pItems)
-		{
-			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName FROM TIssuedCerts WHERE SerialNumber <> @SerialNumber AND SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
-			using (var pCommand = new NpgsqlCommand(pSQL, m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
-				pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					int iCount = 0;
-					while (pReader.Read())
-					{
-						iCount++;
-					}
-					if (iCount == 0)
-					{
-						return (false);
-					}
-				}
-			}
-
-			return (true);
-		}
-		*/
 
 		//　証明書を失効
 		public override bool Revoke(uint uAuthorityId, string SerialNumber)
@@ -464,42 +430,7 @@ namespace Arteria_s.DB.Base
 
 			return (pCertificate);
 		}
-/*
-		public override bool Save2(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
-		{
-			var pSQL_UPDATE = "UPDATE TIssuedCerts SET Revoked = True, RevokeAt = now() WHERE AuthorityId = @AuthorityId AND CommonName = @CommonName";
-			using (var pCommand = new NpgsqlCommand(pSQL_UPDATE, m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-				pCommand.ExecuteNonQuery();
-			}
 
-			var pSQL = "INSERT INTO TIssuedCerts (AuthorityId, SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, LaunchAt, ExpireAt, PemData, KeyData)";
-			pSQL += " VALUES (@AuthorityId, NEXTVAL('SQ_REQTS'), @SerialNumber, @SubjectName, @CommonName, @TypeOf, @LaunchAt, @ExpireAt, @PemData, @KeyData)";
-			pSQL += " ON CONFLICT ON CONSTRAINT tissuedcerts_pkey DO UPDATE SET";
-			pSQL += " SerialNumber = @SerialNumber, SubjectName = @SubjectName, CommonName = @CommonName, TypeOf = @TypeOf,";
-			pSQL += " LaunchAt = @LaunchAt, ExpireAt = @ExpireAt, PemData = @PemData, KeyData = @KeyData";
-			using (var pCommand = new NpgsqlCommand(pSQL, m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
-				pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
-				pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-				pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-				pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
-				pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt);
-				pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt);
-				pCommand.Parameters.AddWithValue("PemData", m_pCrt);
-				pCommand.Parameters.AddWithValue("KeyData", m_pKey);
-				pCommand.ExecuteNonQuery();
-			}
-
-			return (true);
-		}
-*/
 		//　CRLを生成
 		public override byte[] GenerateCRL(uint m_uAuthorityId, int iDays, X509Certificate2 m_pCertificate)
 		{
@@ -555,9 +486,6 @@ namespace Arteria_s.DB.Base
 
 			return (pBytes);
 		}
-
-
-
 
 		public override bool Commit()
 		{

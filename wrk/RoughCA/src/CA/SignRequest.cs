@@ -114,7 +114,6 @@ namespace Arteria_s.App.RoughCA
 			var pNotAfter  = DateTime.UtcNow.AddDays(128);
 
 			m_pItems.SequenceNumber = 0;
-			//m_pItems.SerialNumber   = pRequest.SerialNumber;
 			m_pItems.SubjectName    = m_pRequest.SubjectName.Name;
 			m_pItems.CommonName     = ItemsMentioned.GetDistinguishedValue("CN", m_pRequest.SubjectName);
 			m_pItems.TypeOf         = CertificateType.Demand;

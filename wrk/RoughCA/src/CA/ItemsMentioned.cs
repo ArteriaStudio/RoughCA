@@ -35,7 +35,6 @@ namespace Arteria_s.App.RoughCA
 		public bool 				Revoked { get; set; }
 		public DateTime 			LaunchAt { get; set; }
 		public DateTime 			ExpireAt { get; set; }
-		//public string				PemData { get; set; }
 
 		public ItemsMentioned()
 		{
@@ -45,7 +44,6 @@ namespace Arteria_s.App.RoughCA
 			CommonName     = "";
 			TypeOf         = 0;
 			Revoked        = false;
-			//PemData        = "";
 		}
 
 		//　サブジェクト名を生成

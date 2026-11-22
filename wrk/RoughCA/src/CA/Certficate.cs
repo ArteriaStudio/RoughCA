@@ -430,34 +430,7 @@ namespace Arteria_s.App.RoughCA
 
 			return (true);
 		}
-		/*
-		//　有効な証明祖の中に同一のサブジェクト名を持つ要素が存在するか検査
-		protected bool IsExistSubject(SQLContext pSQLContext, string pSerialNumber, string pSubjectName, uint uAuthorityId)
-		{
-			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName FROM TIssuedCerts WHERE SerialNumber <> @SerialNumber AND SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
-			using (var pCommand = new NpgsqlCommand(pSQL, pSQLContext.m_pConnection))
-			{
-				pCommand.Parameters.Clear();
-				pCommand.Parameters.AddWithValue("SerialNumber", pSerialNumber);
-				pCommand.Parameters.AddWithValue("SubjectName", pSubjectName);
-				pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-				using (var pReader = pCommand.ExecuteReader())
-				{
-					int iCount = 0;
-					while (pReader.Read())
-					{
-						iCount++;
-					}
-					if (iCount == 0)
-					{
-						return (false);
-					}
-				}
-			}
 
-			return (true);
-		}
-		*/
 		//　証明書データの有効性を検査
 		public bool	Validate()
 		{

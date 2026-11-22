@@ -158,7 +158,6 @@ namespace Arteria_s.App.RoughCA
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
 			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
-//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一のサブジェクトを持つ証明書が既に発行されている。
 				var fOverWrite = false;
@@ -193,7 +192,6 @@ namespace Arteria_s.App.RoughCA
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
 			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
-//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一のサブジェクトを持つ証明書が既に発行されている。
 				if (fOverWrite == false)
@@ -226,7 +224,6 @@ namespace Arteria_s.App.RoughCA
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForClient, pCommonName));
 			}
 			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
-//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一のサブジェクトを持つ証明書が既に発行されている。
 				if (fOverWrite == false)
@@ -260,7 +257,6 @@ namespace Arteria_s.App.RoughCA
 				throw (new AppException(AppError.ExistSameCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
 			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
-//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一のサブジェクトを持つ証明書が既に発行されている。
 				if (fOverWrite == false)
@@ -275,7 +271,6 @@ namespace Arteria_s.App.RoughCA
 
 			return (true);
 		}
-		
 
 		//　認証局署名要求を生成する。
 		public bool CreateForDemand(VSQLContext pSQLContext, uint uInstance, string pCommonName, string pExportFolder = null)
@@ -313,7 +308,6 @@ namespace Arteria_s.App.RoughCA
 			var pBytes = File.ReadAllBytes(pImportFilepath);
 
 			//　署名要求に記載された事項も入力（CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions）
-			//var pSignRequest = CertificateRequest.LoadSigningRequest(pBytes, HashAlgorithmName.SHA512);
 			var pSignRequest = CertificateRequest.LoadSigningRequest(pBytes, HashAlgorithmName.SHA512, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 			if (pSignRequest == null) {
 				return (false);
@@ -331,7 +325,6 @@ namespace Arteria_s.App.RoughCA
 			}
 			//　認証局が発行した有効な証明書の中にサブジェクト名の重複がないことを検査
 			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
-//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一の共通名を持つ証明書が存在する。
 				if (fOverWrite == false)
@@ -354,7 +347,6 @@ namespace Arteria_s.App.RoughCA
 			var pBytes = File.ReadAllBytes(pImportFilepath);
 
 			//　署名要求に記載された事項も入力（CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions）
-			//var pSignRequest = CertificateRequest.LoadSigningRequest(pBytes, HashAlgorithmName.SHA512);
 			var pSignRequest = CertificateRequest.LoadSigningRequest(pBytes, HashAlgorithmName.SHA512, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 			if (pSignRequest == null) {
 				return (false);
@@ -377,7 +369,6 @@ namespace Arteria_s.App.RoughCA
 			}
 			//　認証局が発行した有効な証明書の中にサブジェクト名の重複がないことを検査
 			if (pSQLContext.IsExistSubject(pCertificate.m_pItems.SerialNumber, pCertificate.m_pItems.SubjectName, m_uAuthorityId) == true)
-//			if (pCertificate.IsExistSubject(pSQLContext, m_uAuthorityId) == true)
 			{
 				//　同一の共通名を持つ証明書が存在する。
 				if (fOverWrite == false)
@@ -497,7 +488,6 @@ namespace Arteria_s.App.RoughCA
 		public void SaveOrgProfile(SQLContext pSQLContext)
 		{
 			pSQLContext.SaveOrgProfile(m_pOrgProfile);
-//			m_pOrgProfile.Save(pSQLContext);
 		}
 
 		public uint GetAuthorityId()
