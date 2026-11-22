@@ -14,8 +14,6 @@ namespace Arteria_s.App.RoughCA
 	{
 		public ItemsMentioned		m_pItems = new ItemsMentioned();
 		public X509Certificate2 	m_pCertificate { get; set; }
-		public string				m_pCrt;
-		public string				m_pKey;
 
 		public Certificate()
 		{
@@ -34,84 +32,82 @@ namespace Arteria_s.App.RoughCA
 			return (false);
 		}
 
-		//　共通名が一致する証明書を入力
-		public bool Load(VSQLContext pSQLContext, string pCommonName, uint uAuthorityId)
+		//　PEM文字列からX509Certificate2を構築して保持する
+		public bool LoadFromPem(string pCertPem, string pKeyPem = null)
 		{
-			var status = pSQLContext.LoadCertificate(pCommonName, uAuthorityId, ref m_pItems, ref m_pCrt, ref m_pKey);
-			if (status == false)
+			if (string.IsNullOrEmpty(pCertPem))
 			{
 				return (false);
 			}
 
-			//if ((m_pItems.KeyData != null) && (m_pItems.KeyData.Length > 0))
-			if ((m_pKey != null) && (m_pKey.Length > 0))
+			m_pCertificate?.Dispose();
+			if (!string.IsNullOrEmpty(pKeyPem))
 			{
-				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt, m_pKey);
+				m_pCertificate = X509Certificate2.CreateFromPem(pCertPem, pKeyPem);
 			}
 			else
 			{
-				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt);
+				m_pCertificate = X509Certificate2.CreateFromPem(pCertPem);
 			}
 
 			return (true);
 		}
 
-		//　
-		//　pKeyData：当該証明書に紐付く秘密鍵
-		public bool Save(VSQLContext pSQLContext, uint uAuthorityId, uint uInstance, string pKeyData = null)
+		//　保持している証明書に秘密鍵を紐付ける
+		public bool AttachPrivateKey(ECDsa pPrivateKey)
 		{
-			if (pKeyData != null)
+			if ((m_pCertificate == null) || (pPrivateKey == null))
 			{
-				m_pKey = pKeyData;
+				return (false);
 			}
-			var bResult = pSQLContext.SaveCertificate(uAuthorityId, uInstance, m_pItems, m_pCrt, m_pKey);
+
+			var pWithKey = m_pCertificate.CopyWithPrivateKey(pPrivateKey);
+			m_pCertificate.Dispose();
+			m_pCertificate = pWithKey;
+			return (true);
+		}
+
+		//　証明書をPEM形式で取得
+		public string ExportCertificatePem()
+		{
+			return (m_pCertificate?.ExportCertificatePem());
+		}
+
+		//　秘密鍵をPEM形式で取得（未保持の場合はnull）
+		public string ExportPrivateKeyPem()
+		{
+			if ((m_pCertificate == null) || (m_pCertificate.HasPrivateKey == false))
+			{
+				return (null);
+			}
+
+			using (var pPrivateKey = m_pCertificate.GetECDsaPrivateKey())
+			{
+				return (pPrivateKey?.ExportECPrivateKeyPem());
+			}
+		}
+
+		//　共通名が一致する証明書を入力
+		public bool Load(VSQLContext pSQLContext, string pCommonName, uint uAuthorityId)
+		{
+			string pCertPem = null;
+			string pKeyPem = null;
+			var status = pSQLContext.LoadCertificate(pCommonName, uAuthorityId, ref m_pItems, ref pCertPem, ref pKeyPem);
+			if (status == false)
+			{
+				return (false);
+			}
+
+			return (LoadFromPem(pCertPem, pKeyPem));
+		}
+
+		//　証明書と（保持していれば）秘密鍵を保存
+		public bool Save(VSQLContext pSQLContext, uint uAuthorityId, uint uInstance)
+		{
+			var pCertPem = ExportCertificatePem();
+			var pKeyPem = ExportPrivateKeyPem();
+			var bResult = pSQLContext.SaveCertificate(uAuthorityId, uInstance, m_pItems, pCertPem, pKeyPem);
 			return (bResult);
-		}
-		/*
-		//　
-		//　pKeyData：当該証明書に紐付く秘密鍵
-		public bool Save2(VSQLContext pSQLContext, uint uAuthorityId, uint uInstance, string pKeyData = null)
-		{
-			var status = true;
-
-			if (pKeyData != null)
-			{
-				m_pKey = pKeyData;
-			}
-
-			try
-			{
-				status = pSQLContext.SaveCertificate(uAuthorityId, uInstance, m_pItems, m_pCrt, m_pKey);
-			}
-			catch (Exception ex)
-			{
-				Debug.WriteLine(ex);
-				status = false;
-			}
-			return (status);
-		}
-		*/
-		//　
-		public void Prepare()
-		{
-			//if ((m_pItems.KeyData != null) && (m_pItems.KeyData.Length > 0))
-			if ((m_pKey != null) && (m_pKey.Length > 0))
-			{
-				if (m_pItems.TypeOf == CertificateType.Demand)
-				{
-					;
-				}
-				else
-				{
-					m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt, m_pKey);
-				}
-			}
-			else
-			{
-				m_pCertificate = X509Certificate2.CreateFromPem(m_pCrt);
-			}
-
-			return;
 		}
 
 		//　認証局証明書を生成
@@ -120,37 +116,40 @@ namespace Arteria_s.App.RoughCA
 		public bool CreateForAuthority(OrgProfile pOrgProfile, string pCommonName, Certificate pCACertificate)
 		{
 			//　秘密鍵を生成（楕円曲線方式）
-			ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE);
-
-			//　認証局の署名要求を生成
-			var pRequest = CertificateProvider.CreateSignRequest(pKeys, pOrgProfile, pCommonName);
-			if (pRequest == null)
+			using (ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE))
 			{
-				return (false);
-			}
-			//　デバッグ用：署名要求のバイト列を生成
-			//var pBytes = pRequest.CreateSigningRequest();
-
-			if (pCACertificate == null)
-			{
-				var iLifeDays = 365 * 10;
-				m_pCertificate = CertificateProvider.CreateSelfCertificate(pRequest, pCommonName, iLifeDays, pOrgProfile.ServerName);
-				if (m_pCertificate == null)
+				//　認証局の署名要求を生成
+				var pRequest = CertificateProvider.CreateSignRequest(pKeys, pOrgProfile, pCommonName);
+				if (pRequest == null)
 				{
 					return (false);
 				}
-				//　自己署名証明書を生成した時は、秘密鍵が証明書オブジェクトに含まれている。
-			}
-			else
-			{
-				//　ルート認証局の証明書データで署名した発行認証局の証明書を生成
-				var iLifeDays = 365 * 5;
-				m_pCertificate = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName);
-				if (m_pCertificate == null)
+
+				m_pCertificate?.Dispose();
+				if (pCACertificate == null)
 				{
-					return (false);
+					var iLifeDays = 365 * 10;
+					m_pCertificate = CertificateProvider.CreateSelfCertificate(pRequest, pCommonName, iLifeDays, pOrgProfile.ServerName);
+					if (m_pCertificate == null)
+					{
+						return (false);
+					}
+					//　自己署名証明書を生成した時は、秘密鍵が証明書オブジェクトに含まれている。
 				}
-				//　通常のシーケンスだと証明書オブジェクトに鍵ペアは含まれない。
+				else
+				{
+					//　ルート認証局の証明書データで署名した発行認証局の証明書を生成
+					var iLifeDays = 365 * 5;
+					using (var pSignedCert = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName))
+					{
+						if (pSignedCert == null)
+						{
+							return (false);
+						}
+						//　CA署名証明書には秘密鍵が含まれないため、生成した秘密鍵を紐付ける。
+						m_pCertificate = pSignedCert.CopyWithPrivateKey(pKeys);
+					}
+				}
 			}
 
 			//　証明書記載情報の主要なものをキャッシュ
@@ -162,12 +161,6 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.Revoked        = false;
 			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
 			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
-			
-			//　証明書をPEM 形式に変換して保管
-			m_pCrt = m_pCertificate.ExportCertificatePem();
-
-			//　秘密鍵をPEM 形式に変換して保管
-			m_pKey = pKeys.ExportECPrivateKeyPem();
 
 			return (true);
 		}
@@ -179,12 +172,13 @@ namespace Arteria_s.App.RoughCA
 		{
 			//　ルート認証局の証明書データで署名した発行認証局の証明書を生成
 			var iLifeDays = 365 * 5;
+			m_pCertificate?.Dispose();
 			m_pCertificate = CertificateProvider.CreateCertificate(pSignRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName);
 			if (m_pCertificate == null)
 			{
 				return (false);
 			}
-			//　通常のシーケンスだと証明書オブジェクトに鍵ペアは含まれない。
+			//　署名要求からの発行では秘密鍵は含まれない。
 
 			//　証明書記載情報の主要なものをキャッシュ
 			m_pItems.SequenceNumber = 0;
@@ -196,9 +190,6 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
 			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
 
-			m_pCrt = m_pCertificate.ExportCertificatePem();
-			m_pKey = "";
-
 			return (true);
 		}
 
@@ -209,12 +200,13 @@ namespace Arteria_s.App.RoughCA
 		{
 			//　ルート認証局の証明書データで署名した発行認証局の証明書を生成
 			var iLifeDays = 365 * 1;
+			m_pCertificate?.Dispose();
 			m_pCertificate = CertificateProvider.CreateCertificate(pSignRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName);
 			if (m_pCertificate == null)
 			{
 				return (false);
 			}
-			//　通常のシーケンスだと証明書オブジェクトに鍵ペアは含まれない。
+			//　署名要求からの発行では秘密鍵は含まれない。
 
 			//　証明書記載情報の主要なものをキャッシュ
 			m_pItems.SequenceNumber = 0;
@@ -225,9 +217,6 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.Revoked        = false;
 			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
 			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
-
-			m_pCrt = m_pCertificate.ExportCertificatePem();
-			m_pKey = "";
 
 			return (true);
 		}
@@ -245,20 +234,25 @@ namespace Arteria_s.App.RoughCA
 			var pSubjectName = ItemsMentioned.GenerateSubjectName(pOrgProfile, pCommonName);
 
 			//　秘密鍵を生成（楕円曲線方式）
-			ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE);
-
-			//　サーバ証明書用の署名要求を生成
-			var pRequest = CertificateProvider.CreateSignRequestForServer(pKeys, pOrgProfile, pSubjectName, pCommonName, pFQDN, fCA);
-			if (pRequest == null)
+			using (ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE))
 			{
-				return (false);
-			}
-			//　指定された認証局の証明書で署名
-			var iLifeDays = 365 * 1;
-			m_pCertificate = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName);
-			if (m_pCertificate == null)
-			{
-				return (false);
+				//　サーバ証明書用の署名要求を生成
+				var pRequest = CertificateProvider.CreateSignRequestForServer(pKeys, pOrgProfile, pSubjectName, pCommonName, pFQDN, fCA);
+				if (pRequest == null)
+				{
+					return (false);
+				}
+				//　指定された認証局の証明書で署名
+				var iLifeDays = 365 * 1;
+				using (var pSignedCert = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName))
+				{
+					if (pSignedCert == null)
+					{
+						return (false);
+					}
+					m_pCertificate?.Dispose();
+					m_pCertificate = pSignedCert.CopyWithPrivateKey(pKeys);
+				}
 			}
 
 			//　証明書記載情報の主要なものをキャッシュ
@@ -270,12 +264,6 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.Revoked        = false;
 			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
 			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
-
-			//　証明書データをPEM 形式に変換して保管
-			m_pCrt = m_pCertificate.ExportCertificatePem();
-
-			//　秘密鍵データをPEM 形式に変換して保管
-			m_pKey = pKeys.ExportECPrivateKeyPem();
 
 			return (true);
 		}
@@ -293,24 +281,28 @@ namespace Arteria_s.App.RoughCA
 			var pSubjectName = ItemsMentioned.GenerateSubjectName(pOrgProfile, pCommonName);
 
 			//　秘密鍵を生成（楕円曲線方式）
-			ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE);
-
-			//　メール証明書用の署名要求を生成
-			var pRequest = CertificateProvider.CreateSignRequestForClient(pKeys, pOrgProfile, pSubjectName, pCommonName, pMailAddress, fCA);
-			if (pRequest == null)
+			using (ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE))
 			{
-				return (false);
-			}
-			//　指定された認証局の証明書で署名
-			var iLifeDays = 365 * 1;
-			m_pCertificate = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName);
-			if (m_pCertificate == null)
-			{
-				return (false);
+				//　メール証明書用の署名要求を生成
+				var pRequest = CertificateProvider.CreateSignRequestForClient(pKeys, pOrgProfile, pSubjectName, pCommonName, pMailAddress, fCA);
+				if (pRequest == null)
+				{
+					return (false);
+				}
+				//　指定された認証局の証明書で署名
+				var iLifeDays = 365 * 1;
+				using (var pSignedCert = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName))
+				{
+					if (pSignedCert == null)
+					{
+						return (false);
+					}
+					m_pCertificate?.Dispose();
+					m_pCertificate = pSignedCert.CopyWithPrivateKey(pKeys);
+				}
 			}
 
 			//　証明書記載情報の主要なものをキャッシュ
-			//FetchProperties(m_pCertificate, pKeys, CertificateType.Client);
 			m_pItems.SequenceNumber = 0;
 			m_pItems.SerialNumber   = m_pCertificate.SerialNumber;
 			m_pItems.SubjectName    = m_pCertificate.SubjectName.Name;
@@ -319,12 +311,6 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.Revoked        = false;
 			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
 			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
-
-			//　証明書データをPEM 形式に変換して保管
-			m_pCrt = m_pCertificate.ExportCertificatePem();
-
-			//　秘密鍵データをPEM 形式に変換して保管
-			m_pKey = pKeys.ExportECPrivateKeyPem();
 
 			return (true);
 		}
@@ -342,20 +328,25 @@ namespace Arteria_s.App.RoughCA
 			var pSubjectName = ItemsMentioned.GenerateSubjectName(pOrgProfile, pCommonName);
 
 			//　秘密鍵を生成（楕円曲線方式）
-			ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE);
-
-			//　サーバ証明書用の署名要求を生成
-			var pRequest = CertificateProvider.CreateSignRequestForRDSign(pKeys, pOrgProfile, pSubjectName, pCommonName, pFQDN, pNetAddress, fCA);
-			if (pRequest == null)
+			using (ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE))
 			{
-				return (false);
-			}
-			//　指定された認証局の証明書で署名
-			var iLifeDays = 365 * 1;
-			m_pCertificate = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName);
-			if (m_pCertificate == null)
-			{
-				return (false);
+				//　サーバ証明書用の署名要求を生成
+				var pRequest = CertificateProvider.CreateSignRequestForRDSign(pKeys, pOrgProfile, pSubjectName, pCommonName, pFQDN, pNetAddress, fCA);
+				if (pRequest == null)
+				{
+					return (false);
+				}
+				//　指定された認証局の証明書で署名
+				var iLifeDays = 365 * 1;
+				using (var pSignedCert = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName))
+				{
+					if (pSignedCert == null)
+					{
+						return (false);
+					}
+					m_pCertificate?.Dispose();
+					m_pCertificate = pSignedCert.CopyWithPrivateKey(pKeys);
+				}
 			}
 
 			//　証明書記載情報の主要なものをキャッシュ
@@ -367,12 +358,6 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.Revoked        = false;
 			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
 			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
-
-			//　証明書データをPEM 形式に変換して保管
-			m_pCrt = m_pCertificate.ExportCertificatePem();
-
-			//　秘密鍵データをPEM 形式に変換して保管
-			m_pKey = pKeys.ExportECPrivateKeyPem();
 
 			return (true);
 		}
@@ -394,24 +379,28 @@ namespace Arteria_s.App.RoughCA
 			}
 
 			//　秘密鍵を生成（楕円曲線方式）
-			ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE);
-
-			//　メール証明書用の署名要求を生成
-			var pRequest = CertificateProvider.CreateSignRequestForUpdate(pKeys, pOrgProfile, pBaseCertificate.m_pCertificate);
-			if (pRequest == null)
+			using (ECDsaCng pKeys = new ECDsaCng(RoughCA_Const.ECDSAKEY_SIZE))
 			{
-				return (false);
-			}
-			//　指定された認証局の証明書で署名
-			var iLifeDays = 365 * 1;
-			m_pCertificate = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName);
-			if (m_pCertificate == null)
-			{
-				return (false);
+				//　メール証明書用の署名要求を生成
+				var pRequest = CertificateProvider.CreateSignRequestForUpdate(pKeys, pOrgProfile, pBaseCertificate.m_pCertificate);
+				if (pRequest == null)
+				{
+					return (false);
+				}
+				//　指定された認証局の証明書で署名
+				var iLifeDays = 365 * 1;
+				using (var pSignedCert = CertificateProvider.CreateCertificate(pRequest, pCACertificate, iLifeDays, pOrgProfile.ServerName))
+				{
+					if (pSignedCert == null)
+					{
+						return (false);
+					}
+					m_pCertificate?.Dispose();
+					m_pCertificate = pSignedCert.CopyWithPrivateKey(pKeys);
+				}
 			}
 
 			//　証明書記載情報の主要なものをキャッシュ
-			//FetchProperties(m_pCertificate, pKeys, pBaseCertificate.m_pItems.TypeOf);
 			m_pItems.SequenceNumber = 0;
 			m_pItems.SerialNumber   = m_pCertificate.SerialNumber;
 			m_pItems.SubjectName    = m_pCertificate.SubjectName.Name;
@@ -420,12 +409,6 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.Revoked        = false;
 			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
 			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
-
-			//　証明書データをPEM 形式に変換して保管
-			m_pCrt = m_pCertificate.ExportCertificatePem();
-
-			//　秘密鍵データをPEM 形式に変換して保管
-			m_pKey = pKeys.ExportECPrivateKeyPem();
 
 			return (true);
 		}
@@ -500,61 +483,30 @@ namespace Arteria_s.App.RoughCA
 
 		public bool IsHaveKey()
 		{
-			if (m_pKey == null)
-			{
-				return (false);
-			}
-			if (m_pKey.Equals(""))
-			{
-				return (false);
-			}
-			return (true);
+			return ((m_pCertificate != null) && m_pCertificate.HasPrivateKey);
 		}
-		/*
-		//　X509証明書データとECDsa鍵データをオブジェクトに入力
-		//　pKeys：証明書の署名に用いる当該認証局の秘密鍵
-		private void FetchProperties(X509Certificate2 pCertificate, ECDsaCng pKeys, CertificateType eTypeOf)
-		{
-			m_pItems.SequenceNumber = 0;
-			m_pItems.SerialNumber   = pCertificate.SerialNumber;
-			m_pItems.SubjectName    = pCertificate.SubjectName.Name;
-			m_pItems.CommonName     = ItemsMentioned.GetDistinguishedValue("CN", pCertificate.SubjectName);
-			m_pItems.TypeOf         = eTypeOf;
-			m_pItems.Revoked        = false;
-			m_pItems.LaunchAt       = pCertificate.NotBefore;
-			m_pItems.ExpireAt       = pCertificate.NotAfter;
-			m_pCrt        = pCertificate.ExportCertificatePem();
-			if (pKeys != null)
-			{
-				//m_pItems.KeyData = pKeys.ExportECPrivateKeyPem();
-				m_pKey = pKeys.ExportECPrivateKeyPem();
-			}
 
-			if (m_pCertificate != null)
-			{
-				//m_pCertificate = X509Certificate2.CreateFromPem(m_pItems.PemData, m_pItems.KeyData);
-			}
-		}
-		*/
 		//　指定したフォルダに証明書と鍵をファイル形式で出力
 		public string Export(string pExportFolder, bool bPemFormat = false)
 		{
 			DirectoryHelper.CreateDirectorySafe(pExportFolder);
 
 			//　証明書が秘密鍵を持っていれば、それを出力する。
-			var pPrivateKey = m_pCertificate.GetECDsaPrivateKey();
-			if (pPrivateKey != null)
+			using (var pPrivateKey = m_pCertificate.GetECDsaPrivateKey())
 			{
-				var pExportFilepathOfKey = Path.Combine(pExportFolder, m_pItems.CommonName + RoughCA_Const.KEY_EXTENSION);
-				if (bPemFormat)
+				if (pPrivateKey != null)
 				{
-					var pPemOfKey = pPrivateKey.ExportECPrivateKeyPem();
-					File.WriteAllText(pExportFilepathOfKey, pPemOfKey, Encoding.ASCII);
-				}
-				else
-				{
-					var pBytesOfKey = pPrivateKey.ExportECPrivateKey();
-					File.WriteAllBytes(pExportFilepathOfKey, pBytesOfKey);
+					var pExportFilepathOfKey = Path.Combine(pExportFolder, m_pItems.CommonName + RoughCA_Const.KEY_EXTENSION);
+					if (bPemFormat)
+					{
+						var pPemOfKey = pPrivateKey.ExportECPrivateKeyPem();
+						File.WriteAllText(pExportFilepathOfKey, pPemOfKey, Encoding.ASCII);
+					}
+					else
+					{
+						var pBytesOfKey = pPrivateKey.ExportECPrivateKey();
+						File.WriteAllBytes(pExportFilepathOfKey, pBytesOfKey);
+					}
 				}
 			}
 
@@ -577,6 +529,7 @@ namespace Arteria_s.App.RoughCA
 		public bool Import(string pImportFilepath)
 		{
 			var pBytes = File.ReadAllBytes(pImportFilepath);
+			m_pCertificate?.Dispose();
 			m_pCertificate = X509CertificateLoader.LoadCertificate(pBytes);
 			if (m_pCertificate == null)
 			{
@@ -590,8 +543,6 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.Revoked        = false;
 			m_pItems.LaunchAt       = m_pCertificate.NotBefore;
 			m_pItems.ExpireAt       = m_pCertificate.NotAfter;
-			m_pCrt = m_pCertificate.ExportCertificatePem();
-			m_pKey = null;
 
 			return (true);
 		}
@@ -605,26 +556,18 @@ namespace Arteria_s.App.RoughCA
 			File.WriteAllBytes("D:/tmp/" + m_pItems.CommonName + RoughCA_Const.CRT_EXTENSION, pBytesOfCrt);
 		}
 
-		//　証明書データに収められた秘密鍵を比較（動作検証用）
+		//　証明書データに収められた秘密鍵を確認（動作検証用）
 		protected void Dump()
 		{
-			var pKey = m_pCertificate.GetECDsaPrivateKey();
-			if (pKey == null)
+			using (var pKey = m_pCertificate?.GetECDsaPrivateKey())
 			{
-				;
-			}
-			else
-			{
-				var pRoot = pKey.ExportECPrivateKeyPem();
-				if (pRoot == m_pKey)
+				if (pKey == null)
 				{
-					//　ルート証明書を自己署名した証明書データは、このケースに来る。
-					//　つまり、X509オブジェクトのインスタンスに何故か秘密鍵が含まれている。
-					Debug.WriteLine("Match");
+					Debug.WriteLine("NoPrivateKey");
 				}
 				else
 				{
-					Debug.WriteLine("UnMatch");
+					Debug.WriteLine("HasPrivateKey: " + pKey.KeySize);
 				}
 			}
 		}

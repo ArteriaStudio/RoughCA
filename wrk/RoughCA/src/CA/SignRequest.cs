@@ -14,7 +14,7 @@ namespace Arteria_s.App.RoughCA
 		public ItemsMentioned		m_pItems = new ItemsMentioned();
 		public CertificateRequest	m_pRequest = null;
 		public DateTime				m_RevokeAt;
-		public string				m_pKey;
+		public ECDsa				m_pPrivateKey { get; private set; }
 
 		public SignRequest()
 		{
@@ -55,15 +55,7 @@ namespace Arteria_s.App.RoughCA
 		//　鍵を所有しているかを確認
 		public bool IsHaveKey()
 		{
-			if (m_pKey == null)
-			{
-				return (false);
-			}
-			if (m_pKey.Equals(""))
-			{
-				return (false);
-			}
-			return (true);
+			return (m_pPrivateKey != null);
 		}
 
 		//　署名要求が存在するかを確認する。
@@ -75,13 +67,29 @@ namespace Arteria_s.App.RoughCA
 		//　署名要求が存在するかを確認する。
 		public bool Load(VSQLContext pSQLContext, uint uAuthorityId, string pSubjectName)
 		{
-			return (pSQLContext.LoadSignRequest(uAuthorityId, pSubjectName, ref m_pKey, ref m_pItems));
+			string pKeyPem = null;
+			if (pSQLContext.LoadSignRequest(uAuthorityId, pSubjectName, ref pKeyPem, ref m_pItems) == false)
+			{
+				return (false);
+			}
+
+			m_pPrivateKey?.Dispose();
+			m_pPrivateKey = null;
+			if (!string.IsNullOrEmpty(pKeyPem))
+			{
+				var pKey = ECDsa.Create();
+				pKey.ImportFromPem(pKeyPem);
+				m_pPrivateKey = pKey;
+			}
+
+			return (true);
 		}
 
 		//　
 		public bool Save(VSQLContext pSQLContext, uint uInstance, uint uAuthorityId)
 		{
-			return (pSQLContext.SaveSignRequest(uAuthorityId, m_pKey, m_pItems));
+			var pKeyPem = m_pPrivateKey?.ExportECPrivateKeyPem();
+			return (pSQLContext.SaveSignRequest(uAuthorityId, pKeyPem, m_pItems));
 		}
 
 		//　認証局署名要求を生成
@@ -97,6 +105,7 @@ namespace Arteria_s.App.RoughCA
 			m_pRequest = CertificateProvider.CreateSignRequest(pKeys, pOrgProfile, pCommonName);
 			if (m_pRequest == null)
 			{
+				pKeys.Dispose();
 				return (false);
 			}
 
@@ -113,8 +122,9 @@ namespace Arteria_s.App.RoughCA
 			m_pItems.LaunchAt       = pNotBefore;
 			m_pItems.ExpireAt       = pNotAfter;
 
-			//　秘密鍵をPEM 形式で保管
-			m_pKey = pKeys.ExportECPrivateKeyPem();
+			//　秘密鍵をオブジェクトとして保持
+			m_pPrivateKey?.Dispose();
+			m_pPrivateKey = pKeys;
 
 			return (true);
 		}

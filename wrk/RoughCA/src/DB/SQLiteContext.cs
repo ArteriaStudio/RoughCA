@@ -309,7 +309,7 @@ namespace Arteria_s.DB.Base
 			return (true);
 		}
 
-		public override bool LoadSignRequest(uint uAuthorityId, string pSubjectName, ref string m_pKey, ref ItemsMentioned m_pItems)
+		public override bool LoadSignRequest(uint uAuthorityId, string pSubjectName, ref string pKeyPem, ref ItemsMentioned pItems)
 		{
 			m_pConnection.Open();
 			var pSQL = "SELECT SequenceNumber, SubjectName, KeyData FROM TSignRequest WHERE SubjectName = @SubjectName AND Revoked = FALSE AND LaunchAt <= now() AND now() < ExpireAt AND AuthorityId = @AuthorityId;";
@@ -324,10 +324,9 @@ namespace Arteria_s.DB.Base
 					int iCount = 0;
 					while (pReader.Read())
 					{
-						m_pItems.SequenceNumber = pReader.GetInt64(0);
-						m_pItems.SubjectName = pReader.GetString(1);
-						//m_pItems.KeyData        = pReader.GetString(2);
-						m_pKey = pReader.GetString(2);
+						pItems.SequenceNumber = pReader.GetInt64(0);
+						pItems.SubjectName = pReader.GetString(1);
+						pKeyPem = pReader.IsDBNull(2) ? null : pReader.GetString(2);
 
 						iCount++;
 					}
@@ -342,7 +341,7 @@ namespace Arteria_s.DB.Base
 			return (true);
 		}
 
-		public override bool SaveSignRequest(uint uAuthorityId, string m_pKey, ItemsMentioned m_pItems)
+		public override bool SaveSignRequest(uint uAuthorityId, string pKeyPem, ItemsMentioned pItems)
 		{
 			var status = true;
 
@@ -356,7 +355,7 @@ namespace Arteria_s.DB.Base
 					pCommand.CommandText = pSQL_UPDATE;
 					pCommand.Parameters.Clear();
 					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
+					pCommand.Parameters.AddWithValue("CommonName", pItems.CommonName);
 					pCommand.ExecuteNonQuery();
 				}
 
@@ -370,13 +369,13 @@ namespace Arteria_s.DB.Base
 					pCommand.CommandText = pSQL;
 					pCommand.Parameters.Clear();
 					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("SequenceNumber", m_pItems.SequenceNumber);
-					pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-					pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
-					pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt);
-					pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt);
-					pCommand.Parameters.AddWithValue("KeyData", m_pKey);
+					pCommand.Parameters.AddWithValue("SequenceNumber", pItems.SequenceNumber);
+					pCommand.Parameters.AddWithValue("SubjectName", pItems.SubjectName);
+					pCommand.Parameters.AddWithValue("CommonName", pItems.CommonName);
+					pCommand.Parameters.AddWithValue("TypeOf", (int)pItems.TypeOf);
+					pCommand.Parameters.AddWithValue("LaunchAt", pItems.LaunchAt);
+					pCommand.Parameters.AddWithValue("ExpireAt", pItems.ExpireAt);
+					pCommand.Parameters.AddWithValue("KeyData", (object)pKeyPem ?? DBNull.Value);
 					pCommand.ExecuteNonQuery();
 				}
 
@@ -393,7 +392,7 @@ namespace Arteria_s.DB.Base
 			return (status);
 		}
 
-		public override bool LoadCertificate(string pCommonName, uint uAuthorityId, ref ItemsMentioned m_pItems, ref string m_pCrt, ref string m_pKey)
+		public override bool LoadCertificate(string pCommonName, uint uAuthorityId, ref ItemsMentioned pItems, ref string pCertPem, ref string pKeyPem)
 		{
 			//　共通名が一致する証明書を入力
 			var pSQL = "SELECT SequenceNumber, SerialNumber, SubjectName, CommonName, TypeOf, Revoked, LaunchAt, ExpireAt, PemData, KeyData FROM TIssuedCerts WHERE CommonName = @CommonName AND Revoked = FALSE AND LaunchAt <= CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP < ExpireAt AND AuthorityId = @AuthorityId;";
@@ -410,16 +409,16 @@ namespace Arteria_s.DB.Base
 					int iCount = 0;
 					while (pReader.Read())
 					{
-						m_pItems.SequenceNumber = pReader.GetInt64(0);
-						m_pItems.SerialNumber   = pReader.GetString(1);
-						m_pItems.SubjectName    = pReader.GetString(2);
-						m_pItems.CommonName     = pReader.GetString(3);
-						m_pItems.TypeOf         = (CertificateType)pReader.GetInt32(4);
-						m_pItems.Revoked        = pReader.GetBoolean(5);
-						m_pItems.LaunchAt       = pReader.GetDateTime(6);
-						m_pItems.ExpireAt       = pReader.GetDateTime(7);
-						m_pCrt = pReader.GetString(8);
-						m_pKey = pReader.GetString(9);
+						pItems.SequenceNumber = pReader.GetInt64(0);
+						pItems.SerialNumber   = pReader.GetString(1);
+						pItems.SubjectName    = pReader.GetString(2);
+						pItems.CommonName     = pReader.GetString(3);
+						pItems.TypeOf         = (CertificateType)pReader.GetInt32(4);
+						pItems.Revoked        = pReader.GetBoolean(5);
+						pItems.LaunchAt       = pReader.GetDateTime(6);
+						pItems.ExpireAt       = pReader.GetDateTime(7);
+						pCertPem = pReader.GetString(8);
+						pKeyPem = pReader.IsDBNull(9) ? null : pReader.GetString(9);
 
 						iCount++;
 					}
@@ -499,7 +498,7 @@ namespace Arteria_s.DB.Base
 		}
 
 		//　（前提）呼び出し元がトランザクションとコネクションのライフタイムを管理する
-		public override bool SaveCertificate(uint uAuthorityId, uint uInstance, ItemsMentioned m_pItems, string m_pCrt, string m_pKey)
+		public override bool SaveCertificate(uint uAuthorityId, uint uInstance, ItemsMentioned pItems, string pCertPem, string pKeyPem)
 		{
 			var status = true;
 			try
@@ -510,7 +509,7 @@ namespace Arteria_s.DB.Base
 					pCommand.CommandText = pSQL_UPDATE;
 					pCommand.Parameters.Clear();
 					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
+					pCommand.Parameters.AddWithValue("CommonName", pItems.CommonName);
 					pCommand.ExecuteNonQuery();
 				}
 
@@ -528,14 +527,14 @@ namespace Arteria_s.DB.Base
 					pCommand.Parameters.Clear();
 					pCommand.Parameters.AddWithValue("AuthorityId", (Int64)uAuthorityId);
 					pCommand.Parameters.AddWithValue("SequenceNumber", uSequenceNumber);
-					pCommand.Parameters.AddWithValue("SerialNumber", m_pItems.SerialNumber);
-					pCommand.Parameters.AddWithValue("SubjectName", m_pItems.SubjectName);
-					pCommand.Parameters.AddWithValue("CommonName", m_pItems.CommonName);
-					pCommand.Parameters.AddWithValue("TypeOf", (int)m_pItems.TypeOf);
-					pCommand.Parameters.AddWithValue("LaunchAt", m_pItems.LaunchAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
-					pCommand.Parameters.AddWithValue("ExpireAt", m_pItems.ExpireAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
-					pCommand.Parameters.AddWithValue("PemData", m_pCrt);
-					pCommand.Parameters.AddWithValue("KeyData", m_pKey);
+					pCommand.Parameters.AddWithValue("SerialNumber", pItems.SerialNumber);
+					pCommand.Parameters.AddWithValue("SubjectName", pItems.SubjectName);
+					pCommand.Parameters.AddWithValue("CommonName", pItems.CommonName);
+					pCommand.Parameters.AddWithValue("TypeOf", (int)pItems.TypeOf);
+					pCommand.Parameters.AddWithValue("LaunchAt", pItems.LaunchAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
+					pCommand.Parameters.AddWithValue("ExpireAt", pItems.ExpireAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
+					pCommand.Parameters.AddWithValue("PemData", pCertPem);
+					pCommand.Parameters.AddWithValue("KeyData", (object)pKeyPem ?? DBNull.Value);
 					pCommand.ExecuteNonQuery();
 				}
 
@@ -591,9 +590,9 @@ namespace Arteria_s.DB.Base
 						pCertificate.m_pItems.Revoked = pReader.GetBoolean(4);
 						pCertificate.m_pItems.LaunchAt = pReader.GetDateTime(5);
 						pCertificate.m_pItems.ExpireAt = pReader.GetDateTime(6);
-						pCertificate.m_pCrt = pReader.GetString(7);
-						pCertificate.m_pKey = pReader.GetString(8);
-						pCertificate.Prepare();
+						var pCertPem = pReader.GetString(7);
+						var pKeyPem = pReader.IsDBNull(8) ? null : pReader.GetString(8);
+						pCertificate.LoadFromPem(pCertPem, pKeyPem);
 						pCertificates.Add(pCertificate);
 					}
 					if (pCertificates.Count == 0)
@@ -628,9 +627,9 @@ namespace Arteria_s.DB.Base
 						pCertificate.m_pItems.Revoked = pReader.GetBoolean(4);
 						pCertificate.m_pItems.LaunchAt = pReader.GetDateTime(5);
 						pCertificate.m_pItems.ExpireAt = pReader.GetDateTime(6);
-						pCertificate.m_pCrt = pReader.GetString(7);
-						pCertificate.m_pKey = pReader.GetString(8);
-						pCertificate.Prepare();
+						var pCertPem = pReader.GetString(7);
+						var pKeyPem = pReader.IsDBNull(8) ? null : pReader.GetString(8);
+						pCertificate.LoadFromPem(pCertPem, pKeyPem);
 						iCount++;
 					}
 					if (iCount == 0)

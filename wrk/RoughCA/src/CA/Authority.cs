@@ -410,7 +410,11 @@ namespace Arteria_s.App.RoughCA
 				//　該当する署名要求が存在しない。
 				return (false);
 			}
-			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance, pSignRequest.m_pKey) == false)
+			if (pCertificate.AttachPrivateKey(pSignRequest.m_pPrivateKey) == false)
+			{
+				return (false);
+			}
+			if (pCertificate.Save(pSQLContext, m_uAuthorityId, uInstance) == false)
 			{
 				throw (new AppException(AppError.FailreSaveCertificate, AppFacility.Error, AppFlow.CreateCertificateForServer, pCommonName));
 			}
