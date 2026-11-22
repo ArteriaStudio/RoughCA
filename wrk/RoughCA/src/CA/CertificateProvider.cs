@@ -5,7 +5,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	//　証明書、署名要求のデータを作成する関数群（関数を跨いだ状態を持たない）
 	public static class CertificateProvider

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Arteria_s.OS.Base
+namespace ArteriaS.OS.Base
 {
 	public static class DirectoryHelper
 	{

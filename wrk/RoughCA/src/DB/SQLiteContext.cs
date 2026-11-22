@@ -1,5 +1,5 @@
-﻿using Arteria_s.App.RoughCA;
-using Arteria_s.OS.Base;
+﻿using ArteriaS.App.RoughCA;
+using ArteriaS.OS.Base;
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Arteria_s.DB.Base
+namespace ArteriaS.DB.Base
 {
 	//　データベースコンテキスト
 	public class SQLiteContext : VSQLContext

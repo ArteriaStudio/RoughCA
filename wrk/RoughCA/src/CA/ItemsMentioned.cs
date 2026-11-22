@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	public enum CertificateType
 	{

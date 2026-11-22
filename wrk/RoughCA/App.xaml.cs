@@ -1,4 +1,4 @@
-﻿using Arteria_s.DB.Base;
+﻿using ArteriaS.DB.Base;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Linq;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	public class PrepareFlags
 	{

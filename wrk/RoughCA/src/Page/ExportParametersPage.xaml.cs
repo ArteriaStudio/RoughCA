@@ -1,11 +1,11 @@
-using Arteria_s.UI.Base;
+using ArteriaS.UI.Base;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	public sealed partial class ExportParametersPage : Page
 	{

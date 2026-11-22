@@ -1,4 +1,4 @@
-﻿using Arteria_s.DB;
+﻿using ArteriaS.DB;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	public class DbParams : Data
 	{

@@ -1,5 +1,5 @@
-﻿using Arteria_s.DB.Base;
-using Arteria_s.OS.Base;
+﻿using ArteriaS.DB.Base;
+using ArteriaS.OS.Base;
 using Npgsql;
 using System;
 using System.Collections.ObjectModel;
@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	//　証明書データをコレクションするクラス
 	//　認証局クラス

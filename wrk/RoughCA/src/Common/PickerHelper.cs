@@ -1,7 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Windows.Storage.Pickers;
 
-namespace Arteria_s.UI.Base
+namespace ArteriaS.UI.Base
 {
 	public static class PickerHelper
 	{

@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Arteria_s.DB
+namespace ArteriaS.DB
 {
 	public abstract class Data
 	{

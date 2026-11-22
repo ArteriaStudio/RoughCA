@@ -1,9 +1,9 @@
-﻿using Arteria_s.DB;
-using Arteria_s.DB.Base;
+﻿using ArteriaS.DB;
+using ArteriaS.DB.Base;
 using Npgsql;
 using System;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	//　組織プロファイル
 	public class OrgProfile : Data

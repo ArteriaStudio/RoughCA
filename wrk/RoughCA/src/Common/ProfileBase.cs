@@ -1,8 +1,8 @@
-﻿using Arteria_s.OS.Base;
+﻿using ArteriaS.OS.Base;
 using Microsoft.Data.Sqlite;
 using System;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	public abstract class ProfileBase
 	{

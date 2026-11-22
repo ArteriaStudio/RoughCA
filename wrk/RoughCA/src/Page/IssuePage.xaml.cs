@@ -1,12 +1,12 @@
-﻿using Arteria_s.DB;
+﻿using ArteriaS.DB;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using static Arteria_s.App.RoughCA.CertInputForm;
+using static ArteriaS.App.RoughCA.CertInputForm;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	public class CertInputForm : Data
 	{

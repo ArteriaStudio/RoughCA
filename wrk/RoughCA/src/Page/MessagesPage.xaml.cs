@@ -1,4 +1,4 @@
-﻿using Arteria_s.DB;
+﻿using ArteriaS.DB;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -8,7 +8,7 @@ using System.Collections.ObjectModel;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	/// <summary>
 	/// 利用者向けメッセージ

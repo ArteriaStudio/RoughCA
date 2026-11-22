@@ -1,5 +1,5 @@
-﻿using Arteria_s.DB.Base;
-using Arteria_s.OS.Base;
+﻿using ArteriaS.DB.Base;
+using ArteriaS.OS.Base;
 using Npgsql;
 using System;
 using System.Security.Cryptography;
@@ -7,7 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using System.Diagnostics;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	public class SignRequest : IEquatable<SignRequest>
 	{

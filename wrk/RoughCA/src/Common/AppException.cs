@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Arteria_s.App.RoughCA
+namespace ArteriaS.App.RoughCA
 {
 	public enum AppFacility
 	{

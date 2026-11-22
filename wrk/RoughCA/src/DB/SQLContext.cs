@@ -1,4 +1,4 @@
-﻿using Arteria_s.App.RoughCA;
+﻿using ArteriaS.App.RoughCA;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -11,9 +11,9 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Windows.Security.Authentication.OnlineId;
 using Windows.Security.Cryptography.Certificates;
-using Certificate = Arteria_s.App.RoughCA.Certificate;
+using Certificate = ArteriaS.App.RoughCA.Certificate;
 
-namespace Arteria_s.DB.Base
+namespace ArteriaS.DB.Base
 {
 	//　データベースコンテキスト
 	public class SQLContext : VSQLContext
